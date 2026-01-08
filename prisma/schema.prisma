@@ -1,0 +1,186 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+enum SocialNetwork {
+  INSTAGRAM
+  TIKTOK
+  FACEBOOK
+  YOUTUBE
+}
+
+enum PostType {
+  VIDEO
+  IMAGE
+  TEXT
+}
+
+enum OrderStatus {
+  DRAFT
+  SENT
+  GENERATED
+  DELETED
+}
+
+enum IntegrationSource {
+  N8N
+}
+
+enum IntegrationEventType {
+  WEBHOOK_RECEIVED
+  WEBHOOK_REJECTED
+  COMMENTS_PERSISTED
+}
+
+enum LegacySocialNetwork {
+  TIKTOK    @map("tiktok")
+  FACEBOOK  @map("facebook")
+  INSTAGRAM @map("instagram")
+}
+
+model User {
+  id           String  @id @default(cuid())
+  username     String  @unique
+  usernameLower String @unique
+  passwordHash String
+  name         String
+  role         Role    @default(USER)
+  plan         Plan    @default(FREE)
+  commentLimit Int     @default(500)
+  commentsUsed Int     @default(0)
+
+  projects     Project[]
+  orders       GenerationOrder[]
+  botComments  BotComment[]
+  integrations IntegrationLog[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Project {
+  id          String @id @default(cuid())
+  name        String
+  nameLower   String
+  userId      String
+  user        User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  orders      GenerationOrder[]
+  botComments BotComment[]
+  integrations IntegrationLog[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, nameLower])
+  @@index([userId, createdAt])
+}
+
+model GenerationOrder {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  projectId     String
+  project       Project       @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  link          String
+  socialNetwork SocialNetwork
+  postType      PostType
+  intent        String?
+  quantity      Int
+
+  status        OrderStatus   @default(DRAFT)
+  sentAt        DateTime?
+  generatedAt   DateTime?
+  deletedAt     DateTime?
+
+  comments      BotComment[]
+  integrations  IntegrationLog[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([projectId, createdAt])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model BotComment {
+  id         String @id @default(cuid())
+  userId     String
+  user       User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  projectId  String
+  project    Project @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  orderId    String
+  order      GenerationOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  text       String
+  externalId String?
+  deletedAt  DateTime?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([orderId, createdAt])
+  @@index([projectId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model IntegrationLog {
+  id        String @id @default(cuid())
+  source    IntegrationSource
+  eventType IntegrationEventType
+
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  orderId   String?
+  order     GenerationOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  payload   Json?
+  error     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([source, createdAt])
+  @@index([eventType, createdAt])
+  @@index([orderId, createdAt])
+}
+
+model LegacyBotComment {
+  id          Int      @id @default(autoincrement())
+  url         String   @db.Text
+  commentText String   @db.Text @map("comentario")
+  projectKey  String   @db.Text @map("target")
+  socialNetworkRaw LegacySocialNetwork @map("red_social")
+  isPublished Boolean  @default(false) @map("is_published")
+  createdAt   DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  publishedAt DateTime? @db.Timestamptz(6) @map("published_at")
+
+  @@map("comentarios_bot")
+  @@unique([commentText])
+  @@index([projectKey, createdAt])
+  @@index([isPublished, createdAt])
+}
