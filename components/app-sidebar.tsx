@@ -95,9 +95,9 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-4 py-2">
+        <div className="flex items-center gap-2 px-4 py-2 group-data-[collapsible=icon]:px-2">
           <Bot className="h-6 w-6" />
-          <span className="font-semibold">Brain Bot</span>
+          <span className="font-semibold group-data-[collapsible=icon]:hidden">Brain Bot</span>
         </div>
       </SidebarHeader>
       <SidebarContent>

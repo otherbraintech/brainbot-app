@@ -21,7 +21,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { createDevice, updateDevice, deleteDevice } from "@/lib/actions/devices"
-import { Plus, Pencil, Trash2 } from "lucide-react"
+import { Plus, Pencil, Trash2, Eye } from "lucide-react"
 
 type Device = {
     id: string
@@ -31,6 +31,70 @@ type Device = {
     urlTiktok: string | null
     urlFacebook: string | null
     urlInstagram: string | null
+    blockedAt?: Date | null
+    createdAt?: Date
+    updatedAt?: Date
+}
+
+// View Device Dialog
+export function ViewDeviceButton({ device }: { device: Device }) {
+    const [open, setOpen] = useState(false)
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="ghost" size="icon">
+                    <Eye className="h-4 w-4" />
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Detalles del Dispositivo</DialogTitle>
+                    <DialogDescription>
+                        Información completa del dispositivo
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right font-bold">Nombre:</Label>
+                        <span className="col-span-3">{device.deviceName}</span>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right font-bold">Persona:</Label>
+                        <span className="col-span-3">{device.personName || "-"}</span>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right font-bold">Estado:</Label>
+                        <span className="col-span-3">{device.status}</span>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right font-bold">Bloqueado:</Label>
+                        <span className="col-span-3">
+                            {device.blockedAt ? new Date(device.blockedAt).toLocaleString() : "No"}
+                        </span>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right font-bold">Creado:</Label>
+                        <span className="col-span-3">
+                            {device.createdAt ? new Date(device.createdAt).toLocaleDateString() : "-"}
+                        </span>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right font-bold">TikTok:</Label>
+                        <span className="col-span-3 truncate">{device.urlTiktok || "-"}</span>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right font-bold">Facebook:</Label>
+                        <span className="col-span-3 truncate">{device.urlFacebook || "-"}</span>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right font-bold">Instagram:</Label>
+                        <span className="col-span-3 truncate">{device.urlInstagram || "-"}</span>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
 }
 
 // Create Device Dialog

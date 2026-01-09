@@ -32,6 +32,7 @@ type Order = {
     intent: string | null
     quantity: number
     status: string
+    orderName: string
 }
 
 const SOCIAL_NETWORKS = [
@@ -54,6 +55,7 @@ export function EditOrderButton({ order }: { order: Order }) {
     const [postType, setPostType] = useState(order.postType)
     const [intent, setIntent] = useState(order.intent || "")
     const [quantity, setQuantity] = useState(String(order.quantity))
+    const [orderName, setOrderName] = useState(order.orderName || "")
     const [error, setError] = useState("")
 
     // Can only edit if status is LISTA
@@ -70,7 +72,8 @@ export function EditOrderButton({ order }: { order: Order }) {
             socialNetwork: socialNetwork as "INSTAGRAM" | "FACEBOOK" | "TIKTOK",
             postType: postType as "IMAGEN" | "VIDEO" | "TEXTO",
             intent: intent || undefined,
-            quantity: parseInt(quantity) || 1,
+            quantity: Number(quantity) || 1,
+            orderName: orderName,
         })
 
         setLoading(false)
@@ -104,6 +107,14 @@ export function EditOrderButton({ order }: { order: Order }) {
                     {error && (
                         <div className="text-sm text-destructive">{error}</div>
                     )}
+                    <div className="grid gap-2">
+                        <Label htmlFor="editOrderName">Nombre de la Orden</Label>
+                        <Input
+                            id="editOrderName"
+                            value={orderName}
+                            onChange={(e) => setOrderName(e.target.value)}
+                        />
+                    </div>
                     <div className="grid gap-2">
                         <Label htmlFor="editLink">Enlace de la publicación *</Label>
                         <Input
@@ -171,7 +182,7 @@ export function EditOrderButton({ order }: { order: Order }) {
                     <Button variant="outline" onClick={() => setOpen(false)}>
                         Cancelar
                     </Button>
-                    <Button onClick={handleSubmit} disabled={loading || !link.trim()}>
+                    <Button onClick={handleSubmit} disabled={loading || !link.trim() || !orderName.trim()}>
                         {loading ? "Guardando..." : "Guardar"}
                     </Button>
                 </DialogFooter>

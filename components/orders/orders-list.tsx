@@ -34,6 +34,7 @@ import { EditOrderButton } from "@/components/orders/edit-order-button"
 type Order = {
     id: string
     link: string
+    orderName: string
     socialNetwork: string
     postType: string
     intent: string | null
@@ -123,87 +124,128 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
 
                     return (
                         <Card key={order.id}>
-                            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                            <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                        <Badge variant="outline">{NETWORK_LABELS[order.socialNetwork] || order.socialNetwork}</Badge>
+                                    <CardTitle className="text-lg font-bold leading-none">
+                                        {order.orderName || "Orden sin nombre"}
+                                    </CardTitle>
+                                    <div className="flex items-center gap-2 pt-1 text-xs text-muted-foreground">
+                                        <span>creada el {new Date(order.createdAt).toLocaleDateString("es")}</span>
                                     </div>
-                                    <CardDescription className="text-xs">
-                                        {order.postType} · {order.quantity} comentarios solicitados
-                                    </CardDescription>
                                 </div>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem asChild>
-                                            <a href={order.link} target="_blank" rel="noopener noreferrer">
-                                                <ExternalLink className="mr-2 h-4 w-4" />
-                                                Ver publicación
-                                            </a>
-                                        </DropdownMenuItem>
-                                        {!isProcessing && !isCompleted && (
-                                            <DropdownMenuItem
-                                                className="text-red-600"
-                                                onClick={() => setDeletingOrder(order)}
-                                            >
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                Eliminar
+                                <div className="flex items-center gap-2">
+                                    {!canStart && !isProcessing && !isCompleted && (
+                                        <Badge variant={statusInfo.variant} className="capitalize">
+                                            {statusInfo.label}
+                                        </Badge>
+                                    )}
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem asChild>
+                                                <a href={order.link} target="_blank" rel="noopener noreferrer">
+                                                    <ExternalLink className="mr-2 h-4 w-4" />
+                                                    Ver publicación
+                                                </a>
                                             </DropdownMenuItem>
-                                        )}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                            {!isProcessing && !isCompleted && (
+                                                <DropdownMenuItem
+                                                    className="text-red-600"
+                                                    onClick={() => setDeletingOrder(order)}
+                                                >
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Eliminar
+                                                </DropdownMenuItem>
+                                            )}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-3">
-                                    <p className="text-sm text-muted-foreground line-clamp-2">
+                                <div className="grid grid-cols-2 gap-4 text-sm mt-2">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-xs text-muted-foreground font-medium uppercase">Plataforma</span>
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant="outline" className="font-normal">
+                                                {NETWORK_LABELS[order.socialNetwork] || order.socialNetwork}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-xs text-muted-foreground font-medium uppercase">Detalles</span>
+                                        <div className="text-sm">
+                                            {order.postType} · {order.quantity} coms.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1 pt-2">
+                                    <p className="text-xs text-muted-foreground font-medium uppercase">
+                                        Intención
+                                    </p>
+                                    <p className="text-sm text-foreground leading-relaxed line-clamp-2">
                                         {order.intent || "Sin intención especificada"}
                                     </p>
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-muted-foreground">
-                                            {order._count.comments} comentarios generados
+                                </div>
+
+                                <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-3 mt-4">
+                                    <span className="flex items-center">
+                                        <span className={`font-semibold mr-1 ${order._count.comments > 0 ? "text-primary" : ""}`}>
+                                            {order._count.comments}
                                         </span>
-                                        <span className="text-xs text-muted-foreground">
-                                            {new Date(order.createdAt).toLocaleDateString("es")}
-                                        </span>
-                                    </div>
+                                        comentarios generados
+                                    </span>
+                                </div>
 
-                                    {/* Action buttons */}
-                                    <div className="flex gap-2 pt-2">
-                                        {canStart && (
-                                            <>
-                                                <EditOrderButton order={order} />
-                                                <Button
-                                                    size="sm"
-                                                    className="flex-1"
-                                                    onClick={() => handleStart(order.id)}
-                                                    disabled={isStarting}
-                                                >
-                                                    <Play className="mr-2 h-4 w-4" />
-                                                    {isStarting ? "Iniciando..." : "Empezar"}
-                                                </Button>
-                                            </>
-                                        )}
-
-                                        {isCompleted && (
-                                            <Button size="sm" variant="outline" className="flex-1" asChild>
-                                                <Link href={`/dashboard/orders/${order.id}/comments`}>
-                                                    <Eye className="mr-2 h-4 w-4" />
-                                                    Ver comentarios
-                                                </Link>
+                                {/* Action buttons */}
+                                <div className="flex gap-2 pt-2">
+                                    {canStart && (
+                                        <>
+                                            <EditOrderButton order={order} />
+                                            <Button
+                                                size="sm"
+                                                className="flex-1"
+                                                onClick={() => handleStart(order.id)}
+                                                disabled={isStarting}
+                                            >
+                                                <Play className="mr-2 h-4 w-4" />
+                                                {isStarting ? "Iniciando..." : "Empezar"}
                                             </Button>
-                                        )}
+                                        </>
+                                    )}
 
-                                        {isProcessing && (
-                                            <Button size="sm" variant="secondary" className="flex-1" disabled>
-                                                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                                Procesando...
-                                            </Button>
-                                        )}
-                                    </div>
+                                    {isCompleted && (
+                                        <Button size="sm" variant="outline" className="flex-1" asChild>
+                                            <Link href={`/dashboard/orders/${order.id}/comments`}>
+                                                <Eye className="mr-2 h-4 w-4" />
+                                                Ver comentarios
+                                            </Link>
+                                        </Button>
+                                    )}
+
+                                    {isProcessing && (
+                                        <Button size="sm" variant="secondary" className="flex-1" disabled>
+                                            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                            Procesando...
+                                        </Button>
+                                    )}
+
+                                    {(order.status === "ERROR" || order.status === "CANCELADA") && (
+                                        <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            className="flex-1"
+                                            onClick={() => handleStart(order.id)}
+                                            disabled={isStarting}
+                                        >
+                                            <Play className="mr-2 h-4 w-4" />
+                                            Reintentar
+                                        </Button>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
@@ -221,7 +263,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogCancel disabled={loading}>Cancelar</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleDelete}
                             className="bg-red-600 hover:bg-red-700"

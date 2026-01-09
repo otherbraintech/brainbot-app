@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { updateProject, deleteProject } from "@/lib/actions/projects"
+import { CreateTargetButton } from "./create-target-button"
 
 type Project = {
     id: string
@@ -137,12 +138,13 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="space-y-2">
                             <Button asChild variant="outline" className="w-full">
                                 <Link href={`/dashboard/projects/${project.id}`}>
                                     Ver Proyecto
                                 </Link>
                             </Button>
+                            <CreateTargetButton project={project} />
                         </CardContent>
                     </Card>
                 ))}

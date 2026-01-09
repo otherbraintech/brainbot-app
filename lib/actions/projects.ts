@@ -166,7 +166,7 @@ export async function deleteProject(id: string) {
   // 1. Mark all orders as CANCELLED (instead of deleting them)
   await prisma.generationOrder.updateMany({
     where: { projectId: id },
-    data: { status: OrderStatus.CANCELADO },
+    data: { status: OrderStatus.CANCELADA },
   })
 
   // 2. Soft delete the project (set deletedAt)
@@ -179,4 +179,65 @@ export async function deleteProject(id: string) {
   revalidatePath("/dashboard/projects")
   
   return { success: true }
+}
+
+export async function createTargetAction(payload: any) {
+  const session = await getSession()
+  
+  if (!session) {
+    return { error: "No autenticado" }
+  }
+
+  const WEBHOOK_URL = "https://intelexia-labs-n8n.af9gwe.easypanel.host/webhook/creation_target"
+
+  try {
+    // 1. Send to Webhook
+    const response = await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    })
+
+    const responseData = await response.json()
+
+    if (!responseData.estado && responseData.code !== 200) {
+      return { error: responseData.Message || "Error en el servidor de n8n" }
+    }
+
+    // 2. Update local DB
+    await prisma.project.update({
+      where: { id: payload.project_id },
+      data: {
+        target: payload.target_input
+      }
+    })
+
+    revalidatePath("/dashboard/projects")
+    return { success: true, message: responseData.Message }
+  } catch (error) {
+    console.error("Error in createTargetAction:", error)
+    return { error: "Error al enviar el objetivo al servidor externo" }
+  }
+}
+
+export async function updateTargetAction(projectId: string, targetData: any) {
+  const session = await getSession()
+  if (!session) return { error: "No autorizado" }
+
+  try {
+    await prisma.project.update({
+      where: { id: projectId },
+      data: {
+        target: targetData
+      }
+    })
+
+    revalidatePath("/dashboard/projects")
+    return { success: true }
+  } catch (error) {
+    console.error("Error in updateTargetAction:", error)
+    return { error: "Error al actualizar el objetivo" }
+  }
 }

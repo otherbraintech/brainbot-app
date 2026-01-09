@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Plus } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -22,19 +23,23 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { createOrder } from "@/lib/actions/orders"
+
+import { createOrder, getNextOrderName } from "@/lib/actions/orders"
 
 const SOCIAL_NETWORKS = [
     { value: "INSTAGRAM", label: "Instagram" },
     { value: "FACEBOOK", label: "Facebook" },
     { value: "TIKTOK", label: "TikTok" },
-]
+] as const
 
 const POST_TYPES = [
     { value: "IMAGEN", label: "Imagen" },
     { value: "VIDEO", label: "Video" },
     { value: "TEXTO", label: "Texto" },
-]
+] as const
+
+type SocialNetwork = typeof SOCIAL_NETWORKS[number]["value"]
+type PostType = typeof POST_TYPES[number]["value"]
 
 export function CreateOrderButton({ projectId }: { projectId: string }) {
     const [open, setOpen] = useState(false)
@@ -42,13 +47,27 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
     const [error, setError] = useState<string | null>(null)
 
     const [link, setLink] = useState("")
-    const [socialNetwork, setSocialNetwork] = useState<"INSTAGRAM" | "FACEBOOK" | "TIKTOK">("INSTAGRAM")
-    const [postType, setPostType] = useState<"IMAGEN" | "VIDEO" | "TEXTO">("IMAGEN")
+    const [socialNetwork, setSocialNetwork] = useState<SocialNetwork>("INSTAGRAM")
+    const [postType, setPostType] = useState<PostType>("IMAGEN")
     const [intent, setIntent] = useState("")
     const [quantity, setQuantity] = useState(5)
+    const [orderName, setOrderName] = useState("")
 
-    async function handleSubmit(e: React.FormEvent) {
+    const handleOpenChange = async (newOpen: boolean) => {
+        setOpen(newOpen)
+
+        if (newOpen) {
+            setError(null)
+            const nextName = await getNextOrderName(projectId)
+            setOrderName(nextName)
+        }
+    }
+
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
+
+        if (!link.trim() || !orderName.trim()) return
+
         setLoading(true)
         setError(null)
 
@@ -57,18 +76,19 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
             link,
             socialNetwork,
             postType,
+            orderName,
             intent: intent || undefined,
             quantity,
         })
 
-        if (result.error) {
+        if (result?.error) {
             setError(result.error)
-            setLoading(false)
         } else {
             setOpen(false)
             resetForm()
-            setLoading(false)
         }
+
+        setLoading(false)
     }
 
     function resetForm() {
@@ -77,20 +97,19 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
         setPostType("IMAGEN")
         setIntent("")
         setQuantity(5)
+        setOrderName("")
         setError(null)
     }
 
     return (
-        <Dialog open={open} onOpenChange={(isOpen) => {
-            setOpen(isOpen)
-            if (!isOpen) resetForm()
-        }}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
                 <Button>
                     <Plus className="mr-2 h-4 w-4" />
                     Nueva Orden
                 </Button>
             </DialogTrigger>
+
             <DialogContent className="sm:max-w-[500px]">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
@@ -99,7 +118,19 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                             Ingresa los datos de la publicación para generar comentarios.
                         </DialogDescription>
                     </DialogHeader>
+
                     <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="orderName">Nombre de la Orden</Label>
+                            <Input
+                                id="orderName"
+                                value={orderName}
+                                onChange={(e) => setOrderName(e.target.value)}
+                                placeholder="Ej: Orden #1"
+                                required
+                            />
+                        </div>
+
                         {error && (
                             <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
                                 {error}
@@ -110,7 +141,7 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                             <Label htmlFor="link">Enlace de la publicación</Label>
                             <Input
                                 id="link"
-                                placeholder="https://instagram.com/p/..."
+                                placeholder="https://facebook.com/..."
                                 value={link}
                                 onChange={(e) => setLink(e.target.value)}
                                 required
@@ -120,12 +151,15 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label>Red Social</Label>
-                                <Select value={socialNetwork} onValueChange={(v) => setSocialNetwork(v as typeof socialNetwork)}>
+                                <Select
+                                    value={socialNetwork}
+                                    onValueChange={(v) => setSocialNetwork(v as SocialNetwork)}
+                                >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {SOCIAL_NETWORKS.map((sn) => (
+                                        {(SOCIAL_NETWORKS as any).map((sn: any) => (
                                             <SelectItem key={sn.value} value={sn.value}>
                                                 {sn.label}
                                             </SelectItem>
@@ -136,12 +170,15 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
 
                             <div className="grid gap-2">
                                 <Label>Tipo de publicación</Label>
-                                <Select value={postType} onValueChange={(v) => setPostType(v as typeof postType)}>
+                                <Select
+                                    value={postType}
+                                    onValueChange={(v) => setPostType(v as PostType)}
+                                >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {POST_TYPES.map((pt) => (
+                                        {(POST_TYPES as any).map((pt: any) => (
                                             <SelectItem key={pt.value} value={pt.value}>
                                                 {pt.label}
                                             </SelectItem>
@@ -159,7 +196,7 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                                 min={1}
                                 max={100}
                                 value={quantity}
-                                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                                onChange={(e) => setQuantity(globalThis.Number(e.target.value) || 1)}
                                 required
                             />
                         </div>
@@ -168,19 +205,27 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                             <Label htmlFor="intent">Intención (opcional)</Label>
                             <Textarea
                                 id="intent"
-                                placeholder="Ej: Comentarios positivos sobre el producto, mencionando calidad y presentación..."
+                                placeholder="Ej: Comentarios naturales y positivos sobre el producto"
                                 value={intent}
                                 onChange={(e) => setIntent(e.target.value)}
                                 rows={3}
                             />
                         </div>
                     </div>
+
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setOpen(false)}
+                        >
                             Cancelar
                         </Button>
-                        <Button type="submit" disabled={loading}>
-                            {loading ? "Creando..." : "Crear Orden"}
+                        <Button
+                            type="submit"
+                            disabled={loading || !link.trim() || !orderName.trim()}
+                        >
+                            {loading ? "Creando..." : "Crear"}
                         </Button>
                     </DialogFooter>
                 </form>

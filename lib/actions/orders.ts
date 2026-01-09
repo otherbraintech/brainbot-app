@@ -3,7 +3,7 @@
 import { getSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
-import { OrderStatus } from "@/lib/generated/prisma/client"
+import { OrderStatus, SocialNetwork, PostType } from "@/lib/generated/prisma/client"
 
 export async function getOrders(projectId: string) {
   const session = await getSession()
@@ -56,8 +56,9 @@ export async function getOrder(id: string) {
 type CreateOrderInput = {
   projectId: string
   link: string
-  socialNetwork: "INSTAGRAM" | "FACEBOOK" | "TIKTOK"
-  postType: "IMAGEN" | "VIDEO" | "TEXTO"
+  socialNetwork: SocialNetwork
+  postType: PostType
+  orderName: string
   intent?: string
   quantity: number
 }
@@ -93,6 +94,7 @@ export async function createOrder(input: CreateOrderInput) {
       link: input.link,
       socialNetwork: input.socialNetwork,
       postType: input.postType,
+      orderName: input.orderName,
       intent: input.intent,
       quantity: input.quantity,
       status: OrderStatus.LISTA,
@@ -106,11 +108,12 @@ export async function createOrder(input: CreateOrderInput) {
 
 type UpdateOrderInput = {
   id: string
-  link?: string
-  socialNetwork?: "INSTAGRAM" | "FACEBOOK" | "TIKTOK"
-  postType?: "IMAGEN" | "VIDEO" | "TEXTO"
-  intent?: string
   quantity?: number
+  intent?: string
+  postType?: PostType
+  socialNetwork?: SocialNetwork
+  link?: string
+  orderName?: string
 }
 
 export async function updateOrder(input: UpdateOrderInput) {
@@ -138,8 +141,9 @@ export async function updateOrder(input: UpdateOrderInput) {
       ...(input.link && { link: input.link }),
       ...(input.socialNetwork && { socialNetwork: input.socialNetwork }),
       ...(input.postType && { postType: input.postType }),
-      intent: input.intent,
+      ...(input.intent && { intent: input.intent }),
       ...(input.quantity && { quantity: input.quantity }),
+      ...(input.orderName && { orderName: input.orderName }),
     },
   })
   
@@ -194,8 +198,8 @@ export async function startOrder(id: string) {
     return { error: "Orden no encontrada" }
   }
   
-  if (order.status !== "LISTA") {
-    return { error: "La orden ya fue iniciada" }
+  if (order.status !== "LISTA" && order.status !== "ERROR" && order.status !== "CANCELADA") {
+    return { error: "La orden ya fue iniciada o completada" }
   }
   
   // Send to n8n webhook - n8n will update status directly in PostgreSQL
@@ -205,14 +209,6 @@ export async function startOrder(id: string) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         orderId: order.id,
-        projectId: order.projectId,
-        projectName: order.project.name,
-        userId: order.userId,
-        link: order.link,
-        socialNetwork: order.socialNetwork,
-        postType: order.postType,
-        intent: order.intent,
-        quantity: order.quantity,
       }),
     })
     
@@ -228,4 +224,56 @@ export async function startOrder(id: string) {
   revalidatePath(`/dashboard/projects/${order.projectId}`)
   
   return { success: true }
+}
+export async function getOrderWithComments(orderId: string) {
+  const session = await getSession()
+  
+  if (!session) {
+    return { error: "No autorizado" }
+  }
+  
+  const order = await prisma.generationOrder.findUnique({
+    where: { 
+      id: orderId,
+      userId: session,
+      deletedAt: null,
+    },
+    include: {
+      comments: {
+        include: {
+          device: {
+            select: { deviceName: true }
+          }
+        },
+        orderBy: { createdAt: "desc" },
+      },
+      project: {
+        select: {
+            name: true,
+            id: true
+        }
+      }
+    },
+  })
+  
+  return { order }
+}
+
+export async function getNextOrderName(projectId: string) {
+  const session = await getSession()
+  
+  if (!session) return "Orden #1"
+  
+  // Count ALL orders for this project, including deleted ones if possible (but we only soft delete projects, orders are cancelled)
+  // Since we don't have soft deleted orders (deletedAt IS NULL usually), we count all.
+  // Actually, we soft delete orders by setting status CANCELADO. They are still in DB.
+  // But wait, the previous requirement said "if Order #1 is deleted, the next should be Order #3".
+  // This implies we should look at the MAX number used, or count total history.
+  // Let's count all orders regardless of status.
+  
+  const count = await prisma.generationOrder.count({
+    where: { projectId }
+  })
+  
+  return `Orden #${count + 1}`
 }
