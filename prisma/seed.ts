@@ -11,7 +11,7 @@ import {
   PostType,
   PrismaClient,
   Role,
-} from "../lib/generated/prisma/client";
+} from "@prisma/client";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);

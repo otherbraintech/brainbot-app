@@ -3,7 +3,7 @@
 import { getSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
-import { OrderStatus, SocialNetwork, PostType } from "@/lib/generated/prisma/client"
+import { OrderStatus, SocialNetwork, PostType } from "@prisma/client"
 
 export async function getOrders(projectId: string) {
   const session = await getSession()
