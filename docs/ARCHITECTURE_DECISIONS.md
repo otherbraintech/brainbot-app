@@ -67,3 +67,10 @@ Estado: Aceptada
 Decisión:
 - Se agregará "plan" (FREE/PRO) en User.
 - "commentLimit" existirá en User y podrá derivarse del plan, pero quedará disponible para overrides.
+
+## ADR-008: Idioma
+Estado: Aceptada
+
+Decisión:
+- Toda la interfaz de usuario y los mensajes de la aplicación deben estar en **Español**.
+- El código (nombres de variables, funciones) puede mantenerse en inglés, pero los textos visibles al usuario deben ser en español.

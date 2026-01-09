@@ -1,0 +1,45 @@
+import { notFound } from "next/navigation"
+import { getProject } from "@/lib/actions/projects"
+import { getOrders } from "@/lib/actions/orders"
+import { OrdersList } from "@/components/orders/orders-list"
+import { CreateOrderButton } from "@/components/orders/create-order-button"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft } from "lucide-react"
+import Link from "next/link"
+
+export default async function ProjectDetailPage({
+    params,
+}: {
+    params: Promise<{ id: string }>
+}) {
+    const { id } = await params
+    const project = await getProject(id)
+
+    if (!project) {
+        notFound()
+    }
+
+    const orders = await getOrders(id)
+
+    return (
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" asChild>
+                    <Link href="/dashboard/projects">
+                        <ArrowLeft className="h-4 w-4" />
+                    </Link>
+                </Button>
+                <div className="flex-1">
+                    <h1 className="text-2xl font-bold">{project.name}</h1>
+                    <p className="text-muted-foreground">
+                        {project._count.orders} órdenes · {project._count.botComments} comentarios generados
+                    </p>
+                </div>
+                <CreateOrderButton projectId={id} />
+            </div>
+
+            <OrdersList orders={orders} projectId={id} />
+        </div>
+    )
+}

@@ -6,8 +6,8 @@
   - usernameLower (único, normalizado para case-insensitive)
   - passwordHash
   - name
-  - role (ADMIN/USER)
-  - plan (FREE/PRO)
+  - role (ADMIN/USUARIO)
+  - plan (GRATIS/PRO)
   - commentLimit (máximo permitido)
   - commentsUsed (contador)
 
@@ -24,16 +24,18 @@
   - postType (VIDEO/IMAGE/TEXT)
   - intent (texto libre)
   - quantity (int)
-  - status (DRAFT/SENT/GENERATED/DELETED)
+  - status (BORRADOR/LISTA/GENERADA/REINTENTAR)
   - sentAt, generatedAt
   - deletedAt (soft delete)
 
-- BotComment (comentarios_bots)
+- BotComment (tabla: comentarios_bot)
   - orderId
   - projectId
   - userId
   - text
-  - externalId (opcional, id de n8n)
+  - dispositivo (opcional, a qué dispositivo va a ir el comentario)
+  - publishAt (opcional, hora y minuto a publicar)
+  - status (PENDIENTE/PUBLICADO/CANCELADO)
   - deletedAt
 
 - IntegrationLog
@@ -42,15 +44,6 @@
   - userId/projectId/orderId (opcionales)
   - payload (JSON)
   - error (string)
-
-- LegacyBotComment (tabla existente: comentarios_bot)
-  - Nota: se mantiene por compatibilidad con el esquema anterior.
-  - Campos principales: url, comentario, target, red_social, is_published, created_at, published_at
-  - En Prisma:
-    - commentText -> columna comentario
-    - projectKey -> columna target (NO se usa la palabra "target" en el código). Es dinámico/creable en la app.
-    - socialNetworkRaw -> columna red_social (set fijo)
-  - Índice/constraint: comentario unique
 
 ## Relaciones
 - User 1..n Project

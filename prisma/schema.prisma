@@ -15,11 +15,11 @@ datasource db {
 
 enum Role {
   ADMIN
-  USER
+  USUARIO
 }
 
 enum Plan {
-  FREE
+  GRATIS
   PRO
 }
 
@@ -32,15 +32,23 @@ enum SocialNetwork {
 
 enum PostType {
   VIDEO
-  IMAGE
-  TEXT
+  IMAGEN
+  TEXTO
 }
 
 enum OrderStatus {
-  DRAFT
-  SENT
-  GENERATED
-  DELETED
+  LISTA
+  GENERANDO
+  GENERADA
+  CANCELADA
+  REINTENTAR
+}
+
+enum CommentStatus {
+  PENDIENTE
+  PUBLICADO
+  CANCELADO
+  SINPUBLICAR
 }
 
 enum IntegrationSource {
@@ -53,56 +61,51 @@ enum IntegrationEventType {
   COMMENTS_PERSISTED
 }
 
-enum LegacySocialNetwork {
-  TIKTOK    @map("tiktok")
-  FACEBOOK  @map("facebook")
-  INSTAGRAM @map("instagram")
-}
-
 model User {
-  id           String  @id @default(cuid())
-  username     String  @unique
+  id            String @id @default(cuid())
+  username      String @unique
   usernameLower String @unique
-  passwordHash String
-  name         String
-  role         Role    @default(USER)
-  plan         Plan    @default(FREE)
-  commentLimit Int     @default(500)
-  commentsUsed Int     @default(0)
+  passwordHash  String
+  name          String
+  role          Role   @default(USUARIO)
+  plan          Plan   @default(GRATIS)
+  commentLimit  Int    @default(500)
+  commentsUsed  Int    @default(0)
 
   projects     Project[]
   orders       GenerationOrder[]
   botComments  BotComment[]
   integrations IntegrationLog[]
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Project {
-  id          String @id @default(cuid())
-  name        String
-  nameLower   String
-  userId      String
-  user        User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  id        String @id @default(cuid())
+  name      String
+  nameLower String
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
-  orders      GenerationOrder[]
-  botComments BotComment[]
+  orders       GenerationOrder[]
+  botComments  BotComment[]
   integrations IntegrationLog[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@unique([userId, nameLower])
   @@index([userId, createdAt])
 }
 
 model GenerationOrder {
-  id            String        @id @default(cuid())
-  userId        String
-  user          User          @relation(fields: [userId], references: [id], onDelete: Restrict)
-  projectId     String
-  project       Project       @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Restrict)
 
   link          String
   socialNetwork SocialNetwork
@@ -110,16 +113,16 @@ model GenerationOrder {
   intent        String?
   quantity      Int
 
-  status        OrderStatus   @default(DRAFT)
-  sentAt        DateTime?
-  generatedAt   DateTime?
-  deletedAt     DateTime?
+  status      OrderStatus @default(LISTA)
+  sentAt      DateTime?
+  generatedAt DateTime?
+  deletedAt   DateTime?
 
-  comments      BotComment[]
-  integrations  IntegrationLog[]
+  comments     BotComment[]
+  integrations IntegrationLog[]
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([projectId, createdAt])
   @@index([userId, createdAt])
@@ -127,60 +130,75 @@ model GenerationOrder {
 }
 
 model BotComment {
-  id         String @id @default(cuid())
-  userId     String
-  user       User   @relation(fields: [userId], references: [id], onDelete: Restrict)
-  projectId  String
-  project    Project @relation(fields: [projectId], references: [id], onDelete: Restrict)
-  orderId    String
-  order      GenerationOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  projectId String
+  project   Project         @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  orderId   String
+  order     GenerationOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
 
-  text       String
-  externalId String?
-  deletedAt  DateTime?
+  text      String
+  deviceId  String?
+  device    Device?       @relation(fields: [deviceId], references: [id])
+  publishAt String?
+  status    CommentStatus @default(PENDIENTE)
+  deletedAt DateTime?
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([orderId, createdAt])
   @@index([projectId, createdAt])
   @@index([userId, createdAt])
+  @@index([deviceId, createdAt])
+  @@map("comentarios_bot")
+}
+
+model Device {
+  id         String  @id @default(cuid())
+  deviceName String // n_device
+  personName String? // name_person
+
+  urlTiktok    String?
+  urlFacebook  String?
+  urlInstagram String?
+
+  status    DeviceStatus @default(LIBRE)
+  blockedAt DateTime?
+
+  comments BotComment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("dispositivos")
+}
+
+enum DeviceStatus {
+  OCUPADO
+  LIBRE
+  BLOQUEADO
 }
 
 model IntegrationLog {
-  id        String @id @default(cuid())
+  id        String               @id @default(cuid())
   source    IntegrationSource
   eventType IntegrationEventType
 
   userId    String?
-  user      User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user      User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
   projectId String?
-  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  project   Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
   orderId   String?
   order     GenerationOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
-  payload   Json?
-  error     String?
+  payload Json?
+  error   String?
 
   createdAt DateTime @default(now())
 
   @@index([source, createdAt])
   @@index([eventType, createdAt])
   @@index([orderId, createdAt])
-}
-
-model LegacyBotComment {
-  id          Int      @id @default(autoincrement())
-  url         String   @db.Text
-  commentText String   @db.Text @map("comentario")
-  projectKey  String   @db.Text @map("target")
-  socialNetworkRaw LegacySocialNetwork @map("red_social")
-  isPublished Boolean  @default(false) @map("is_published")
-  createdAt   DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
-  publishedAt DateTime? @db.Timestamptz(6) @map("published_at")
-
-  @@map("comentarios_bot")
-  @@unique([commentText])
-  @@index([projectKey, createdAt])
-  @@index([isPublished, createdAt])
 }

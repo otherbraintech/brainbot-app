@@ -2,22 +2,16 @@
 
 import * as React from "react"
 import {
-  AudioWaveform,
-  BookOpen,
   Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
-  SquareTerminal,
+  FolderOpen,
+  LayoutDashboard,
+  Plus,
+  Smartphone,
+  Users,
 } from "lucide-react"
 
-import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
+import { NavMain, type NavItem } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
   SidebarContent,
@@ -26,148 +20,91 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-// This is sample data.
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
-  navMain: [
-    {
-      title: "Playground",
-      url: "#",
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
-  ],
+type Project = {
+  id: string
+  name: string
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+type User = {
+  name: string
+  username: string
+} | null
+
+export function AppSidebar({
+  user,
+  projects = [],
+  ...props
+}: React.ComponentProps<typeof Sidebar> & {
+  user: User
+  projects?: Project[]
+}) {
+
+  // Build navigation items dynamically
+  const navItems: NavItem[] = React.useMemo(() => {
+    const items: NavItem[] = [
+      {
+        title: "Panel de Control",
+        url: "/dashboard",
+        icon: LayoutDashboard,
+      },
+    ]
+
+    // Proyectos section
+    if (projects && projects.length > 0) {
+      items.push({
+        title: "Proyectos",
+        url: "/dashboard/projects",
+        icon: FolderOpen,
+        items: [
+          ...projects.map((project) => ({
+            title: project.name,
+            url: `/dashboard/projects/${project.id}`,
+          })),
+          {
+            title: "Nuevo proyecto",
+            url: "/dashboard/projects",
+            icon: Plus,
+          },
+        ],
+      })
+    } else {
+      items.push({
+        title: "Nuevo proyecto",
+        url: "/dashboard/projects",
+        icon: Plus,
+      })
+    }
+
+    // Dispositivos - simple link
+    items.push({
+      title: "Dispositivos",
+      url: "/dashboard/devices",
+      icon: Smartphone,
+    })
+
+    // Usuarios - simple link
+    items.push({
+      title: "Usuarios",
+      url: "/dashboard/users",
+      icon: Users,
+    })
+
+    return items
+  }, [projects])
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <div className="flex items-center gap-2 px-4 py-2">
+          <Bot className="h-6 w-6" />
+          <span className="font-semibold">Brain Bot</span>
+        </div>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
