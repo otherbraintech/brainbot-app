@@ -11,6 +11,7 @@ import {
   PostType,
   PrismaClient,
   Role,
+  Device,
 } from "@prisma/client";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -31,7 +32,7 @@ async function main() {
     (await prisma.user.create({
       data: {
         username,
-        usernameLower,
+        usernameLower: usernameLower as string,
         passwordHash: "dev-only-not-hashed",
         name: "Usuario Demo",
         role: Role.USUARIO,
@@ -58,7 +59,7 @@ async function main() {
     create: {
       userId: user.id,
       name: projectName,
-      nameLower: projectNameLower,
+      nameLower: projectNameLower as string,
     },
     select: { id: true },
   });
@@ -87,12 +88,12 @@ async function main() {
     },
   ];
 
-  const devices = [];
+  const devices: Device[] = [];
   for (const deviceData of devicesData) {
     const device = await prisma.device.upsert({
       where: { id: deviceData.deviceName }, // Usamos upsert con un campo que no existe para forzar create
       update: {},
-      create: deviceData,
+      create: deviceData as any,
     });
     devices.push(device);
   }

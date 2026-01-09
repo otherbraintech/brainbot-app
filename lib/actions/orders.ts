@@ -198,7 +198,7 @@ export async function startOrder(id: string) {
     return { error: "Orden no encontrada" }
   }
   
-  if (order.status !== "LISTA" && order.status !== "ERROR" && order.status !== "CANCELADA") {
+  if (order.status !== "LISTA" && order.status !== "REINTENTAR" && order.status !== "CANCELADA") {
     return { error: "La orden ya fue iniciada o completada" }
   }
   

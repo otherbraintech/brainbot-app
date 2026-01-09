@@ -51,6 +51,7 @@ const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secon
     GENERANDO: { label: "Generando...", variant: "default" },
     GENERADA: { label: "Completada", variant: "default" },
     CANCELADA: { label: "Cancelada", variant: "destructive" },
+    REINTENTAR: { label: "Error / Reintentar", variant: "destructive" },
 }
 
 const NETWORK_LABELS: Record<string, string> = {
@@ -234,7 +235,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                         </Button>
                                     )}
 
-                                    {(order.status === "ERROR" || order.status === "CANCELADA") && (
+                                    {(order.status === "REINTENTAR" || order.status === "CANCELADA") && (
                                         <Button
                                             size="sm"
                                             variant="secondary"
