@@ -13,7 +13,7 @@ Criterios:
 - Escalabilidad y control de invalidación
 
 Propuesta inicial:
-- JWT firmado + cookie httpOnly + middleware para proteger /dashboard
+- JWT firmado + cookie httpOnly + proxy para proteger /dashboard
 - Hash de password con bcrypt
 - Roles en DB
 
