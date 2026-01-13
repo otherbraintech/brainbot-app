@@ -84,7 +84,7 @@ export async function updateDevice(input: UpdateDeviceInput) {
       urlFacebook: input.urlFacebook || null,
       urlInstagram: input.urlInstagram || null,
       ...(input.status && { status: input.status }),
-      ...(input.status === "BLOQUEADO" && { blockedAt: new (global as any).Date() }),
+      ...(input.status === "BLOQUEADO" && { blockedAt: new Date() }),
       ...(input.status !== "BLOQUEADO" && { blockedAt: null }),
     } as any,
   })
