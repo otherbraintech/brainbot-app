@@ -42,33 +42,10 @@ export function AppSidebar({
   projects?: Project[]
 }) {
   const pathname = usePathname()
-  const [activeProjectId, setActiveProjectId] = React.useState<string | null>(null)
 
-  // Sync active project with URL or LocalStorage
-  React.useEffect(() => {
-    // 1. Try to extract from URL
-    const match = pathname?.match(/\/dashboard\/projects\/([^\/]+)/)
-    if (match && (match as any)[1]) {
-      setActiveProjectId((match as any)[1])
-      return
-    }
-
-    // 2. Fallback to LocalStorage (TeamSwitcher state)
-    try {
-      const saved = localStorage.getItem("active_project")
-      if (saved) {
-        const parsed = (globalThis as any).JSON.parse(saved)
-        if (parsed.id) setActiveProjectId(parsed.id)
-      }
-    } catch {
-      // ignore
-    }
-  }, [pathname])
 
   // Default to first project if still null after effect (client-side) or handle server-side default
-  const targetUrl = activeProjectId
-    ? `/dashboard/projects/${activeProjectId}`
-    : ((projects as any)?.[0]?.id ? `/dashboard/projects/${(projects as any)[0].id}` : "/dashboard/projects")
+
 
 
   const teams = React.useMemo(
@@ -97,8 +74,8 @@ export function AppSidebar({
     items = [
       ...items,
       {
-        title: "Proyecto",
-        url: targetUrl,
+        title: "Proyectos",
+        url: "/dashboard/projects?list=1",
         icon: FolderOpen,
       },
     ]
