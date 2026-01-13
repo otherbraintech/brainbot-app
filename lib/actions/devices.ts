@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
+import { DeviceStatus } from "@prisma/client"
 
 export async function getDevices() {
   const devices = await prisma.device.findMany({
@@ -56,7 +57,7 @@ export async function createDevice(input: CreateDeviceInput) {
       urlFacebook: input.urlFacebook || null,
       urlInstagram: input.urlInstagram || null,
       status: "LIBRE",
-    },
+    } as any,
   })
   
   revalidatePath("/dashboard/devices")
@@ -70,7 +71,7 @@ type UpdateDeviceInput = {
   urlTiktok?: string
   urlFacebook?: string
   urlInstagram?: string
-  status?: "LIBRE" | "OCUPADO" | "BLOQUEADO"
+  status?: DeviceStatus
 }
 
 export async function updateDevice(input: UpdateDeviceInput) {
@@ -83,9 +84,9 @@ export async function updateDevice(input: UpdateDeviceInput) {
       urlFacebook: input.urlFacebook || null,
       urlInstagram: input.urlInstagram || null,
       ...(input.status && { status: input.status }),
-      ...(input.status === "BLOQUEADO" && { blockedAt: new Date() }),
+      ...(input.status === "BLOQUEADO" && { blockedAt: new (global as any).Date() }),
       ...(input.status !== "BLOQUEADO" && { blockedAt: null }),
-    },
+    } as any,
   })
   
   revalidatePath("/dashboard/devices")

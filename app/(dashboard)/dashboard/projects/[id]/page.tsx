@@ -20,7 +20,7 @@ export default async function ProjectDetailPage({
         notFound()
     }
 
-    const orders = await getOrders(id)
+    const orders = (await getOrders(id)) as any[]
 
     return (
         <div className="space-y-6">

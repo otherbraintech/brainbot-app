@@ -157,6 +157,11 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                         <span>•</span>
                                         <span>{new Date(order.createdAt).toLocaleDateString("es")}</span>
                                     </div>
+                                    {order.type === "COMENTARIO" && order.intent && (
+                                        <p className="text-[11px] text-muted-foreground mt-2 line-clamp-1 italic" title={order.intent}>
+                                            &quot;{order.intent}&quot;
+                                        </p>
+                                    )}
                                 </div>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
