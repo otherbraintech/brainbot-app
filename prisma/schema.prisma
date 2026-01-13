@@ -22,6 +22,8 @@ model User {
   genComments   GenComment[]
   genLikes      GenLike[]
   genShares     GenShare[]
+  genFollows    GenFollow[]
+  genReports    GenReport[]
   integrations  IntegrationLog[]
   projects      Project[]
 }
@@ -66,6 +68,8 @@ model BotOrder {
   genComments   GenComment[]
   genLikes      GenLike[]
   genShares     GenShare[]
+  genFollows    GenFollow[]
+  genReports    GenReport[]
   integrations  IntegrationLog[]
 
   @@index([projectId, createdAt])
@@ -96,31 +100,61 @@ model GenComment {
 }
 
 model GenLike {
-  id        Int               @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
   orderId   String
   userId    String
-  status    InteractionStatus @default(PENDIENTE)
+  status    CommentStatus @default(PENDIENTE)
   deviceId  String?
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @default(now())
-  device    Device?           @relation(fields: [deviceId], references: [id])
-  botOrder  BotOrder          @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  user      User              @relation(fields: [userId], references: [id])
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @default(now())
+  device    Device?       @relation(fields: [deviceId], references: [id])
+  botOrder  BotOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id])
 
   @@index([orderId, createdAt])
 }
 
 model GenShare {
-  id        Int               @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
   orderId   String
   userId    String
-  status    InteractionStatus @default(PENDIENTE)
+  status    CommentStatus @default(PENDIENTE)
   deviceId  String?
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @default(now())
-  device    Device?           @relation(fields: [deviceId], references: [id])
-  botOrder  BotOrder          @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  user      User              @relation(fields: [userId], references: [id])
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @default(now())
+  device    Device?       @relation(fields: [deviceId], references: [id])
+  botOrder  BotOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@index([orderId, createdAt])
+}
+
+model GenFollow {
+  id        Int           @id @default(autoincrement())
+  orderId   String
+  userId    String
+  status    CommentStatus @default(PENDIENTE)
+  deviceId  String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @default(now())
+  device    Device?       @relation(fields: [deviceId], references: [id])
+  botOrder  BotOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@index([orderId, createdAt])
+}
+
+model GenReport {
+  id        Int           @id @default(autoincrement())
+  orderId   String
+  userId    String
+  status    CommentStatus @default(PENDIENTE)
+  deviceId  String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @default(now())
+  device    Device?       @relation(fields: [deviceId], references: [id])
+  botOrder  BotOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id])
 
   @@index([orderId, createdAt])
 }
@@ -139,6 +173,8 @@ model Device {
   genComments  GenComment[]
   genLikes     GenLike[]
   genShares    GenShare[]
+  genFollows   GenFollow[]
+  genReports   GenReport[]
 
   @@map("dispositivos")
 }
@@ -183,6 +219,9 @@ enum PostType {
   VIDEO
   IMAGEN
   TEXTO
+  OTRO
+  PAGINA
+  PUBLICACION
 }
 
 enum OrderStatus {
@@ -191,6 +230,7 @@ enum OrderStatus {
   GENERADA
   CANCELADA
   REINTENTAR
+  COMPLETADA
 }
 
 enum CommentStatus {
@@ -210,16 +250,12 @@ enum IntegrationEventType {
   COMMENTS_PERSISTED
 }
 
-enum InteractionStatus {
-  PENDIENTE
-  CONFIRMADO
-  FALLIDO
-}
-
 enum OrderType {
   COMENTARIO
   MEGUSTA
   COMPARTIR
+  SEGUIMIENTO
+  REPORTE
 }
 
 enum DeviceStatus {

@@ -1,0 +1,144 @@
+import { getOrder } from "@/lib/actions/orders"
+import { notFound } from "next/navigation"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
+import { ArrowLeft, Activity, UserPlus, Heart, Share2, AlertTriangle, MessageSquare } from "lucide-react"
+import Link from "next/link"
+
+const TYPE_CONFIG: any = {
+    COMENTARIO: { label: "Comentarios", icon: MessageSquare, color: "text-blue-600" },
+    MEGUSTA: { label: "Me gusta", icon: Heart, color: "text-rose-600" },
+    COMPARTIR: { label: "Compartidos", icon: Share2, color: "text-green-600" },
+    SEGUIMIENTO: { label: "Seguidores", icon: UserPlus, color: "text-indigo-600" },
+    REPORTE: { label: "Reportes", icon: AlertTriangle, color: "text-amber-600" },
+}
+
+export default async function OrderExecutionsPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
+    const order = await getOrder(id)
+
+    if (!order) {
+        notFound()
+    }
+
+    const config = TYPE_CONFIG[order.type] || { label: "Ejecución", icon: Activity, color: "text-primary" }
+
+    // Unificar arrays de interacciones
+    const interactions = (order.type === "COMENTARIO" ? order.genComments :
+        order.type === "MEGUSTA" ? (order as any).genLikes :
+            order.type === "COMPARTIR" ? (order as any).genShares :
+                order.type === "SEGUIMIENTO" ? (order as any).genFollows :
+                    (order as any).genReports) || []
+
+    return (
+        <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-4">
+                <Button variant="outline" size="icon" asChild>
+                    <Link href={`/dashboard/projects/${order.projectId}`}>
+                        <ArrowLeft className="h-4 w-4" />
+                    </Link>
+                </Button>
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                        <config.icon className={`h-6 w-6 ${config.color}`} />
+                        {order.orderName || `Ejecución de ${config.label}`}
+                    </h1>
+                    <p className="text-muted-foreground">
+                        {order.project.name} · {order.socialNetwork} · {order.postType}
+                    </p>
+                </div>
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Detalles de Ejecución</CardTitle>
+                    <CardDescription>
+                        Mostrando {interactions.length} registros de {config.label.toLowerCase()}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[100px]">ID</TableHead>
+                                {order.type === "COMENTARIO" && <TableHead>Contenido</TableHead>}
+                                <TableHead>Dispositivo Asignado</TableHead>
+                                <TableHead className="w-[120px]">Estado</TableHead>
+                                <TableHead className="w-[150px] text-right">Fecha</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {interactions.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={order.type === "COMENTARIO" ? 5 : 4} className="text-center py-12 text-muted-foreground">
+                                        <config.icon className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                                        No hay registros de ejecución para esta orden aún.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                interactions.map((item: any) => (
+                                    <TableRow key={item.id}>
+                                        <TableCell className="font-mono text-[10px] text-muted-foreground">
+                                            #{item.id}
+                                        </TableCell>
+                                        {order.type === "COMENTARIO" && (
+                                            <TableCell className="max-w-[300px] truncate italic text-muted-foreground">
+                                                &quot;{item.text}&quot;
+                                            </TableCell>
+                                        )}
+                                        <TableCell>
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="font-medium text-sm">
+                                                    {item.device?.deviceName || "Sin asignar"}
+                                                </span>
+                                                {item.device?.personName && (
+                                                    <span className="text-[10px] text-muted-foreground italic">
+                                                        {item.device.personName}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                variant={
+                                                    item.status === "PUBLICADO" || item.status === "CONFIRMADO"
+                                                        ? "default"
+                                                        : "secondary"
+                                                }
+                                                className={
+                                                    item.status === "PUBLICADO" || item.status === "CONFIRMADO"
+                                                        ? "bg-green-100 text-green-700 hover:bg-green-100 border-green-200"
+                                                        : ""
+                                                }
+                                            >
+                                                {item.status}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right text-xs text-muted-foreground">
+                                            {new (globalThis as any).Date(item.createdAt).toLocaleString("es", {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}

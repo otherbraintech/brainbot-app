@@ -32,6 +32,8 @@ export async function getDevice(id: string) {
           genComments: true,
           genLikes: true,
           genShares: true,
+          genFollows: true,
+          genReports: true,
         },
       },
     },

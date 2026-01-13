@@ -11,9 +11,10 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { getBreadcrumbData } from "@/lib/actions/orders"
 import { Fragment } from "react"
 
-const ROUTE_LABELS: Record<string, string> = {
+const ROUTE_LABELS: { [key: string]: string } = {
     dashboard: "Panel",
     projects: "Proyectos",
     devices: "Dispositivos",
@@ -31,12 +32,12 @@ type BreadcrumbItemData = {
 
 export function DynamicBreadcrumb() {
     const pathname = usePathname()
-    const [dynamicLabels, setDynamicLabels] = useState<Record<string, string>>({})
+    const [dynamicLabels, setDynamicLabels] = useState<{ [key: string]: string }>({})
 
     // Fetch dynamic data for IDs in the path
     useEffect(() => {
         async function fetchDynamicLabels() {
-            const segments = pathname.split("/").filter(Boolean)
+            const segments = pathname.split("/").filter((s: string) => !!s)
             const projectIndex = segments.indexOf("projects")
 
             // If there's a project ID after "projects"
@@ -55,17 +56,94 @@ export function DynamicBreadcrumb() {
                     }
                 }
             }
+
+            // Check for orders path to fetch Project Name + Order Name
+            const orderIndex = segments.indexOf("orders")
+            if (orderIndex !== -1 && segments[orderIndex + 1]) {
+                const orderId = segments[orderIndex + 1]
+                // Only fetch if looks like ID
+                if (orderId.startsWith("cm") || orderId.includes("-")) {
+                    try {
+                        const data = await getBreadcrumbData(orderId)
+                        if (data) {
+                            setDynamicLabels(prev => ({
+                                ...prev,
+                                [orderId]: data.orderName,
+                                [`project_${orderId}`]: data.projectName,
+                                [`projectId_${orderId}`]: data.projectId
+                            }))
+                        }
+                    } catch {
+                        // ignore
+                    }
+                }
+            }
         }
         fetchDynamicLabels()
     }, [pathname])
 
     // Split path and filter empty segments
-    const segments = pathname.split("/").filter(Boolean)
+    const segments = pathname.split("/").filter((s) => !!s)
 
     // Build breadcrumb items
     const breadcrumbItems: BreadcrumbItemData[] = []
 
     let currentPath = ""
+    // Custom Logic for Orders hierarchy: Panel > [Project Name] > [Order Name]
+    // If we're deep in orders route and have data
+    const orderIndex = segments.indexOf("orders")
+    if (orderIndex !== -1 && segments[orderIndex + 1]) {
+        const orderId = segments[orderIndex + 1]
+        const orderName = dynamicLabels[orderId]
+        const projectName = dynamicLabels[`project_${orderId}`]
+        const projectId = dynamicLabels[`projectId_${orderId}`]
+
+        if (orderName && projectName && projectId) {
+            breadcrumbItems.push({
+                label: "Panel",
+                href: "/dashboard",
+                isLast: false,
+            })
+
+            breadcrumbItems.push({
+                label: orderName,
+                href: `/dashboard/orders/${orderId}/executions`, // Keep user context or direct to main order view? Usually executions is the main view or part of it.
+                isLast: segments.length === orderIndex + 2 // if we are at orders/[id]
+            })
+
+            // If there's more after [id], like 'executions', hide it if it's the last one, or show it?
+            // User requested "Executions" -> Order Name.
+            // If we are at /dashboard/orders/[id]/executions
+            // The segments are: dashboard, orders, [id], executions
+            // My custom logic above handles the first 3 conceptual levels.
+
+            // Actually, let's just REPLACE the items if we match this pattern.
+            // If we are at .../executions, we just want to show "Order Name" as the active leaf?
+            // User: "debeira decir el nombre de la orden envez de "executions" y en vez de "..." deberia salir el nombre del proyecto"
+            // So: Panel > Project > Order
+
+            // If the path IS .../executions, we make "Order" the last item.
+            // If the path IS .../orders/[id], we make "Order" the last item.
+
+            // Override whatever loop produced
+            return (
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem>
+                            <BreadcrumbLink asChild>
+                                <Link href="/dashboard">Panel</Link>
+                            </BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>{orderName}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
+            )
+        }
+    }
+
     segments.forEach((segment, index) => {
         currentPath += `/${segment}`
         const isLast = index === segments.length - 1

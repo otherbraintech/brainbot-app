@@ -4,14 +4,15 @@ import * as React from "react"
 import {
   Bot,
   FolderOpen,
+  History,
   LayoutDashboard,
-  Plus,
   Smartphone,
   Users,
 } from "lucide-react"
 
 import { NavMain, type NavItem } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
+import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
   SidebarContent,
@@ -30,6 +31,8 @@ type User = {
   username: string
 } | null
 
+import { usePathname } from "next/navigation"
+
 export function AppSidebar({
   user,
   projects = [],
@@ -38,10 +41,51 @@ export function AppSidebar({
   user: User
   projects?: Project[]
 }) {
+  const pathname = usePathname()
+  const [activeProjectId, setActiveProjectId] = React.useState<string | null>(null)
+
+  // Sync active project with URL or LocalStorage
+  React.useEffect(() => {
+    // 1. Try to extract from URL
+    const match = pathname?.match(/\/dashboard\/projects\/([^\/]+)/)
+    if (match && (match as any)[1]) {
+      setActiveProjectId((match as any)[1])
+      return
+    }
+
+    // 2. Fallback to LocalStorage (TeamSwitcher state)
+    try {
+      const saved = localStorage.getItem("active_project")
+      if (saved) {
+        const parsed = (globalThis as any).JSON.parse(saved)
+        if (parsed.id) setActiveProjectId(parsed.id)
+      }
+    } catch {
+      // ignore
+    }
+  }, [pathname])
+
+  // Default to first project if still null after effect (client-side) or handle server-side default
+  const targetUrl = activeProjectId
+    ? `/dashboard/projects/${activeProjectId}`
+    : ((projects as any)?.[0]?.id ? `/dashboard/projects/${(projects as any)[0].id}` : "/dashboard/projects")
+
+
+  const teams = React.useMemo(
+    () =>
+      ((projects as any) || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        logo: FolderOpen,
+        plan: "Proyecto",
+        url: `/dashboard/projects/${p.id}`,
+      })),
+    [projects]
+  )
 
   // Build navigation items dynamically
   const navItems: NavItem[] = React.useMemo(() => {
-    const items: NavItem[] = [
+    let items: any[] = [
       {
         title: "Panel de Control",
         url: "/dashboard",
@@ -49,45 +93,45 @@ export function AppSidebar({
       },
     ]
 
-    // Proyectos section
-    if (projects && projects.length > 0) {
-      items.push({
-        title: "Proyectos",
-        url: "/dashboard/projects",
+    // Proyectos
+    items = [
+      ...items,
+      {
+        title: "Proyecto",
+        url: targetUrl,
         icon: FolderOpen,
-        items: [
-          ...projects.map((project) => ({
-            title: project.name,
-            url: `/dashboard/projects/${project.id}`,
-          })),
-          {
-            title: "Nuevo proyecto",
-            url: "/dashboard/projects",
-            icon: Plus,
-          },
-        ],
-      })
-    } else {
-      items.push({
-        title: "Nuevo proyecto",
-        url: "/dashboard/projects",
-        icon: Plus,
-      })
-    }
+      },
+    ]
 
     // Dispositivos - simple link
-    items.push({
-      title: "Dispositivos",
-      url: "/dashboard/devices",
-      icon: Smartphone,
-    })
+    items = [
+      ...items,
+      {
+        title: "Dispositivos",
+        url: "/dashboard/devices",
+        icon: Smartphone,
+      }
+    ]
 
     // Usuarios - simple link
-    items.push({
-      title: "Usuarios",
-      url: "/dashboard/users",
-      icon: Users,
-    })
+    items = [
+      ...items,
+      {
+        title: "Usuarios",
+        url: "/dashboard/users",
+        icon: Users,
+      }
+    ]
+
+    // Historial - simple link
+    items = [
+      ...items,
+      {
+        title: "Historial de Órdenes",
+        url: "/dashboard/orders/history",
+        icon: History,
+      }
+    ]
 
     return items
   }, [projects])
@@ -99,6 +143,11 @@ export function AppSidebar({
           <Bot className="h-6 w-6" />
           <span className="font-semibold group-data-[collapsible=icon]:hidden">Brain Bot</span>
         </div>
+        {teams.length > 0 && (
+          <div>
+            <TeamSwitcher teams={teams} />
+          </div>
+        )}
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navItems} />

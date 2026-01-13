@@ -21,7 +21,13 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { createDevice, updateDevice, deleteDevice } from "@/lib/actions/devices"
-import { Plus, Pencil, Trash2, Eye } from "lucide-react"
+import { Plus, Pencil, Trash2, Eye, MoreHorizontal } from "lucide-react"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 type Device = {
     id: string
@@ -43,7 +49,7 @@ export function ViewDeviceButton({ device }: { device: Device }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-indigo-500 hover:bg-indigo-50">
                     <Eye className="h-4 w-4" />
                 </Button>
             </DialogTrigger>
@@ -232,7 +238,7 @@ export function EditDeviceButton({ device }: { device: Device }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="secondary" size="icon" className="border-slate-200">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-amber-500 hover:bg-amber-50">
                     <Pencil className="h-4 w-4" />
                 </Button>
             </DialogTrigger>
@@ -323,8 +329,8 @@ export function DeleteDeviceButton({ device }: { device: Device }) {
     }
 
     return (
-        <Button variant="secondary" size="icon" className="border-slate-200 shadow-sm" onClick={handleDelete} disabled={loading}>
-            <Trash2 className="h-4 w-4 text-destructive" />
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={handleDelete} disabled={loading}>
+            <Trash2 className="h-4 w-4" />
         </Button>
     )
 }

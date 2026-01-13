@@ -84,21 +84,12 @@ export function LoginForm({
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Contraseña</FieldLabel>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </a>
                 </div>
                 <Input id="password" name="password" type="password" required />
               </Field>
               <Field>
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
-                </Button>
-                <Button variant="secondary" type="button" className="w-full border-slate-200 shadow-sm">
-                  Iniciar con Google
                 </Button>
                 <FieldDescription className="text-center">
                   ¿No tienes una cuenta? <a href="/register" className="underline">Regístrate</a>

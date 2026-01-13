@@ -30,22 +30,34 @@ const SOCIAL_NETWORKS = [
     { value: "INSTAGRAM", label: "Instagram" },
     { value: "FACEBOOK", label: "Facebook" },
     { value: "TIKTOK", label: "TikTok" },
+    { value: "YOUTUBE", label: "YouTube" },
 ] as const
 
 const POST_TYPES = [
     { value: "VIDEO", label: "Video" },
     { value: "IMAGEN", label: "Imagen" },
     { value: "TEXTO", label: "Texto" },
+    { value: "OTRO", label: "Otro" },
+] as const
+
+const POST_TYPES_FOR_POST_ACTIONS = POST_TYPES.filter((pt) => pt.value !== "OTRO")
+
+const REPORT_TYPES = [
+    { value: "PAGINA", label: "Página" },
+    { value: "PUBLICACION", label: "Publicación" },
 ] as const
 
 const ORDER_TYPES = [
     { value: "COMENTARIO", label: "Comentarios" },
     { value: "MEGUSTA", label: "Me gusta" },
-    { value: "COMPARTIR", label: "Compartir" },
+    { value: "COMPARTIR", label: "Compartidos" },
+    { value: "SEGUIMIENTO", label: "Seguimiento" },
+    { value: "REPORTE", label: "Reporte" },
 ] as const
 
 type SocialNetwork = typeof SOCIAL_NETWORKS[number]["value"]
-type PostType = typeof POST_TYPES[number]["value"]
+type ReportType = (typeof REPORT_TYPES)[number]["value"]
+type PostType = typeof POST_TYPES[number]["value"] | ReportType
 type OrderType = typeof ORDER_TYPES[number]["value"]
 
 export function CreateOrderButton({ projectId }: { projectId: string }) {
@@ -56,10 +68,14 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
     const [link, setLink] = useState("")
     const [socialNetwork, setSocialNetwork] = useState<SocialNetwork>("INSTAGRAM")
     const [postType, setPostType] = useState<PostType>("IMAGEN")
+    const [reportType, setReportType] = useState<ReportType>("PUBLICACION")
     const [orderType, setOrderType] = useState<OrderType>("COMENTARIO")
     const [intent, setIntent] = useState("")
     const [quantity, setQuantity] = useState(5)
     const [orderName, setOrderName] = useState("")
+
+    const isPostAction = orderType === "COMENTARIO" || orderType === "MEGUSTA" || orderType === "COMPARTIR"
+    const isReportAction = orderType === "REPORTE"
 
     const handleOpenChange = async (newOpen: boolean) => {
         setOpen(newOpen)
@@ -83,7 +99,7 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
             projectId,
             link,
             socialNetwork,
-            postType,
+            postType: isReportAction ? reportType : (isPostAction ? postType : "OTRO"),
             orderName,
             type: orderType,
             intent: orderType === "COMENTARIO" ? (intent || undefined) : undefined,
@@ -104,6 +120,7 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
         setLink("")
         setSocialNetwork("INSTAGRAM")
         setPostType("IMAGEN")
+        setReportType("PUBLICACION")
         setOrderType("COMENTARIO")
         setIntent("")
         setQuantity(5)
@@ -177,7 +194,91 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        {isPostAction && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label>Red Social</Label>
+                                    <Select
+                                        value={socialNetwork}
+                                        onValueChange={(v) => setSocialNetwork(v as SocialNetwork)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {(SOCIAL_NETWORKS as any).map((sn: any) => (
+                                                <SelectItem key={sn.value} value={sn.value}>
+                                                    {sn.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label>Tipo de publicación</Label>
+                                    <Select
+                                        value={postType}
+                                        onValueChange={(v) => setPostType(v as PostType)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {(POST_TYPES_FOR_POST_ACTIONS as any).map((pt: any) => (
+                                                <SelectItem key={pt.value} value={pt.value}>
+                                                    {pt.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        )}
+
+                        {isReportAction && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label>Red Social</Label>
+                                    <Select
+                                        value={socialNetwork}
+                                        onValueChange={(v) => setSocialNetwork(v as SocialNetwork)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {(SOCIAL_NETWORKS as any).map((sn: any) => (
+                                                <SelectItem key={sn.value} value={sn.value}>
+                                                    {sn.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label>Tipo de reporte</Label>
+                                    <Select
+                                        value={reportType}
+                                        onValueChange={(v) => setReportType(v as ReportType)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {(REPORT_TYPES as any).map((rt: any) => (
+                                                <SelectItem key={rt.value} value={rt.value}>
+                                                    {rt.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        )}
+
+                        {!isPostAction && !isReportAction && (
                             <div className="grid gap-2">
                                 <Label>Red Social</Label>
                                 <Select
@@ -196,32 +297,15 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                                     </SelectContent>
                                 </Select>
                             </div>
-
-                            <div className="grid gap-2">
-                                <Label>Tipo de publicación</Label>
-                                <Select
-                                    value={postType}
-                                    onValueChange={(v) => setPostType(v as PostType)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {(POST_TYPES as any).map((pt: any) => (
-                                            <SelectItem key={pt.value} value={pt.value}>
-                                                {pt.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+                        )}
 
                         <div className="grid gap-2">
                             <Label htmlFor="quantity">
                                 {orderType === "COMENTARIO" ? "Cantidad de comentarios" :
                                     orderType === "MEGUSTA" ? "Cantidad de likes" :
-                                        "Cantidad de shares"}
+                                        orderType === "COMPARTIR" ? "Cantidad de shares" :
+                                            orderType === "SEGUIMIENTO" ? "Cantidad de seguidores" :
+                                                "Cantidad de reportes"}
                             </Label>
                             <Input
                                 id="quantity"

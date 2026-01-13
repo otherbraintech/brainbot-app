@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { ChevronsUpDown, Plus } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import {
   DropdownMenu,
@@ -23,13 +24,37 @@ export function TeamSwitcher({
   teams,
 }: {
   teams: {
+    id?: string
     name: string
     logo: React.ElementType
     plan: string
+    url?: string
   }[]
 }) {
   const { isMobile } = useSidebar()
+  const router = useRouter()
   const [activeTeam, setActiveTeam] = React.useState(teams[0])
+
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem("active_project")
+      if (!saved) return
+      const parsed = (globalThis as any).JSON.parse(saved)
+      const found = (teams as any).find((t: any) => t.id && t.id === parsed?.id)
+      if (found) setActiveTeam(found)
+    } catch {
+      // ignore
+    }
+  }, [teams])
+
+  React.useEffect(() => {
+    if (!activeTeam?.id) return
+    try {
+      localStorage.setItem("active_project", JSON.stringify({ id: activeTeam.id, name: activeTeam.name }))
+    } catch {
+      // ignore
+    }
+  }, [activeTeam])
 
   if (!activeTeam) {
     return null
@@ -39,19 +64,20 @@ export function TeamSwitcher({
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger {...({ asChild: true } as any)}>
             <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              size="default"
+              tooltip={activeTeam.name}
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:justify-center"
             >
-              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg group-data-[collapsible=icon]:mx-auto">
                 <activeTeam.logo className="size-4" />
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
+              <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                 <span className="truncate font-medium">{activeTeam.name}</span>
                 <span className="truncate text-xs">{activeTeam.plan}</span>
               </div>
-              <ChevronsUpDown className="ml-auto" />
+              <ChevronsUpDown className="ml-auto group-data-[collapsible=icon]:hidden" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -60,14 +86,18 @@ export function TeamSwitcher({
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-muted-foreground text-xs">
+            <DropdownMenuLabel className="text-muted-foreground text-xs" {...({} as any)}>
               Teams
             </DropdownMenuLabel>
             {teams.map((team, index) => (
               <DropdownMenuItem
                 key={team.name}
-                onClick={() => setActiveTeam(team)}
+                onClick={() => {
+                  setActiveTeam(team)
+                  if (team.url) router.push(team.url)
+                }}
                 className="gap-2 p-2"
+                {...({} as any)}
               >
                 <div className="flex size-6 items-center justify-center rounded-md border">
                   <team.logo className="size-3.5 shrink-0" />
@@ -77,11 +107,14 @@ export function TeamSwitcher({
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 p-2">
+            <DropdownMenuItem
+              className="gap-2 p-2"
+              onClick={() => router.push("/dashboard/projects")}
+            >
               <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                 <Plus className="size-4" />
               </div>
-              <div className="text-muted-foreground font-medium">Add team</div>
+              <div className="text-muted-foreground font-medium">Nuevo proyecto</div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

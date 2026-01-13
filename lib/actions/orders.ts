@@ -1,9 +1,12 @@
 "use server"
+// Triggering reload for new enums
 
 import { getSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
-import { OrderStatus, SocialNetwork, PostType, InteractionStatus, OrderType } from "@prisma/client"
+import { OrderStatus, SocialNetwork, PostType, CommentStatus, OrderType } from "@prisma/client"
+
+type ExtendedPostType = PostType | "PAGINA" | "PUBLICACION"
 
 export async function getOrders(projectId: string) {
   const session = await getSession()
@@ -25,6 +28,42 @@ export async function getOrders(projectId: string) {
           genComments: true,
           genLikes: true,
           genShares: true,
+          genFollows: true,
+          genReports: true,
+        },
+      },
+    },
+  })
+  
+  return orders
+}
+
+export async function getAllOrders() {
+  const session = await getSession()
+  
+  if (!session) {
+    return []
+  }
+  
+  const orders = await prisma.botOrder.findMany({
+    where: { 
+      userId: session,
+    },
+    orderBy: { createdAt: "desc" },
+    include: {
+      project: {
+        select: {
+          name: true,
+          id: true
+        }
+      },
+      _count: {
+        select: {
+          genComments: true,
+          genLikes: true,
+          genShares: true,
+          genFollows: true,
+          genReports: true,
         },
       },
     },
@@ -54,8 +93,22 @@ export async function getOrder(id: string) {
         },
         orderBy: { createdAt: "desc" }
       },
-      genLikes: true,
-      genShares: true,
+      genLikes: {
+        include: { device: true },
+        orderBy: { createdAt: "desc" }
+      },
+      genShares: {
+        include: { device: true },
+        orderBy: { createdAt: "desc" }
+      },
+      genFollows: {
+        include: { device: true },
+        orderBy: { createdAt: "desc" }
+      },
+      genReports: {
+        include: { device: true },
+        orderBy: { createdAt: "desc" }
+      },
     },
   })
   
@@ -66,7 +119,7 @@ type CreateOrderInput = {
   projectId: string
   link: string
   socialNetwork: SocialNetwork
-  postType: PostType
+  postType: ExtendedPostType
   orderName: string
   type: OrderType
   intent?: string
@@ -89,7 +142,7 @@ export async function createOrder(input: CreateOrderInput) {
     return { error: "Proyecto no encontrado" }
   }
   
-  if (!input.link || input.link.length < 10) {
+  if (!input.link || (input.link as any).length < 10) {
     return { error: "Ingresa un enlace válido" }
   }
   
@@ -109,7 +162,7 @@ export async function createOrder(input: CreateOrderInput) {
       intent: input.intent,
       quantity: input.quantity,
       status: OrderStatus.LISTA,
-    },
+    } as any,
   })
   
   revalidatePath(`/dashboard/projects/${input.projectId}`)
@@ -121,7 +174,7 @@ type UpdateOrderInput = {
   id: string
   quantity?: number
   intent?: string
-  postType?: PostType
+  postType?: ExtendedPostType
   socialNetwork?: SocialNetwork
   link?: string
   orderName?: string
@@ -157,7 +210,7 @@ export async function updateOrder(input: UpdateOrderInput) {
       ...(input.quantity && { quantity: input.quantity }),
       ...(input.orderName && { orderName: input.orderName }),
       ...(input.type && { type: input.type }),
-    },
+    } as any,
   })
   
   revalidatePath(`/dashboard/projects/${order.projectId}`)
@@ -183,7 +236,7 @@ export async function deleteOrder(id: string) {
   // Soft delete
   await prisma.botOrder.update({
     where: { id },
-    data: { deletedAt: new Date() },
+    data: { deletedAt: new (globalThis as any).Date() } as any,
   })
   
   revalidatePath(`/dashboard/projects/${order.projectId}`)
@@ -191,9 +244,7 @@ export async function deleteOrder(id: string) {
   return { success: true }
 }
 
-const N8N_WEBHOOK_URL_COMMENTS = "https://intelexia-labs-n8n.af9gwe.easypanel.host/webhook/run-orders-gen-comment"
-const N8N_WEBHOOK_URL_LIKES = "https://intelexia-labs-n8n.af9gwe.easypanel.host/webhook/run-orders-gen-likes"
-const N8N_WEBHOOK_URL_SHARES = "https://intelexia-labs-n8n.af9gwe.easypanel.host/webhook/run-orders-gen-shares"
+const N8N_WEBHOOK_URL = "https://intelexia-labs-n8n.af9gwe.easypanel.host/webhook/run-orders-gen-comment"
 
 export async function startOrder(id: string) {
   const session = await getSession()
@@ -209,6 +260,21 @@ export async function startOrder(id: string) {
   if (!order) {
     return { error: "Orden no encontrada" }
   }
+
+  if (order.type === OrderType.COMENTARIO) {
+    const project = await prisma.project.findFirst({
+      where: { id: order.projectId, userId: session },
+      select: { id: true, target: true },
+    })
+
+    if (!project?.target) {
+      return {
+        error: "Se necesita crear un objetivo para enviar órdenes de comentarios.",
+        code: "PROJECT_TARGET_REQUIRED",
+        projectId: order.projectId,
+      }
+    }
+  }
   
   if (order.status !== "LISTA" && order.status !== "REINTENTAR" && order.status !== "CANCELADA") {
     return { error: "La orden ya fue iniciada o completada" }
@@ -220,34 +286,46 @@ export async function startOrder(id: string) {
       data: {
         orderId: id,
         userId: session,
-        status: InteractionStatus.PENDIENTE
-      }
+        status: CommentStatus.PENDIENTE
+      } as any
     })
   } else if (order.type === OrderType.COMPARTIR) {
     await prisma.genShare.create({
       data: {
         orderId: id,
         userId: session,
-        status: InteractionStatus.PENDIENTE
-      }
+        status: CommentStatus.PENDIENTE
+      } as any
+    })
+  } else if (order.type === OrderType.SEGUIMIENTO) {
+    await prisma.genFollow.create({
+      data: {
+        orderId: id,
+        userId: session,
+        status: CommentStatus.PENDIENTE
+      } as any
+    })
+  } else if (order.type === OrderType.REPORTE) {
+    await prisma.genReport.create({
+      data: {
+        orderId: id,
+        userId: session,
+        status: CommentStatus.PENDIENTE
+      } as any
     })
   }
   
   // Actualizamos el estado a GENERANDO antes de disparar el webhook
   await prisma.botOrder.update({
     where: { id },
-    data: { status: OrderStatus.GENERANDO }
+    data: { status: OrderStatus.GENERANDO } as any
   })
   
   try {
-    let webhookUrl = N8N_WEBHOOK_URL_COMMENTS;
-    if (order.type === OrderType.MEGUSTA) webhookUrl = N8N_WEBHOOK_URL_LIKES;
-    if (order.type === OrderType.COMPARTIR) webhookUrl = N8N_WEBHOOK_URL_SHARES;
-
-    const response = await fetch(webhookUrl, {
+    const response = await fetch(N8N_WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+      body: (globalThis as any).JSON.stringify({
         orderId: order.id,
       }),
     })
@@ -256,7 +334,7 @@ export async function startOrder(id: string) {
       // Si falla el webhook, volvemos a ponerlo en REINTENTAR para que el usuario sepa
       await prisma.botOrder.update({
         where: { id },
-        data: { status: OrderStatus.REINTENTAR }
+        data: { status: OrderStatus.REINTENTAR } as any
       })
       return { error: "Error al enviar la orden. El servidor respondió con error." }
     }
@@ -264,7 +342,7 @@ export async function startOrder(id: string) {
     // Si hay error de red, volvemos a ponerlo en REINTENTAR
     await prisma.botOrder.update({
       where: { id },
-      data: { status: OrderStatus.REINTENTAR }
+      data: { status: OrderStatus.REINTENTAR } as any
     })
     return { error: "Error al enviar la orden. Intenta de nuevo." }
   }
@@ -317,5 +395,37 @@ export async function getNextOrderName(projectId: string) {
     where: { projectId }
   })
   
-  return `Orden #${count + 1}`
+  const nextCount = (globalThis as any).Number(count) + 1
+  return `Orden #${nextCount}`
+}
+
+export async function getBreadcrumbData(orderId: string) {
+  const session = await getSession()
+  
+  if (!session) return null
+  
+  const order = await prisma.botOrder.findUnique({
+    where: { 
+      id: orderId,
+      userId: session 
+    },
+    select: {
+      orderName: true,
+      projectId: true,
+      type: true,
+      project: {
+        select: {
+          name: true
+        }
+      }
+    }
+  })
+  
+  if (!order) return null
+  
+  return {
+    orderName: order.orderName || `Orden ${order.type}`,
+    projectName: order.project.name,
+    projectId: order.projectId
+  }
 }

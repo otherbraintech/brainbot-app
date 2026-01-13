@@ -43,7 +43,15 @@ export async function getProject(id: string) {
       id,
       userId: session,
     },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      nameLower: true,
+      userId: true,
+      target: true,
+      createdAt: true,
+      updatedAt: true,
+      deletedAt: true,
       _count: {
         select: {
           botOrders: { where: { deletedAt: null } },

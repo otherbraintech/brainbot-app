@@ -46,6 +46,9 @@ const POST_TYPES = [
     { value: "VIDEO", label: "Video" },
     { value: "IMAGEN", label: "Imagen" },
     { value: "TEXTO", label: "Texto" },
+    { value: "OTRO", label: "Otro" },
+    { value: "PAGINA", label: "Página" },
+    { value: "PUBLICACION", label: "Publicación" },
 ]
 
 export function EditOrderButton({ order }: { order: Order }) {
@@ -71,7 +74,7 @@ export function EditOrderButton({ order }: { order: Order }) {
             id: order.id,
             link,
             socialNetwork: socialNetwork as "INSTAGRAM" | "FACEBOOK" | "TIKTOK",
-            postType: postType as "IMAGEN" | "VIDEO" | "TEXTO",
+            postType: postType as any,
             intent: order.type === "COMENTARIO" ? (intent || undefined) : undefined,
             quantity: Number(quantity) || 1,
             orderName: orderName,

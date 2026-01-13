@@ -1,3 +1,4 @@
+// Forced reload to pick up new enum types
 import "dotenv/config"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { Pool } from "pg"

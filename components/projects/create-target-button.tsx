@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Target, Plus, Upload, X, Loader2 } from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -35,7 +36,15 @@ type Project = {
     target?: any
 }
 
-export function CreateTargetButton({ project }: { project: Project }) {
+export function CreateTargetButton({
+    project,
+    fullWidth = true,
+}: {
+    project: Project
+    fullWidth?: boolean
+}) {
+    const router = useRouter()
+    const searchParams = useSearchParams()
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [step, setStep] = useState(1)
@@ -89,6 +98,14 @@ export function CreateTargetButton({ project }: { project: Project }) {
 
     // Persistencia
     const persistenceKey = `target_form_${project.id}`
+
+    useEffect(() => {
+        const createTarget = searchParams.get("createTarget")
+        if (createTarget === "1") {
+            setOpen(true)
+            router.replace(`/dashboard/projects/${project.id}`)
+        }
+    }, [project.id, router, searchParams])
 
     // Cargar datos al montar
     useEffect(() => {
@@ -270,7 +287,10 @@ export function CreateTargetButton({ project }: { project: Project }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant={project.target ? "secondary" : "secondary"} className="w-full mt-2 border-slate-200 shadow-sm">
+                <Button
+                    variant={project.target ? "secondary" : "secondary"}
+                    className={fullWidth ? "w-full mt-2 border-slate-200 shadow-sm" : "h-10 border-slate-200 shadow-sm"}
+                >
                     <Target className="h-4 w-4 mr-2" />
                     {loading ? "Creando target..." : (project.target ? "Ver Objetivo" : "Crear Objetivo")}
                 </Button>
