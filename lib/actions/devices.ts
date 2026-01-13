@@ -27,7 +27,11 @@ export async function getDevice(id: string) {
     where: { id },
     include: {
       _count: {
-        select: { comments: true },
+        select: { 
+          genComments: true,
+          genLikes: true,
+          genShares: true,
+        },
       },
     },
   })
