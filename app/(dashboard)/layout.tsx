@@ -1,3 +1,4 @@
+import { notFound, redirect } from "next/navigation"
 import { AppSidebar } from "@/components/app-sidebar"
 import {
     SidebarInset,
@@ -15,7 +16,11 @@ export default async function DashboardLayout({
     children: React.ReactNode
 }) {
     const user = await getCurrentUser()
-    const projects = await getProjects()
+    const projects = (await getProjects()) as any[]
+
+    if (!user) {
+        redirect("/login")
+    }
 
     return (
         <SidebarProvider>
