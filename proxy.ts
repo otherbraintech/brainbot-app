@@ -18,7 +18,10 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/register")
   ) {
     if (session) {
-      return NextResponse.redirect(new URL("/dashboard", request.url))
+      // Note: We can't check DB in Edge Middleware easily without external fetch
+      // But clearing the loop on the Layout side is more robust.
+      // For now, let's keep it simple but avoid the loop if possible.
+      // return NextResponse.redirect(new URL("/dashboard", request.url))
     }
   }
 

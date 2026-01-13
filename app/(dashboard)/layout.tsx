@@ -1,5 +1,6 @@
-import { notFound, redirect } from "next/navigation"
+import { notFound } from "next/navigation"
 import { AppSidebar } from "@/components/app-sidebar"
+import { AuthErrorModal } from "@/components/auth-error-modal"
 import {
     SidebarInset,
     SidebarProvider,
@@ -18,12 +19,9 @@ export default async function DashboardLayout({
     const user = await getCurrentUser()
     const projects = (await getProjects()) as any[]
 
-    if (!user) {
-        redirect("/login")
-    }
-
     return (
         <SidebarProvider>
+            <AuthErrorModal user={user} />
             <AppSidebar user={user} projects={projects} />
             <SidebarInset>
                 <header className="flex h-14 shrink-0 items-center gap-2 px-4">
