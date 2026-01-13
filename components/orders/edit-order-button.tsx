@@ -26,7 +26,8 @@ import { Pencil } from "lucide-react"
 
 type Order = {
     id: string
-    link: string
+    url: string
+    type: string
     socialNetwork: string
     postType: string
     intent: string | null
@@ -50,7 +51,7 @@ const POST_TYPES = [
 export function EditOrderButton({ order }: { order: Order }) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
-    const [link, setLink] = useState(order.link)
+    const [link, setLink] = useState(order.url)
     const [socialNetwork, setSocialNetwork] = useState(order.socialNetwork)
     const [postType, setPostType] = useState(order.postType)
     const [intent, setIntent] = useState(order.intent || "")
@@ -58,8 +59,8 @@ export function EditOrderButton({ order }: { order: Order }) {
     const [orderName, setOrderName] = useState(order.orderName || "")
     const [error, setError] = useState("")
 
-    // Can only edit if status is LISTA
-    const canEdit = order.status === "LISTA"
+    // Can only edit if status is LISTA or REINTENTAR
+    const canEdit = order.status === "LISTA" || order.status === "REINTENTAR"
 
     const handleSubmit = async () => {
         if (!link.trim()) return
@@ -71,7 +72,7 @@ export function EditOrderButton({ order }: { order: Order }) {
             link,
             socialNetwork: socialNetwork as "INSTAGRAM" | "FACEBOOK" | "TIKTOK",
             postType: postType as "IMAGEN" | "VIDEO" | "TEXTO",
-            intent: intent || undefined,
+            intent: order.type === "COMENTARIO" ? (intent || undefined) : undefined,
             quantity: Number(quantity) || 1,
             orderName: orderName,
         })
@@ -91,7 +92,7 @@ export function EditOrderButton({ order }: { order: Order }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="secondary" size="sm" className="h-8 border-slate-200 shadow-sm">
                     <Pencil className="h-4 w-4 mr-1" />
                     Editar
                 </Button>
@@ -100,7 +101,7 @@ export function EditOrderButton({ order }: { order: Order }) {
                 <DialogHeader>
                     <DialogTitle>Editar Orden</DialogTitle>
                     <DialogDescription>
-                        Modifica los datos de la orden antes de iniciarla
+                        Modifica los datos de la orden antes de procesarla.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -157,26 +158,32 @@ export function EditOrderButton({ order }: { order: Order }) {
                         </div>
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="editQuantity">Cantidad de comentarios</Label>
+                        <Label htmlFor="editQuantity">
+                            {order.type === "COMENTARIO" ? "Cantidad de comentarios" :
+                                order.type === "MEGUSTA" ? "Cantidad de likes" :
+                                    "Cantidad de shares"}
+                        </Label>
                         <Input
                             id="editQuantity"
                             type="number"
                             min="1"
-                            max="100"
+                            max="500"
                             value={quantity}
                             onChange={(e) => setQuantity(e.target.value)}
                         />
                     </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="editIntent">Intención (opcional)</Label>
-                        <Textarea
-                            id="editIntent"
-                            value={intent}
-                            onChange={(e) => setIntent(e.target.value)}
-                            placeholder="Describe el tono o estilo de los comentarios..."
-                            rows={3}
-                        />
-                    </div>
+                    {order.type === "COMENTARIO" && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="editIntent">Intención de comentarios (opcional)</Label>
+                            <Textarea
+                                id="editIntent"
+                                value={intent}
+                                onChange={(e) => setIntent(e.target.value)}
+                                placeholder="Describe el tono o estilo de los comentarios..."
+                                rows={3}
+                            />
+                        </div>
+                    )}
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setOpen(false)}>

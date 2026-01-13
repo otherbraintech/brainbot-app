@@ -44,8 +44,8 @@ type Project = {
     name: string
     createdAt: Date
     _count: {
-        orders: number
-        botComments: number
+        botOrders: number
+        genComments: number
     }
 }
 
@@ -109,12 +109,12 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                             <div>
                                 <CardTitle className="text-lg">{project.name}</CardTitle>
                                 <CardDescription>
-                                    {project._count.orders} órdenes · {project._count.botComments} comentarios
+                                    {project._count.botOrders} órdenes
                                 </CardDescription>
                             </div>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon">
+                                    <Button variant="secondary" size="icon" className="h-8 w-8 border-slate-200 shadow-sm">
                                         <MoreHorizontal className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -139,7 +139,7 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                             </DropdownMenu>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                            <Button asChild variant="outline" className="w-full">
+                            <Button asChild variant="secondary" className="w-full border-slate-200 shadow-sm">
                                 <Link href={`/dashboard/projects/${project.id}`}>
                                     Ver Proyecto
                                 </Link>
@@ -174,7 +174,7 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                         />
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setEditingProject(null)}>
+                        <Button type="button" variant="secondary" className="border-slate-200" onClick={() => setEditingProject(null)}>
                             Cancelar
                         </Button>
                         <Button onClick={handleEdit} disabled={loading}>
@@ -190,9 +190,9 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                     <AlertDialogHeader>
                         <AlertDialogTitle>¿Eliminar proyecto?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Estás a punto de eliminar el proyecto <span className="font-semibold">"{deletingProject?.name}"</span>.
+                            Estás a punto de eliminar el proyecto <span className="font-semibold">&quot;{deletingProject?.name}&quot;</span>.
                             <br /><br />
-                            Esto eliminará también <span className="font-bold text-red-600 dark:text-red-400">{deletingProject?._count.orders} órdenes</span> asociadas y todos sus contenidos.
+                            Esto eliminará también <span className="font-bold text-red-600 dark:text-red-400">{deletingProject?._count.botOrders} órdenes</span> asociadas y todos sus contenidos.
                             <br /><br />
                             Esta acción es permanente y no se puede deshacer. ¿Seguro que quieres continuar?
                             {error && (

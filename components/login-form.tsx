@@ -97,7 +97,7 @@ export function LoginForm({
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
                 </Button>
-                <Button variant="outline" type="button" className="w-full">
+                <Button variant="secondary" type="button" className="w-full border-slate-200 shadow-sm">
                   Iniciar con Google
                 </Button>
                 <FieldDescription className="text-center">

@@ -4,6 +4,7 @@ import { getOrders } from "@/lib/actions/orders"
 import { OrdersList } from "@/components/orders/orders-list"
 import { CreateOrderButton } from "@/components/orders/create-order-button"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
@@ -31,9 +32,9 @@ export default async function ProjectDetailPage({
                     </Link>
                 </Button>
                 <div className="flex-1">
-                    <h1 className="text-2xl font-bold">{project.name}</h1>
+                    <h1 className="text-2xl font-bold">Proyecto: {project.name}</h1>
                     <p className="text-muted-foreground">
-                        {project._count.orders} órdenes · {project._count.botComments} comentarios generados
+                        Aquí puedes crear y gestionar las órdenes de este proyecto.
                     </p>
                 </div>
                 <CreateOrderButton projectId={id} />

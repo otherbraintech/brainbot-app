@@ -33,13 +33,20 @@ const SOCIAL_NETWORKS = [
 ] as const
 
 const POST_TYPES = [
-    { value: "IMAGEN", label: "Imagen" },
     { value: "VIDEO", label: "Video" },
+    { value: "IMAGEN", label: "Imagen" },
     { value: "TEXTO", label: "Texto" },
+] as const
+
+const ORDER_TYPES = [
+    { value: "COMENTARIO", label: "Comentarios" },
+    { value: "MEGUSTA", label: "Me gusta" },
+    { value: "COMPARTIR", label: "Compartir" },
 ] as const
 
 type SocialNetwork = typeof SOCIAL_NETWORKS[number]["value"]
 type PostType = typeof POST_TYPES[number]["value"]
+type OrderType = typeof ORDER_TYPES[number]["value"]
 
 export function CreateOrderButton({ projectId }: { projectId: string }) {
     const [open, setOpen] = useState(false)
@@ -49,6 +56,7 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
     const [link, setLink] = useState("")
     const [socialNetwork, setSocialNetwork] = useState<SocialNetwork>("INSTAGRAM")
     const [postType, setPostType] = useState<PostType>("IMAGEN")
+    const [orderType, setOrderType] = useState<OrderType>("COMENTARIO")
     const [intent, setIntent] = useState("")
     const [quantity, setQuantity] = useState(5)
     const [orderName, setOrderName] = useState("")
@@ -77,7 +85,8 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
             socialNetwork,
             postType,
             orderName,
-            intent: intent || undefined,
+            type: orderType,
+            intent: orderType === "COMENTARIO" ? (intent || undefined) : undefined,
             quantity,
         })
 
@@ -95,6 +104,7 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
         setLink("")
         setSocialNetwork("INSTAGRAM")
         setPostType("IMAGEN")
+        setOrderType("COMENTARIO")
         setIntent("")
         setQuantity(5)
         setOrderName("")
@@ -113,9 +123,9 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
             <DialogContent className="sm:max-w-[500px]">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
-                        <DialogTitle>Crear Orden de Comentarios</DialogTitle>
+                        <DialogTitle>Crear Nueva Orden</DialogTitle>
                         <DialogDescription>
-                            Ingresa los datos de la publicación para generar comentarios.
+                            Configura los detalles de la orden para iniciar el proceso de generación.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -136,6 +146,25 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                                 {error}
                             </div>
                         )}
+
+                        <div className="grid gap-2">
+                            <Label>Tipo de Acción</Label>
+                            <Select
+                                value={orderType}
+                                onValueChange={(v) => setOrderType(v as OrderType)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {(ORDER_TYPES as any).map((ot: any) => (
+                                        <SelectItem key={ot.value} value={ot.value}>
+                                            {ot.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="link">Enlace de la publicación</Label>
@@ -189,34 +218,41 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="quantity">Cantidad de comentarios</Label>
+                            <Label htmlFor="quantity">
+                                {orderType === "COMENTARIO" ? "Cantidad de comentarios" :
+                                    orderType === "MEGUSTA" ? "Cantidad de likes" :
+                                        "Cantidad de shares"}
+                            </Label>
                             <Input
                                 id="quantity"
                                 type="number"
                                 min={1}
-                                max={100}
+                                max={500}
                                 value={quantity}
-                                onChange={(e) => setQuantity(globalThis.Number(e.target.value) || 1)}
+                                onChange={(e) => setQuantity(Number(e.target.value) || 1)}
                                 required
                             />
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="intent">Intención (opcional)</Label>
-                            <Textarea
-                                id="intent"
-                                placeholder="Ej: Comentarios naturales y positivos sobre el producto"
-                                value={intent}
-                                onChange={(e) => setIntent(e.target.value)}
-                                rows={3}
-                            />
-                        </div>
+                        {orderType === "COMENTARIO" && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="intent">Intención de los comentarios (opcional)</Label>
+                                <Textarea
+                                    id="intent"
+                                    placeholder="Ej: Comentarios naturales y positivos sobre el producto"
+                                    value={intent}
+                                    onChange={(e) => setIntent(e.target.value)}
+                                    rows={3}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <DialogFooter>
                         <Button
                             type="button"
-                            variant="outline"
+                            variant="secondary"
+                            className="border-slate-200"
                             onClick={() => setOpen(false)}
                         >
                             Cancelar

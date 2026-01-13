@@ -69,7 +69,7 @@ export function CreateProjectButton() {
                         />
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                        <Button type="button" variant="secondary" className="border-slate-200 shadow-sm" onClick={() => setOpen(false)}>
                             Cancelar
                         </Button>
                         <Button type="submit" disabled={loading}>

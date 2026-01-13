@@ -21,8 +21,8 @@ export async function getProjects() {
     include: {
       _count: {
         select: {
-          orders: { where: { deletedAt: null } },
-          botComments: true,
+          botOrders: { where: { deletedAt: null } },
+          genComments: true,
         },
       },
     },
@@ -46,8 +46,8 @@ export async function getProject(id: string) {
     include: {
       _count: {
         select: {
-          orders: { where: { deletedAt: null } },
-          botComments: true,
+          botOrders: { where: { deletedAt: null } },
+          genComments: true,
         },
       },
     },
@@ -154,7 +154,7 @@ export async function deleteProject(id: string) {
     where: { id, userId: session },
     include: {
       _count: {
-        select: { orders: true },
+        select: { botOrders: true },
       },
     },
   })
@@ -164,7 +164,7 @@ export async function deleteProject(id: string) {
   }
   
   // 1. Mark all orders as CANCELLED (instead of deleting them)
-  await prisma.generationOrder.updateMany({
+  await prisma.botOrder.updateMany({
     where: { projectId: id },
     data: { status: OrderStatus.CANCELADA },
   })

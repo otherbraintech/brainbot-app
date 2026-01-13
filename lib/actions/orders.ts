@@ -3,7 +3,7 @@
 import { getSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
-import { OrderStatus, SocialNetwork, PostType } from "@prisma/client"
+import { OrderStatus, SocialNetwork, PostType, InteractionStatus, OrderType } from "@prisma/client"
 
 export async function getOrders(projectId: string) {
   const session = await getSession()
@@ -12,7 +12,7 @@ export async function getOrders(projectId: string) {
     return []
   }
   
-  const orders = await prisma.generationOrder.findMany({
+  const orders = await prisma.botOrder.findMany({
     where: { 
       projectId,
       userId: session,
@@ -22,7 +22,9 @@ export async function getOrders(projectId: string) {
     include: {
       _count: {
         select: {
-          comments: true,
+          genComments: true,
+          genLikes: true,
+          genShares: true,
         },
       },
     },
@@ -38,7 +40,7 @@ export async function getOrder(id: string) {
     return null
   }
   
-  const order = await prisma.generationOrder.findFirst({
+  const order = await prisma.botOrder.findFirst({
     where: { 
       id,
       userId: session,
@@ -46,7 +48,14 @@ export async function getOrder(id: string) {
     },
     include: {
       project: true,
-      comments: true,
+      genComments: {
+        include: {
+          device: true
+        },
+        orderBy: { createdAt: "desc" }
+      },
+      genLikes: true,
+      genShares: true,
     },
   })
   
@@ -59,6 +68,7 @@ type CreateOrderInput = {
   socialNetwork: SocialNetwork
   postType: PostType
   orderName: string
+  type: OrderType
   intent?: string
   quantity: number
 }
@@ -83,15 +93,16 @@ export async function createOrder(input: CreateOrderInput) {
     return { error: "Ingresa un enlace válido" }
   }
   
-  if (input.quantity < 1 || input.quantity > 100) {
-    return { error: "La cantidad debe ser entre 1 y 100" }
+  if (input.quantity < 1 || input.quantity > 500) {
+    return { error: "La cantidad debe ser entre 1 y 500" }
   }
   
-  const order = await prisma.generationOrder.create({
+  const order = await prisma.botOrder.create({
     data: {
       userId: session,
       projectId: input.projectId,
-      link: input.link,
+      type: input.type,
+      url: input.link,
       socialNetwork: input.socialNetwork,
       postType: input.postType,
       orderName: input.orderName,
@@ -114,6 +125,7 @@ type UpdateOrderInput = {
   socialNetwork?: SocialNetwork
   link?: string
   orderName?: string
+  type?: OrderType
 }
 
 export async function updateOrder(input: UpdateOrderInput) {
@@ -123,7 +135,7 @@ export async function updateOrder(input: UpdateOrderInput) {
     return { error: "No autenticado" }
   }
   
-  const order = await prisma.generationOrder.findFirst({
+  const order = await prisma.botOrder.findFirst({
     where: { id: input.id, userId: session, deletedAt: null },
   })
   
@@ -135,15 +147,16 @@ export async function updateOrder(input: UpdateOrderInput) {
     return { error: "No se puede editar una orden que ya fue iniciada" }
   }
   
-  await prisma.generationOrder.update({
+  await prisma.botOrder.update({
     where: { id: input.id },
     data: {
-      ...(input.link && { link: input.link }),
+      ...(input.link && { url: input.link }),
       ...(input.socialNetwork && { socialNetwork: input.socialNetwork }),
       ...(input.postType && { postType: input.postType }),
       ...(input.intent && { intent: input.intent }),
       ...(input.quantity && { quantity: input.quantity }),
       ...(input.orderName && { orderName: input.orderName }),
+      ...(input.type && { type: input.type }),
     },
   })
   
@@ -159,7 +172,7 @@ export async function deleteOrder(id: string) {
     return { error: "No autenticado" }
   }
   
-  const order = await prisma.generationOrder.findFirst({
+  const order = await prisma.botOrder.findFirst({
     where: { id, userId: session },
   })
   
@@ -168,7 +181,7 @@ export async function deleteOrder(id: string) {
   }
   
   // Soft delete
-  await prisma.generationOrder.update({
+  await prisma.botOrder.update({
     where: { id },
     data: { deletedAt: new Date() },
   })
@@ -178,7 +191,9 @@ export async function deleteOrder(id: string) {
   return { success: true }
 }
 
-const N8N_WEBHOOK_URL = "https://intelexia-labs-n8n.af9gwe.easypanel.host/webhook/run-orders-gen-comment"
+const N8N_WEBHOOK_URL_COMMENTS = "https://intelexia-labs-n8n.af9gwe.easypanel.host/webhook/run-orders-gen-comment"
+const N8N_WEBHOOK_URL_LIKES = "https://intelexia-labs-n8n.af9gwe.easypanel.host/webhook/run-orders-gen-likes"
+const N8N_WEBHOOK_URL_SHARES = "https://intelexia-labs-n8n.af9gwe.easypanel.host/webhook/run-orders-gen-shares"
 
 export async function startOrder(id: string) {
   const session = await getSession()
@@ -187,11 +202,8 @@ export async function startOrder(id: string) {
     return { error: "No autenticado" }
   }
   
-  const order = await prisma.generationOrder.findFirst({
+  const order = await prisma.botOrder.findFirst({
     where: { id, userId: session },
-    include: {
-      project: true,
-    },
   })
   
   if (!order) {
@@ -201,10 +213,38 @@ export async function startOrder(id: string) {
   if (order.status !== "LISTA" && order.status !== "REINTENTAR" && order.status !== "CANCELADA") {
     return { error: "La orden ya fue iniciada o completada" }
   }
+
+  // Si es Like o Share, creamos el registro hijo antes de disparar el webhook
+  if (order.type === OrderType.MEGUSTA) {
+    await prisma.genLike.create({
+      data: {
+        orderId: id,
+        userId: session,
+        status: InteractionStatus.PENDIENTE
+      }
+    })
+  } else if (order.type === OrderType.COMPARTIR) {
+    await prisma.genShare.create({
+      data: {
+        orderId: id,
+        userId: session,
+        status: InteractionStatus.PENDIENTE
+      }
+    })
+  }
   
-  // Send to n8n webhook - n8n will update status directly in PostgreSQL
+  // Actualizamos el estado a GENERANDO antes de disparar el webhook
+  await prisma.botOrder.update({
+    where: { id },
+    data: { status: OrderStatus.GENERANDO }
+  })
+  
   try {
-    const response = await fetch(N8N_WEBHOOK_URL, {
+    let webhookUrl = N8N_WEBHOOK_URL_COMMENTS;
+    if (order.type === OrderType.MEGUSTA) webhookUrl = N8N_WEBHOOK_URL_LIKES;
+    if (order.type === OrderType.COMPARTIR) webhookUrl = N8N_WEBHOOK_URL_SHARES;
+
+    const response = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -213,11 +253,19 @@ export async function startOrder(id: string) {
     })
     
     if (!response.ok) {
-      console.error("Webhook returned error:", response.status)
+      // Si falla el webhook, volvemos a ponerlo en REINTENTAR para que el usuario sepa
+      await prisma.botOrder.update({
+        where: { id },
+        data: { status: OrderStatus.REINTENTAR }
+      })
       return { error: "Error al enviar la orden. El servidor respondió con error." }
     }
   } catch (error) {
-    console.error("Error sending to n8n:", error)
+    // Si hay error de red, volvemos a ponerlo en REINTENTAR
+    await prisma.botOrder.update({
+      where: { id },
+      data: { status: OrderStatus.REINTENTAR }
+    })
     return { error: "Error al enviar la orden. Intenta de nuevo." }
   }
   
@@ -225,6 +273,7 @@ export async function startOrder(id: string) {
   
   return { success: true }
 }
+
 export async function getOrderWithComments(orderId: string) {
   const session = await getSession()
   
@@ -232,14 +281,14 @@ export async function getOrderWithComments(orderId: string) {
     return { error: "No autorizado" }
   }
   
-  const order = await prisma.generationOrder.findUnique({
+  const order = await prisma.botOrder.findUnique({
     where: { 
       id: orderId,
       userId: session,
       deletedAt: null,
     },
     include: {
-      comments: {
+      genComments: {
         include: {
           device: {
             select: { deviceName: true }
@@ -264,14 +313,7 @@ export async function getNextOrderName(projectId: string) {
   
   if (!session) return "Orden #1"
   
-  // Count ALL orders for this project, including deleted ones if possible (but we only soft delete projects, orders are cancelled)
-  // Since we don't have soft deleted orders (deletedAt IS NULL usually), we count all.
-  // Actually, we soft delete orders by setting status CANCELADO. They are still in DB.
-  // But wait, the previous requirement said "if Order #1 is deleted, the next should be Order #3".
-  // This implies we should look at the MAX number used, or count total history.
-  // Let's count all orders regardless of status.
-  
-  const count = await prisma.generationOrder.count({
+  const count = await prisma.botOrder.count({
     where: { projectId }
   })
   

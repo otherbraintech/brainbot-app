@@ -154,7 +154,7 @@ export function CreateUserButton() {
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => setOpen(false)}>
+                    <Button variant="secondary" className="border-slate-200 shadow-sm" onClick={() => setOpen(false)}>
                         Cancelar
                     </Button>
                     <Button onClick={handleSubmit} disabled={loading || !name.trim() || !username.trim() || !password.trim()}>
@@ -202,7 +202,7 @@ export function EditUserButton({ user }: { user: User }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="secondary" size="icon" className="border-slate-200 shadow-sm">
                     <Pencil className="h-4 w-4" />
                 </Button>
             </DialogTrigger>
@@ -280,7 +280,7 @@ export function EditUserButton({ user }: { user: User }) {
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => setOpen(false)}>
+                    <Button variant="secondary" className="border-slate-200 shadow-sm" onClick={() => setOpen(false)}>
                         Cancelar
                     </Button>
                     <Button onClick={handleSubmit} disabled={loading || !name.trim() || !username.trim()}>
@@ -304,7 +304,7 @@ export function DeleteUserButton({ user }: { user: User }) {
     }
 
     return (
-        <Button variant="ghost" size="icon" onClick={handleDelete} disabled={loading}>
+        <Button variant="secondary" size="icon" className="border-slate-200 shadow-sm" onClick={handleDelete} disabled={loading}>
             <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
     )

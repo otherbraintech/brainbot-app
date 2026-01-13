@@ -42,7 +42,7 @@ export default async function OrderCommentsPage({ params }: { params: Promise<{ 
                 <CardHeader>
                     <CardTitle>Lista de Comentarios</CardTitle>
                     <CardDescription>
-                        Total: {order.comments.length} comentarios
+                        Total: {order.genComments.length} comentarios
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -56,7 +56,7 @@ export default async function OrderCommentsPage({ params }: { params: Promise<{ 
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {order.comments.length === 0 ? (
+                            {order.genComments.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                                         <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -64,7 +64,7 @@ export default async function OrderCommentsPage({ params }: { params: Promise<{ 
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                order.comments.map((comment: any) => (
+                                order.genComments.map((comment: any) => (
                                     <TableRow key={comment.id}>
                                         <TableCell className="font-medium">{comment.text}</TableCell>
                                         <TableCell>

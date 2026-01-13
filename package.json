@@ -2,15 +2,11 @@
   "name": "brain-bot-app",
   "version": "0.1.0",
   "private": true,
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "prisma:seed": "prisma db seed",
     "postinstall": "prisma generate"
   },
   "dependencies": {
