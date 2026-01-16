@@ -57,6 +57,7 @@ export function AppSidebar({
         logo: FolderOpen,
         plan: "Proyecto",
         url: `/dashboard/projects/${p.id}`,
+        stance: p.stance,
       })),
     [projects]
   )

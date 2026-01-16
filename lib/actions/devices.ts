@@ -103,3 +103,11 @@ export async function deleteDevice(id: string) {
   revalidatePath("/dashboard/devices")
   return { success: true }
 }
+
+export async function getAvailableDevicesCount() {
+  const count = await prisma.device.count({
+    where: { status: "LIBRE" }
+  })
+  
+  return count
+}

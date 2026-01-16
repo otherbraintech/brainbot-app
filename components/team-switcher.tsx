@@ -13,6 +13,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Badge } from "@/components/ui/badge"
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -29,6 +30,7 @@ export function TeamSwitcher({
     logo: React.ElementType
     plan: string
     url?: string
+    stance?: "FAVOR" | "AGAINST"
   }[]
 }) {
   const { isMobile } = useSidebar()
@@ -74,7 +76,20 @@ export function TeamSwitcher({
                 <activeTeam.logo className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                <span className="truncate font-medium">{activeTeam.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="truncate font-medium">{activeTeam.name}</span>
+                  {activeTeam.stance && (
+                    <Badge
+                      variant={activeTeam.stance === "AGAINST" ? "destructive" : "default"}
+                      className={`h-4 px-1.5 text-[9px] ${activeTeam.stance === "AGAINST"
+                          ? "bg-red-600 hover:bg-red-600 dark:bg-red-500"
+                          : "bg-emerald-600 hover:bg-emerald-600 dark:bg-emerald-500"
+                        }`}
+                    >
+                      {activeTeam.stance === "AGAINST" ? "Contra" : "Favor"}
+                    </Badge>
+                  )}
+                </div>
                 <span className="truncate text-xs">{activeTeam.plan}</span>
               </div>
               <ChevronsUpDown className="ml-auto group-data-[collapsible=icon]:hidden" />

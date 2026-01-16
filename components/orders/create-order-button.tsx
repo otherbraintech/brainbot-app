@@ -25,6 +25,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 
 import { createOrder, getNextOrderName } from "@/lib/actions/orders"
+import { getAvailableDevicesCount } from "@/lib/actions/devices"
 
 const SOCIAL_NETWORKS = [
     { value: "INSTAGRAM", label: "Instagram" },
@@ -73,6 +74,7 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
     const [intent, setIntent] = useState("")
     const [quantity, setQuantity] = useState(5)
     const [orderName, setOrderName] = useState("")
+    const [maxDevices, setMaxDevices] = useState(500)
 
     const isPostAction = orderType === "COMENTARIO" || orderType === "MEGUSTA" || orderType === "COMPARTIR"
     const isReportAction = orderType === "REPORTE"
@@ -84,6 +86,11 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
             setError(null)
             const nextName = await getNextOrderName(projectId)
             setOrderName(nextName)
+
+            // Get available devices count
+            const availableCount = await getAvailableDevicesCount()
+            setMaxDevices(availableCount > 0 ? availableCount : 1)
+            setQuantity(Math.min(5, availableCount > 0 ? availableCount : 5))
         }
     }
 
@@ -331,11 +338,14 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                                 id="quantity"
                                 type="number"
                                 min={1}
-                                max={500}
+                                max={maxDevices}
                                 value={quantity}
-                                onChange={(e) => setQuantity(Number(e.target.value) || 1)}
+                                onChange={(e) => setQuantity(Math.min(Number(e.target.value) || 1, maxDevices))}
                                 required
                             />
+                            <p className="text-xs text-muted-foreground">
+                                Dispositivos disponibles: {maxDevices}
+                            </p>
                         </div>
 
                         {orderType === "COMENTARIO" && (
