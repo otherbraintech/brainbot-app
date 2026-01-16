@@ -5,6 +5,39 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { OrderStatus, ProjectStance } from "@prisma/client"
 
+async function isTargetFullyUsedByOppositeStances(
+  userId: string,
+  targetId: string,
+  excludeProjectId?: string
+) {
+  const projects = await prisma.project.findMany({
+    where: {
+      userId,
+      targetId,
+      deletedAt: null,
+      ...(excludeProjectId ? { id: { not: excludeProjectId } } : {}),
+    },
+    select: {
+      id: true,
+      stance: true,
+    },
+  })
+
+  let hasFavor = false
+  let hasAgainst = false
+  for (const p of projects) {
+    if (p.stance === "FAVOR") hasFavor = true
+    if (p.stance === "AGAINST") hasAgainst = true
+  }
+
+  return {
+    projects,
+    fullyUsed: projects.length >= 2 && hasFavor && hasAgainst,
+    hasFavor,
+    hasAgainst,
+  }
+}
+
 export async function getProjects() {
   const session = await getSession()
   
@@ -74,7 +107,8 @@ export async function getTargetUsage(targetId: string) {
   const projects = await prisma.project.findMany({
     where: {
       userId: session,
-      targetId: targetId
+      targetId: targetId,
+      deletedAt: null,
     },
     select: {
       id: true,
@@ -84,6 +118,39 @@ export async function getTargetUsage(targetId: string) {
   })
 
   return { projects }
+}
+
+export async function getBlockedTargetIds() {
+  const session = await getSession()
+  if (!session) return []
+
+  const rows = await prisma.project.findMany({
+    where: {
+      userId: session,
+      deletedAt: null,
+      targetId: { not: null },
+    },
+    select: {
+      targetId: true,
+      stance: true,
+    },
+  })
+
+  const map = new Map<string, { favor: boolean; against: boolean }>()
+  for (const r of rows) {
+    const tid = r.targetId as string
+    const current = map.get(tid) || { favor: false, against: false }
+    if (r.stance === "FAVOR") current.favor = true
+    if (r.stance === "AGAINST") current.against = true
+    map.set(tid, current)
+  }
+
+  const blocked: string[] = []
+  for (const [tid, v] of map.entries()) {
+    if (v.favor && v.against) blocked.push(tid)
+  }
+
+  return blocked
 }
 
 export async function createProject(name: string, targetId?: string, stance: ProjectStance = "FAVOR") {
@@ -103,6 +170,11 @@ export async function createProject(name: string, targetId?: string, stance: Pro
   if (targetId) {
       const target = await prisma.target.findFirst({ where: { id: targetId, userId: session } })
       if (!target) return { error: "Objetivo no válido" }
+
+      const usage = await isTargetFullyUsedByOppositeStances(session, targetId)
+      if (usage.fullyUsed) {
+        return { error: "Este objetivo ya está asignado a 2 proyectos (uno a favor y otro en contra). Crea un objetivo nuevo o usa otro." }
+      }
 
       // Check if this target is already used with the same stance
       const existingWithSameStance = await prisma.project.findFirst({
@@ -304,6 +376,11 @@ export async function assignTargetToProject(projectId: string, targetId: string,
      
      const target = await prisma.target.findFirst({ where: { id: targetId, userId: session } })
      if (!target) return { error: "Objetivo no encontrado" }
+
+     const usage = await isTargetFullyUsedByOppositeStances(session, targetId, projectId)
+     if (usage.fullyUsed) {
+       return { error: "Este objetivo ya está asignado a 2 proyectos (uno a favor y otro en contra). No se puede asignar a un tercer proyecto." }
+     }
 
     await prisma.project.update({
       where: { id: projectId },

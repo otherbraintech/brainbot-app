@@ -327,6 +327,17 @@ export async function startOrder(id: string) {
     const webhookPayload = {
       // Backwards-compatible identifier
       orderId: order.id,
+      // Legacy top-level fields some n8n flows might rely on
+      projectId: order.projectId,
+      userId: order.userId,
+      type: order.type,
+      url: order.url,
+      orderName: (order as any).orderName,
+      socialNetwork: order.socialNetwork,
+      postType: order.postType,
+      quantity: order.quantity,
+      intent: order.intent || null, // Explicitly include even if null
+      status: OrderStatus.GENERANDO,
       // Full order snapshot
       order: {
         id: order.id,
@@ -337,7 +348,7 @@ export async function startOrder(id: string) {
         orderName: (order as any).orderName,
         socialNetwork: order.socialNetwork,
         postType: order.postType,
-        intent: order.intent,
+        intent: order.intent || null,
         quantity: order.quantity,
         status: OrderStatus.GENERANDO,
         sentAt: order.sentAt,
@@ -363,6 +374,7 @@ export async function startOrder(id: string) {
                   id: order.project.target.id,
                   name: order.project.target.name,
                   content: (order.project.target as any).content,
+                  imageBase64: (order.project.target as any).imageBase64,
                 }
               : null,
           }
@@ -372,9 +384,7 @@ export async function startOrder(id: string) {
     const response = await fetch(N8N_WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: (globalThis as any).JSON.stringify({
-        ...webhookPayload,
-      }),
+      body: (globalThis as any).JSON.stringify([webhookPayload]),
     })
     
     if (!response.ok) {
@@ -439,7 +449,12 @@ export async function getNextOrderName(projectId: string) {
   if (!session) return "Orden #1"
   
   const count = await prisma.botOrder.count({
-    where: { projectId }
+    where: {
+      projectId,
+      userId: session,
+      deletedAt: null,
+      status: { not: OrderStatus.COMPLETADA },
+    },
   })
   
   const nextCount = (globalThis as any).Number(count) + 1

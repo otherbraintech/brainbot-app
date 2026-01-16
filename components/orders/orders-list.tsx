@@ -292,7 +292,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                         <Badge variant="outline" className={`text-[11px] h-5 py-0 border-none px-2 ${NETWORK_COLORS[order.socialNetwork]}`}>
                                             {NETWORK_LABELS[order.socialNetwork] || order.socialNetwork}
                                         </Badge>
-                                        {order.postType !== "OTRO" && order.type !== "SEGUIMIENTO" && order.type !== "REPORTE" && (
+                                        {order.postType !== "OTRO" && (
                                             <>
                                                 <span className="opacity-50">•</span>
                                                 <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-secondary/50 border border-secondary">
@@ -451,8 +451,16 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                             <div className="grid grid-cols-3 gap-2 text-sm border-b pb-2">
                                 <span className="text-muted-foreground font-medium">Tipo:</span>
                                 <span className="col-span-2 flex items-center gap-2">
-                                    <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
-                                    {ORDER_TYPE_LABELS[viewingOrder.type]?.label || viewingOrder.type}
+                                    {(() => {
+                                        const typeCfg = ORDER_TYPE_LABELS[viewingOrder.type] || { icon: Activity, label: viewingOrder.type }
+                                        const Icon = typeCfg.icon
+                                        return (
+                                            <>
+                                                <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                                                {typeCfg.label}
+                                            </>
+                                        )
+                                    })()}
                                 </span>
                             </div>
                             <div className="grid grid-cols-3 gap-2 text-sm border-b pb-2">

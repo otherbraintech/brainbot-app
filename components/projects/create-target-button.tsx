@@ -24,7 +24,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { assignTargetToProject } from "@/lib/actions/projects"
+import { assignTargetToProject, getBlockedTargetIds } from "@/lib/actions/projects"
 import { getUserTargets } from "@/lib/actions/targets"
 import { toast } from "sonner"
 import { TargetFormDialog } from "@/components/targets/target-form-dialog" // Import reusable for EDIT only
@@ -63,12 +63,14 @@ export function CreateTargetButton({
     const [userTargets, setUserTargets] = useState<TargetType[]>([])
     const [selectedTargetId, setSelectedTargetId] = useState<string>(project.targetId || "")
     const [stance, setStance] = useState<"FAVOR" | "AGAINST">(project.stance || "FAVOR")
+    const [blockedTargetIds, setBlockedTargetIds] = useState<string[]>([])
 
     // Init
     useEffect(() => {
         if (open) {
-            getUserTargets().then(targets => {
+            Promise.all([getUserTargets(), getBlockedTargetIds()]).then(([targets, blocked]) => {
                 setUserTargets(targets as any)
+                setBlockedTargetIds((blocked as any) ?? [])
             })
 
             if (!project.targetId) {
@@ -220,9 +222,16 @@ export function CreateTargetButton({
                                             <SelectValue placeholder="Seleccionar..." />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {userTargets.map(t => (
-                                                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                                            ))}
+                                            {userTargets.map(t => {
+                                                const isBlocked = blockedTargetIds.includes(t.id)
+                                                const isCurrent = t.id === (project.targetId || "")
+                                                const disabled = isBlocked && !isCurrent
+                                                return (
+                                                    <SelectItem key={t.id} value={t.id} disabled={disabled}>
+                                                        {t.name}{disabled ? " (No disponible)" : ""}
+                                                    </SelectItem>
+                                                )
+                                            })}
                                         </SelectContent>
                                     </Select>
                                 </div>

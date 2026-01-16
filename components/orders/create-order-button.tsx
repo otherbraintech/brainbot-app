@@ -99,7 +99,12 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
             projectId,
             link,
             socialNetwork,
-            postType: isReportAction ? reportType : (isPostAction ? postType : "OTRO"),
+            postType:
+                orderType === "SEGUIMIENTO"
+                    ? "PAGINA"
+                    : isReportAction
+                        ? reportType
+                        : (isPostAction ? postType : "OTRO"),
             orderName,
             type: orderType,
             intent: orderType === "COMENTARIO" ? (intent || undefined) : undefined,
@@ -168,7 +173,14 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                             <Label>Tipo de Acción</Label>
                             <Select
                                 value={orderType}
-                                onValueChange={(v) => setOrderType(v as OrderType)}
+                                onValueChange={(v) => {
+                                    const newType = v as OrderType
+                                    setOrderType(newType)
+                                    // Auto-switch from Instagram to Facebook if COMPARTIR is selected
+                                    if (newType === "COMPARTIR" && socialNetwork === "INSTAGRAM") {
+                                        setSocialNetwork("FACEBOOK")
+                                    }
+                                }}
                             >
                                 <SelectTrigger>
                                     <SelectValue />
@@ -206,11 +218,19 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {(SOCIAL_NETWORKS as any).map((sn: any) => (
-                                                <SelectItem key={sn.value} value={sn.value}>
-                                                    {sn.label}
-                                                </SelectItem>
-                                            ))}
+                                            {(SOCIAL_NETWORKS as any).map((sn: any) => {
+                                                // Disable Instagram for COMPARTIR (Share) orders
+                                                const isDisabled = orderType === "COMPARTIR" && sn.value === "INSTAGRAM"
+                                                return (
+                                                    <SelectItem
+                                                        key={sn.value}
+                                                        value={sn.value}
+                                                        disabled={isDisabled}
+                                                    >
+                                                        {sn.label}{isDisabled ? " (No disponible)" : ""}
+                                                    </SelectItem>
+                                                )
+                                            })}
                                         </SelectContent>
                                     </Select>
                                 </div>

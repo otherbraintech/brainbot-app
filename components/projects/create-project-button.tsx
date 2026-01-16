@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { createProject, getTargetUsage } from "@/lib/actions/projects"
+import { createProject, getBlockedTargetIds, getTargetUsage } from "@/lib/actions/projects"
 import { getUserTargets } from "@/lib/actions/targets"
 import {
     Select,
@@ -41,6 +41,7 @@ export function CreateProjectButton() {
     const [loading, setLoading] = useState(false)
     const [targets, setTargets] = useState<TargetType[]>([])
     const [targetsLoading, setTargetsLoading] = useState(false)
+    const [blockedTargetIds, setBlockedTargetIds] = useState<string[]>([])
     const [error, setError] = useState<string | null>(null)
     const [stanceWarning, setStanceWarning] = useState<string | null>(null)
 
@@ -49,9 +50,10 @@ export function CreateProjectButton() {
         if (open) {
             setTargetsLoading(true)
             setTargets([])
-            getUserTargets()
-                .then((res) => {
+            Promise.all([getUserTargets(), getBlockedTargetIds()])
+                .then(([res, blocked]) => {
                     setTargets(res as any[])
+                    setBlockedTargetIds((blocked as any) ?? [])
                 })
                 .finally(() => {
                     setTargetsLoading(false)
@@ -176,9 +178,14 @@ export function CreateProjectButton() {
                                         <SelectValue placeholder="Selecciona..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {targets.map(t => (
-                                            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                                        ))}
+                                        {targets.map(t => {
+                                            const isBlocked = blockedTargetIds.includes(t.id)
+                                            return (
+                                                <SelectItem key={t.id} value={t.id} disabled={isBlocked}>
+                                                    {t.name}{isBlocked ? " (No disponible)" : ""}
+                                                </SelectItem>
+                                            )
+                                        })}
                                     </SelectContent>
                                 </Select>
                                 <p className="text-[10px] text-muted-foreground flex justify-between">

@@ -40,6 +40,7 @@ import { Input } from "@/components/ui/input"
 import {
     assignTargetToProject,
     deleteProject,
+    getBlockedTargetIds,
     updateProject,
 } from "@/lib/actions/projects"
 import { getUserTargets } from "@/lib/actions/targets"
@@ -80,6 +81,7 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
     const [editTargetId, setEditTargetId] = useState<string>("")
     const [editStance, setEditStance] = useState<"FAVOR" | "AGAINST">("FAVOR")
     const [targetsLoading, setTargetsLoading] = useState(false)
+    const [blockedTargetIds, setBlockedTargetIds] = useState<string[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -88,10 +90,12 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
         // Force the select to show a visible loading state in the trigger
         setEditTargetId("__loading")
         try {
-            const targets = await getUserTargets()
+            const [targets, blocked] = await Promise.all([getUserTargets(), getBlockedTargetIds()])
             setUserTargets((targets as any)?.map((t: any) => ({ id: t.id, name: t.name })) ?? [])
+            setBlockedTargetIds((blocked as any) ?? [])
         } catch {
             setUserTargets([])
+            setBlockedTargetIds([])
         } finally {
             setTargetsLoading(false)
             setEditTargetId(nextTargetIdAfterLoad)
@@ -263,11 +267,16 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                         ) : (
                                             <>
                                                 <SelectItem value="__none">Sin objetivo</SelectItem>
-                                                {userTargets.map((t) => (
-                                                    <SelectItem key={t.id} value={t.id}>
-                                                        {t.name}
-                                                    </SelectItem>
-                                                ))}
+                                                {userTargets.map((t) => {
+                                                    const isBlocked = blockedTargetIds.includes(t.id)
+                                                    const isCurrent = t.id === (editingProject?.targetId || "")
+                                                    const disabled = isBlocked && !isCurrent
+                                                    return (
+                                                        <SelectItem key={t.id} value={t.id} disabled={disabled}>
+                                                            {t.name}{disabled ? " (No disponible)" : ""}
+                                                        </SelectItem>
+                                                    )
+                                                })}
                                             </>
                                         )}
                                     </SelectContent>
