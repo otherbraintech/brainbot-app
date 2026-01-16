@@ -5,6 +5,7 @@ import { OrdersList } from "@/components/orders/orders-list"
 import { CreateOrderButton } from "@/components/orders/create-order-button"
 import { CreateTargetButton } from "@/components/projects/create-target-button"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
@@ -32,8 +33,21 @@ export default async function ProjectDetailPage({
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
-                    <div className="min-w-0">
-                        <h1 className="text-2xl font-bold truncate">Proyecto: {project.name}</h1>
+                    <div className="min-w-0 space-y-2">
+                        <div className="flex items-center gap-3 flex-wrap">
+                            <h1 className="text-2xl font-bold truncate">Proyecto: {project.name}</h1>
+                            {project.stance && (
+                                <Badge
+                                    className={
+                                        project.stance === "AGAINST"
+                                            ? "bg-red-600 text-white hover:bg-red-600 dark:bg-red-500 dark:hover:bg-red-500"
+                                            : "bg-emerald-600 text-white hover:bg-emerald-600 dark:bg-emerald-500 dark:hover:bg-emerald-500"
+                                    }
+                                >
+                                    {project.stance === "AGAINST" ? "En Contra" : "A Favor"}
+                                </Badge>
+                            )}
+                        </div>
                         <p className="text-muted-foreground">
                             Aquí puedes crear y gestionar las órdenes de este proyecto.
                         </p>

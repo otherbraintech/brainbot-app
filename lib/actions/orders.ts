@@ -255,6 +255,13 @@ export async function startOrder(id: string) {
   
   const order = await prisma.botOrder.findFirst({
     where: { id, userId: session },
+    include: {
+      project: {
+        include: {
+          target: true,
+        },
+      },
+    },
   })
   
   if (!order) {
@@ -262,12 +269,7 @@ export async function startOrder(id: string) {
   }
 
   if (order.type === OrderType.COMENTARIO) {
-    const project = await prisma.project.findFirst({
-      where: { id: order.projectId, userId: session },
-      select: { id: true, target: true },
-    })
-
-    if (!project?.target) {
+    if (!order.project?.target) {
       return {
         error: "Se necesita crear un objetivo para enviar órdenes de comentarios.",
         code: "PROJECT_TARGET_REQUIRED",
@@ -322,11 +324,56 @@ export async function startOrder(id: string) {
   })
   
   try {
+    const webhookPayload = {
+      // Backwards-compatible identifier
+      orderId: order.id,
+      // Full order snapshot
+      order: {
+        id: order.id,
+        projectId: order.projectId,
+        userId: order.userId,
+        type: order.type,
+        url: order.url,
+        orderName: (order as any).orderName,
+        socialNetwork: order.socialNetwork,
+        postType: order.postType,
+        intent: order.intent,
+        quantity: order.quantity,
+        status: OrderStatus.GENERANDO,
+        sentAt: order.sentAt,
+        generatedAt: order.generatedAt,
+        deletedAt: (order as any).deletedAt,
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
+      },
+      // Project snapshot
+      project: order.project
+        ? {
+            id: order.project.id,
+            name: order.project.name,
+            nameLower: (order.project as any).nameLower,
+            userId: order.project.userId,
+            targetId: (order.project as any).targetId,
+            stance: (order.project as any).stance,
+            createdAt: order.project.createdAt,
+            updatedAt: order.project.updatedAt,
+            deletedAt: (order.project as any).deletedAt,
+            target: order.project.target
+              ? {
+                  id: order.project.target.id,
+                  name: order.project.target.name,
+                  content: (order.project.target as any).content,
+                }
+              : null,
+          }
+        : null,
+    }
+
     const response = await fetch(N8N_WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: (globalThis as any).JSON.stringify({
-        orderId: order.id,
+        ...webhookPayload,
       }),
     })
     

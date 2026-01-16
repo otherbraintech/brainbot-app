@@ -58,9 +58,9 @@ export function RegisterForm({
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card>
                 <CardHeader>
-                    <CardTitle>Crea una cuenta</CardTitle>
+                    <CardTitle>Crea una nueva cuenta</CardTitle>
                     <CardDescription>
-                        Ingresa tus datos para crear tu cuenta
+                        Ingresa tus datos para crear tu nueva cuenta
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -77,11 +77,10 @@ export function RegisterForm({
                                     id="username"
                                     name="username"
                                     type="text"
-                                    placeholder="juanperez"
+                                    placeholder="juan123"
                                     minLength={3}
                                     required
                                 />
-                                <FieldDescription>Mínimo 3 caracteres</FieldDescription>
                             </Field>
                             <Field>
                                 <FieldLabel>Nombre Completo</FieldLabel>
@@ -100,10 +99,10 @@ export function RegisterForm({
                                     id="password"
                                     name="password"
                                     type="password"
+                                    placeholder="*********"
                                     minLength={6}
                                     required
                                 />
-                                <FieldDescription>Mínimo 6 caracteres</FieldDescription>
                             </Field>
                             <Field>
                                 <Button type="submit" disabled={loading} className="w-full">

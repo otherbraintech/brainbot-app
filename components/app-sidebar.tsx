@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Smartphone,
   Users,
+  Target,
 } from "lucide-react"
 
 import { NavMain, type NavItem } from "@/components/nav-main"
@@ -77,6 +78,16 @@ export function AppSidebar({
         title: "Proyectos",
         url: "/dashboard/projects?list=1",
         icon: FolderOpen,
+      },
+    ]
+
+    // Objetivos
+    items = [
+      ...items,
+      {
+        title: "Objetivos",
+        url: "/dashboard/targets",
+        icon: Target,
       },
     ]
 

@@ -3,7 +3,7 @@
 import { getSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
-import { OrderStatus } from "@prisma/client"
+import { OrderStatus, ProjectStance } from "@prisma/client"
 
 export async function getProjects() {
   const session = await getSession()
@@ -19,6 +19,7 @@ export async function getProjects() {
     },
     orderBy: { createdAt: "desc" },
     include: {
+      target: true,
       _count: {
         select: {
           botOrders: { where: { deletedAt: null } },
@@ -48,7 +49,9 @@ export async function getProject(id: string) {
       name: true,
       nameLower: true,
       userId: true,
+      targetId: true,
       target: true,
+      stance: true,
       createdAt: true,
       updatedAt: true,
       deletedAt: true,
@@ -64,7 +67,26 @@ export async function getProject(id: string) {
   return project
 }
 
-export async function createProject(name: string) {
+export async function getTargetUsage(targetId: string) {
+  const session = await getSession()
+  if (!session) return { error: "No autenticado" }
+
+  const projects = await prisma.project.findMany({
+    where: {
+      userId: session,
+      targetId: targetId
+    },
+    select: {
+      id: true,
+      name: true,
+      stance: true
+    }
+  })
+
+  return { projects }
+}
+
+export async function createProject(name: string, targetId?: string, stance: ProjectStance = "FAVOR") {
   const session = await getSession()
   
   if (!session) {
@@ -76,17 +98,25 @@ export async function createProject(name: string) {
   }
   
   const nameLower = name.toLowerCase().trim().replace(/\s+/g, "_")
-  
-  // Check if project with same name exists for this user
-  const existing = await prisma.project.findFirst({
-    where: {
-      userId: session,
-      nameLower,
-    },
-  })
-  
-  if (existing) {
-    return { error: "Ya existe un proyecto con ese nombre" }
+
+  // If targetId provided, verify it belongs to user and check stance exclusivity
+  if (targetId) {
+      const target = await prisma.target.findFirst({ where: { id: targetId, userId: session } })
+      if (!target) return { error: "Objetivo no válido" }
+
+      // Check if this target is already used with the same stance
+      const existingWithSameStance = await prisma.project.findFirst({
+        where: {
+          userId: session,
+          targetId: targetId,
+          stance: stance
+        }
+      })
+
+      if (existingWithSameStance) {
+        const stanceText = stance === "FAVOR" ? "A Favor" : "En Contra"
+        return { error: `Ya existe un proyecto "${existingWithSameStance.name}" con este objetivo y postura "${stanceText}". Usa la postura opuesta.` }
+      }
   }
   
   const project = await prisma.project.create({
@@ -94,6 +124,8 @@ export async function createProject(name: string) {
       name: name.trim(),
       nameLower,
       userId: session,
+      targetId: targetId || null,
+      stance: stance
     },
   })
   
@@ -122,19 +154,6 @@ export async function updateProject(id: string, name: string) {
   
   if (!project) {
     return { error: "Proyecto no encontrado" }
-  }
-  
-  // Check if another project with same name exists
-  const existing = await prisma.project.findFirst({
-    where: {
-      userId: session,
-      nameLower,
-      NOT: { id },
-    },
-  })
-  
-  if (existing) {
-    return { error: "Ya existe un proyecto con ese nombre" }
   }
   
   await prisma.project.update({
@@ -200,12 +219,17 @@ export async function createTargetAction(payload: any) {
 
   try {
     // 1. Send to Webhook
+    const webhookBody = [{
+      ...payload.target_input,
+      user_id: session
+    }]
+    
     const response = await fetch(WEBHOOK_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(webhookBody),
     })
 
     const responseData = await response.json()
@@ -214,11 +238,24 @@ export async function createTargetAction(payload: any) {
       return { error: responseData.Message || "Error en el servidor de n8n" }
     }
 
-    // 2. Update local DB
+    // 2. Update local DB (Create Target and Link)
+    const targetData = payload.target_input.target?.[0] || payload.target_input
+    const identityName = targetData.basic_identity?.name || "Nuevo Objetivo"
+    const role = targetData.basic_identity?.role || ""
+    const displayName = role ? `${identityName} - ${role}` : identityName
+
+    const newTarget = await prisma.target.create({
+      data: {
+        content: payload.target_input,
+        userId: session, // Required field
+        name: displayName
+      }
+    })
+
     await prisma.project.update({
       where: { id: payload.project_id },
       data: {
-        target: payload.target_input
+        targetId: newTarget.id
       }
     })
 
@@ -231,21 +268,56 @@ export async function createTargetAction(payload: any) {
 }
 
 export async function updateTargetAction(projectId: string, targetData: any) {
+    // Legacy support or specific use case wrapper
+    // Now we prefer updating the target directly via targets.ts
+    // But if called for a project's linked target:
   const session = await getSession()
   if (!session) return { error: "No autorizado" }
 
   try {
-    await prisma.project.update({
-      where: { id: projectId },
-      data: {
-        target: targetData
-      }
-    })
-
+    const project = await prisma.project.findUnique({ where: { id: projectId } })
+    
+    if (project?.targetId) {
+      await prisma.target.update({
+        where: { id: project.targetId },
+        data: { content: targetData }
+      })
+    }
+    // If no target, we can't update.
+    
     revalidatePath("/dashboard/projects")
     return { success: true }
   } catch (error) {
     console.error("Error in updateTargetAction:", error)
     return { error: "Error al actualizar el objetivo" }
+  }
+}
+
+export async function assignTargetToProject(projectId: string, targetId: string, stance: ProjectStance) {
+  const session = await getSession()
+  if (!session) return { error: "No autorizado" }
+
+  try {
+     // Verify ownership of both project and target
+     const project = await prisma.project.findFirst({ where: { id: projectId, userId: session } })
+     if (!project) return { error: "Proyecto no encontrado" }
+     
+     const target = await prisma.target.findFirst({ where: { id: targetId, userId: session } })
+     if (!target) return { error: "Objetivo no encontrado" }
+
+    await prisma.project.update({
+      where: { id: projectId },
+      data: {
+        targetId: targetId,
+        stance: stance
+      }
+    })
+
+    revalidatePath(`/dashboard/projects/${projectId}`)
+    revalidatePath("/dashboard/projects")
+    return { success: true }
+  } catch (error) {
+    console.error("Error in assignTargetToProject:", error)
+    return { error: "Error al asignar el objetivo" }
   }
 }

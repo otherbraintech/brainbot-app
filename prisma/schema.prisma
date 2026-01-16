@@ -33,7 +33,9 @@ model Project {
   name         String
   nameLower    String
   userId       String
-  target       Json?
+  targetId     String?
+  target       Target?          @relation(fields: [targetId], references: [id])
+  stance       ProjectStance    @default(FAVOR)
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
   deletedAt    DateTime?
@@ -42,8 +44,23 @@ model Project {
   integrations IntegrationLog[]
   user         User             @relation(fields: [userId], references: [id])
 
-  @@unique([userId, nameLower])
   @@index([userId, createdAt])
+}
+
+model Target {
+  id          String    @id @default(cuid())
+  name        String    @default("Sin Nombre")
+  userId      String
+  content     Json
+  imageBase64 String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  projects    Project[]
+}
+
+enum ProjectStance {
+  FAVOR
+  AGAINST
 }
 
 model BotOrder {

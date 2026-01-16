@@ -34,16 +34,12 @@ export function DynamicBreadcrumb() {
     const pathname = usePathname()
     const [dynamicLabels, setDynamicLabels] = useState<{ [key: string]: string }>({})
 
-    // Fetch dynamic data for IDs in the path
     useEffect(() => {
         async function fetchDynamicLabels() {
             const segments = pathname.split("/").filter((s: string) => !!s)
             const projectIndex = segments.indexOf("projects")
-
-            // If there's a project ID after "projects"
             if (projectIndex !== -1 && segments[projectIndex + 1]) {
                 const projectId = segments[projectIndex + 1]
-                // Only fetch if it looks like an ID
                 if (projectId.startsWith("cm") || projectId.includes("-")) {
                     try {
                         const res = await fetch(`/api/projects/${projectId}/name`)
@@ -52,16 +48,13 @@ export function DynamicBreadcrumb() {
                             setDynamicLabels(prev => ({ ...prev, [projectId]: data.name }))
                         }
                     } catch {
-                        // Ignore errors
                     }
                 }
             }
 
-            // Check for orders path to fetch Project Name + Order Name
             const orderIndex = segments.indexOf("orders")
             if (orderIndex !== -1 && segments[orderIndex + 1]) {
                 const orderId = segments[orderIndex + 1]
-                // Only fetch if looks like ID
                 if (orderId.startsWith("cm") || orderId.includes("-")) {
                     try {
                         const data = await getBreadcrumbData(orderId)

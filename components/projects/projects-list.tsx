@@ -11,6 +11,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -36,13 +37,35 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
-import { updateProject, deleteProject } from "@/lib/actions/projects"
-import { CreateTargetButton } from "./create-target-button"
+import {
+    assignTargetToProject,
+    deleteProject,
+    updateProject,
+} from "@/lib/actions/projects"
+import { getUserTargets } from "@/lib/actions/targets"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 type Project = {
     id: string
     name: string
     createdAt: Date
+    // New fields
+    targetId?: string | null
+    target?: {
+        id: string
+        name: string
+        content: any
+    } | null
+    stance?: "FAVOR" | "AGAINST"
+
     _count: {
         botOrders: number
         genComments: number
@@ -53,8 +76,27 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
     const [editingProject, setEditingProject] = useState<Project | null>(null)
     const [deletingProject, setDeletingProject] = useState<Project | null>(null)
     const [editName, setEditName] = useState("")
+    const [userTargets, setUserTargets] = useState<Array<{ id: string; name: string }>>([])
+    const [editTargetId, setEditTargetId] = useState<string>("")
+    const [editStance, setEditStance] = useState<"FAVOR" | "AGAINST">("FAVOR")
+    const [targetsLoading, setTargetsLoading] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+
+    async function loadTargets(nextTargetIdAfterLoad: string) {
+        setTargetsLoading(true)
+        // Force the select to show a visible loading state in the trigger
+        setEditTargetId("__loading")
+        try {
+            const targets = await getUserTargets()
+            setUserTargets((targets as any)?.map((t: any) => ({ id: t.id, name: t.name })) ?? [])
+        } catch {
+            setUserTargets([])
+        } finally {
+            setTargetsLoading(false)
+            setEditTargetId(nextTargetIdAfterLoad)
+        }
+    }
 
     async function handleEdit() {
         if (!editingProject) return
@@ -62,6 +104,15 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
         setError(null)
 
         const result = await updateProject(editingProject.id, editName)
+
+        if (!result.error && editTargetId && editTargetId !== "__none") {
+            const assignResult = await assignTargetToProject(editingProject.id, editTargetId, editStance)
+            if (assignResult.error) {
+                setError(assignResult.error)
+                setLoading(false)
+                return
+            }
+        }
 
         if (result.error) {
             setError(result.error)
@@ -111,6 +162,22 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                 <CardDescription>
                                     {project._count.botOrders} órdenes
                                 </CardDescription>
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                    <Badge variant="outline" className="border-slate-200">
+                                        {project.target?.name ? project.target.name : "Sin objetivo"}
+                                    </Badge>
+                                    {project.stance && (
+                                        <Badge
+                                            className={
+                                                project.stance === "AGAINST"
+                                                    ? "bg-red-600 text-white hover:bg-red-600 dark:bg-red-500 dark:hover:bg-red-500"
+                                                    : "bg-emerald-600 text-white hover:bg-emerald-600 dark:bg-emerald-500 dark:hover:bg-emerald-500"
+                                            }
+                                        >
+                                            {project.stance === "AGAINST" ? "En Contra" : "A Favor"}
+                                        </Badge>
+                                    )}
+                                </div>
                             </div>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -123,6 +190,8 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                         onClick={() => {
                                             setEditingProject(project)
                                             setEditName(project.name)
+                                            setEditStance(project.stance || "FAVOR")
+                                            loadTargets(project.targetId || "__none")
                                         }}
                                     >
                                         <Pencil className="mr-2 h-4 w-4" />
@@ -144,7 +213,6 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                     Ver Proyecto
                                 </Link>
                             </Button>
-                            <CreateTargetButton project={project} />
                         </CardContent>
                     </Card>
                 ))}
@@ -156,7 +224,7 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                     <DialogHeader>
                         <DialogTitle>Editar Proyecto</DialogTitle>
                         <DialogDescription>
-                            Cambia el nombre del proyecto.
+                            Cambia el nombre, objetivo y postura del proyecto.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
@@ -165,13 +233,79 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                 {error}
                             </div>
                         )}
-                        <Input
-                            placeholder="Nombre del proyecto"
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            minLength={2}
-                            required
-                        />
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Nombre</Label>
+                                <Input
+                                    placeholder="Nombre del proyecto"
+                                    value={editName}
+                                    onChange={(e) => setEditName(e.target.value)}
+                                    minLength={2}
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Objetivo</Label>
+                                <Select value={editTargetId} onValueChange={setEditTargetId}>
+                                    <SelectTrigger disabled={targetsLoading}>
+                                        <SelectValue placeholder={targetsLoading ? "Cargando..." : "Seleccionar..."} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {targetsLoading ? (
+                                            <SelectItem value="__loading" disabled>
+                                                Cargando...
+                                            </SelectItem>
+                                        ) : userTargets.length === 0 ? (
+                                            <SelectItem value="__empty" disabled>
+                                                No tienes objetivos
+                                            </SelectItem>
+                                        ) : (
+                                            <>
+                                                <SelectItem value="__none">Sin objetivo</SelectItem>
+                                                {userTargets.map((t) => (
+                                                    <SelectItem key={t.id} value={t.id}>
+                                                        {t.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </>
+                                        )}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="flex items-center justify-between rounded-md border p-3">
+                                <div className="space-y-0.5">
+                                    <Label className="text-sm">Postura</Label>
+                                    <p className="text-xs text-muted-foreground">A favor / En contra</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span
+                                        className={`text-xs font-semibold ${
+                                            editStance === "AGAINST"
+                                                ? "text-muted-foreground"
+                                                : "text-emerald-600 dark:text-emerald-400"
+                                        }`}
+                                    >
+                                        A Favor
+                                    </span>
+                                    <Switch
+                                        checked={editStance === "AGAINST"}
+                                        onCheckedChange={(checked) => setEditStance(checked ? "AGAINST" : "FAVOR")}
+                                        className="data-[state=unchecked]:bg-emerald-600 data-[state=unchecked]:dark:bg-emerald-500 data-[state=checked]:bg-red-600 data-[state=checked]:dark:bg-red-500"
+                                    />
+                                    <span
+                                        className={`text-xs font-semibold ${
+                                            editStance === "AGAINST"
+                                                ? "text-red-600 dark:text-red-400"
+                                                : "text-muted-foreground"
+                                        }`}
+                                    >
+                                        En Contra
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="secondary" className="border-slate-200" onClick={() => setEditingProject(null)}>
