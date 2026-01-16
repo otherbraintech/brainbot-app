@@ -49,10 +49,30 @@ export function TeamSwitcher({
     }
   }, [teams])
 
+  // Listen for project changes from other components
+  React.useEffect(() => {
+    const handleProjectChange = () => {
+      try {
+        const saved = localStorage.getItem("active_project")
+        if (!saved) return
+        const parsed = JSON.parse(saved)
+        const found = teams.find((t: any) => t.id && t.id === parsed?.id)
+        if (found) setActiveTeam(found)
+      } catch {
+        // ignore
+      }
+    }
+
+    window.addEventListener("project-changed", handleProjectChange)
+    return () => window.removeEventListener("project-changed", handleProjectChange)
+  }, [teams])
+
   React.useEffect(() => {
     if (!activeTeam?.id) return
     try {
       localStorage.setItem("active_project", JSON.stringify({ id: activeTeam.id, name: activeTeam.name }))
+      // Dispatch custom event to notify AppSidebar
+      window.dispatchEvent(new Event("project-changed"))
     } catch {
       // ignore
     }
@@ -82,8 +102,8 @@ export function TeamSwitcher({
                     <Badge
                       variant={activeTeam.stance === "AGAINST" ? "destructive" : "default"}
                       className={`h-4 px-1.5 text-[9px] ${activeTeam.stance === "AGAINST"
-                          ? "bg-red-600 hover:bg-red-600 dark:bg-red-500"
-                          : "bg-emerald-600 hover:bg-emerald-600 dark:bg-emerald-500"
+                        ? "bg-red-600 hover:bg-red-600 dark:bg-red-500"
+                        : "bg-emerald-600 hover:bg-emerald-600 dark:bg-emerald-500"
                         }`}
                     >
                       {activeTeam.stance === "AGAINST" ? "Contra" : "Favor"}

@@ -29,7 +29,7 @@ export default async function ProjectDetailPage({
             <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4 min-w-0">
                     <Button variant="ghost" size="icon" asChild>
-                        <Link href="/dashboard/projects">
+                        <Link href="/dashboard/projects?list=1">
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>

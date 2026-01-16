@@ -92,39 +92,18 @@ export function DynamicBreadcrumb() {
         const projectId = dynamicLabels[`projectId_${orderId}`]
 
         if (orderName && projectName && projectId) {
-            breadcrumbItems.push({
-                label: "Panel",
-                href: "/dashboard",
-                isLast: false,
-            })
-
-            breadcrumbItems.push({
-                label: orderName,
-                href: `/dashboard/orders/${orderId}/executions`, // Keep user context or direct to main order view? Usually executions is the main view or part of it.
-                isLast: segments.length === orderIndex + 2 // if we are at orders/[id]
-            })
-
-            // If there's more after [id], like 'executions', hide it if it's the last one, or show it?
-            // User requested "Executions" -> Order Name.
-            // If we are at /dashboard/orders/[id]/executions
-            // The segments are: dashboard, orders, [id], executions
-            // My custom logic above handles the first 3 conceptual levels.
-
-            // Actually, let's just REPLACE the items if we match this pattern.
-            // If we are at .../executions, we just want to show "Order Name" as the active leaf?
-            // User: "debeira decir el nombre de la orden envez de "executions" y en vez de "..." deberia salir el nombre del proyecto"
-            // So: Panel > Project > Order
-
-            // If the path IS .../executions, we make "Order" the last item.
-            // If the path IS .../orders/[id], we make "Order" the last item.
-
-            // Override whatever loop produced
             return (
                 <Breadcrumb>
                     <BreadcrumbList>
                         <BreadcrumbItem>
                             <BreadcrumbLink asChild>
-                                <Link href="/dashboard">Panel</Link>
+                                <Link href="/dashboard/projects?list=1">Proyectos</Link>
+                            </BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbLink asChild>
+                                <Link href={`/dashboard/projects/${projectId}`}>{projectName}</Link>
                             </BreadcrumbLink>
                         </BreadcrumbItem>
                         <BreadcrumbSeparator />
@@ -154,9 +133,15 @@ export function DynamicBreadcrumb() {
             }
         }
 
+        // Override href for "projects" to include list parameter
+        let href = currentPath
+        if (segment === "projects" && !isLast) {
+            href = "/dashboard/projects?list=1"
+        }
+
         breadcrumbItems.push({
             label,
-            href: currentPath,
+            href,
             isLast,
         })
     })

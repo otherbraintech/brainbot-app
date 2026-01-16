@@ -212,7 +212,23 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                             </DropdownMenu>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                            <Button asChild variant="secondary" className="w-full border-slate-200 shadow-sm">
+                            <Button
+                                asChild
+                                variant="secondary"
+                                className="w-full border-slate-200 shadow-sm"
+                                onClick={() => {
+                                    // Update TeamSwitcher when clicking on project
+                                    try {
+                                        localStorage.setItem("active_project", JSON.stringify({
+                                            id: project.id,
+                                            name: project.name
+                                        }))
+                                        window.dispatchEvent(new Event("project-changed"))
+                                    } catch {
+                                        // ignore
+                                    }
+                                }}
+                            >
                                 <Link href={`/dashboard/projects/${project.id}`}>
                                     Ver Proyecto
                                 </Link>
@@ -290,11 +306,10 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span
-                                        className={`text-xs font-semibold ${
-                                            editStance === "AGAINST"
+                                        className={`text-xs font-semibold ${editStance === "AGAINST"
                                                 ? "text-muted-foreground"
                                                 : "text-emerald-600 dark:text-emerald-400"
-                                        }`}
+                                            }`}
                                     >
                                         A Favor
                                     </span>
@@ -304,11 +319,10 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                         className="data-[state=unchecked]:bg-emerald-600 data-[state=unchecked]:dark:bg-emerald-500 data-[state=checked]:bg-red-600 data-[state=checked]:dark:bg-red-500"
                                     />
                                     <span
-                                        className={`text-xs font-semibold ${
-                                            editStance === "AGAINST"
+                                        className={`text-xs font-semibold ${editStance === "AGAINST"
                                                 ? "text-red-600 dark:text-red-400"
                                                 : "text-muted-foreground"
-                                        }`}
+                                            }`}
                                     >
                                         En Contra
                                     </span>

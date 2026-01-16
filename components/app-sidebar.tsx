@@ -9,6 +9,7 @@ import {
   Smartphone,
   Users,
   Target,
+  ListChecks,
 } from "lucide-react"
 
 import { NavMain, type NavItem } from "@/components/nav-main"
@@ -43,6 +44,36 @@ export function AppSidebar({
   projects?: Project[]
 }) {
   const pathname = usePathname()
+  const [activeProjectId, setActiveProjectId] = React.useState<string | null>(null)
+
+  // Track active project from localStorage
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem("active_project")
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        setActiveProjectId(parsed?.id || null)
+      }
+    } catch {
+      // ignore
+    }
+
+    // Listen for custom event when TeamSwitcher changes
+    const handleProjectChange = () => {
+      try {
+        const saved = localStorage.getItem("active_project")
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          setActiveProjectId(parsed?.id || null)
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    window.addEventListener("project-changed", handleProjectChange)
+    return () => window.removeEventListener("project-changed", handleProjectChange)
+  }, [])
 
 
   // Default to first project if still null after effect (client-side) or handle server-side default
@@ -92,6 +123,18 @@ export function AppSidebar({
       },
     ]
 
+    // Órdenes del proyecto activo (si hay uno seleccionado)
+    if (activeProjectId) {
+      items = [
+        ...items,
+        {
+          title: "Órdenes del Proyecto",
+          url: `/dashboard/projects/${activeProjectId}`,
+          icon: ListChecks,
+        },
+      ]
+    }
+
     // Dispositivos - simple link
     items = [
       ...items,
@@ -123,7 +166,7 @@ export function AppSidebar({
     ]
 
     return items
-  }, [projects])
+  }, [activeProjectId])
 
   return (
     <Sidebar collapsible="icon" {...props}>
