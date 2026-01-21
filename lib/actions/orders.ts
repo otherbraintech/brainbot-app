@@ -282,41 +282,6 @@ export async function startOrder(id: string) {
     return { error: "La orden ya fue iniciada o completada" }
   }
 
-  // Si es Like o Share, creamos el registro hijo antes de disparar el webhook
-  if (order.type === OrderType.MEGUSTA) {
-    await prisma.genLike.create({
-      data: {
-        orderId: id,
-        userId: session,
-        status: CommentStatus.PENDIENTE
-      } as any
-    })
-  } else if (order.type === OrderType.COMPARTIR) {
-    await prisma.genShare.create({
-      data: {
-        orderId: id,
-        userId: session,
-        status: CommentStatus.PENDIENTE
-      } as any
-    })
-  } else if (order.type === OrderType.SEGUIMIENTO) {
-    await prisma.genFollow.create({
-      data: {
-        orderId: id,
-        userId: session,
-        status: CommentStatus.PENDIENTE
-      } as any
-    })
-  } else if (order.type === OrderType.REPORTE) {
-    await prisma.genReport.create({
-      data: {
-        orderId: id,
-        userId: session,
-        status: CommentStatus.PENDIENTE
-      } as any
-    })
-  }
-  
   // Actualizamos el estado a GENERANDO antes de disparar el webhook
   await prisma.botOrder.update({
     where: { id },
