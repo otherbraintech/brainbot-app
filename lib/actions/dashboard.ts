@@ -129,7 +129,7 @@ export async function getDashboardStats() {
         usersByPlan = await prisma.user.groupBy({
             by: ['plan'],
             _count: true
-        })
+        } as any)
     }
 
     // 9. Recent Devices (Active)
