@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/tooltip"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
 import { createTargetWithWebhook, updateTarget } from "@/lib/actions/targets"
 import { toast } from "sonner"
 
@@ -46,6 +47,7 @@ export type TargetData = {
         target: {
             target_id?: string
             target_type: "PERSON" | "COMPANY" | "GENERIC"
+            identity_nature: string
             basic_identity: {
                 name: string
                 role: string
@@ -70,12 +72,6 @@ export type TargetData = {
                 focus: string
                 quality: string
                 appearance: string
-                clothing: string
-                hair: string
-                face: string
-                eyebrows: string
-                expression: string
-                build: string
                 notable_elements: string[]
                 colors: string[]
                 logo_or_name_visible: boolean
@@ -87,6 +83,11 @@ export type TargetData = {
                     label: string
                     value: string
                 }[]
+            }
+            recognition_hints: {
+                visual_markers: string[]
+                primary_presence: string
+                contextual_markers: string[]
             }
             extended_notes: string
             user_notes: string
@@ -161,17 +162,19 @@ export function TargetFormDialog({
         focus: "mixto",
         quality: "media",
         appearance: "n/a",
-        clothing: "n/a",
-        hair: "n/a",
-        face: "n/a",
-        eyebrows: "n/a",
-        expression: "n/a",
-        build: "n/a",
         notable_elements: [] as string[],
         colors: [] as string[],
         logo_or_name_visible: false,
         readable_text: [] as string[]
     })
+
+    const [recognitionHints, setRecognitionHints] = useState({
+        visual_markers: [] as string[],
+        primary_presence: "",
+        contextual_markers: [] as string[]
+    })
+
+    const [identityNature, setIdentityNature] = useState("comercial")
 
 
     // Helper State
@@ -188,8 +191,10 @@ export function TargetFormDialog({
                 try {
                     const draft = JSON.parse(saved)
                     if (draft.targetType) setTargetType(draft.targetType)
+                    if (draft.identityNature) setIdentityNature(draft.identityNature)
                     if (draft.basicIdentity) setBasicIdentity(draft.basicIdentity)
                     if (draft.contextualIdentity) setContextualIdentity(draft.contextualIdentity)
+                    if (draft.recognitionHints) setRecognitionHints(draft.recognitionHints)
                     if (draft.constraints) setConstraints(draft.constraints)
                     if (draft.visualAssets) setVisualAssets(draft.visualAssets)
                     if (draft.extendedNotes) setExtendedNotes(draft.extendedNotes)
@@ -206,8 +211,10 @@ export function TargetFormDialog({
         if (typeof window !== "undefined" && mode === 'create') {
             const draft = {
                 targetType,
+                identityNature,
                 basicIdentity,
                 contextualIdentity,
+                recognitionHints,
                 constraints,
                 visualAssets,
                 extendedNotes,
@@ -229,6 +236,7 @@ export function TargetFormDialog({
 
             try {
                 if (data.target_type) setTargetType(data.target_type === 'GENERIC' ? 'COMPANY' : data.target_type)
+                if (data.identity_nature) setIdentityNature(data.identity_nature)
 
                 if (data.basic_identity) {
                     setBasicIdentity({
@@ -248,6 +256,14 @@ export function TargetFormDialog({
                         main_axis: data.contextual_identity.main_axis || "",
                         target_audience: data.contextual_identity.target_audience || [],
                         opposition_frame: data.contextual_identity.opposition_frame || ""
+                    })
+                }
+
+                if (data.recognition_hints) {
+                    setRecognitionHints({
+                        visual_markers: data.recognition_hints.visual_markers || [],
+                        primary_presence: data.recognition_hints.primary_presence || "",
+                        contextual_markers: data.recognition_hints.contextual_markers || []
                     })
                 }
 
@@ -275,10 +291,11 @@ export function TargetFormDialog({
             setStep(1)
             setBasicIdentity({ name: "", role: "", public_domain: "", location: { city: "", country: "" } })
             setContextualIdentity({ self_description: "", main_axis: "", target_audience: [], opposition_frame: "" })
+            setRecognitionHints({ visual_markers: [], primary_presence: "", contextual_markers: [] })
+            setIdentityNature("comercial")
             setConstraints({ must_not_be_confused_with: [] })
             setVisualAssets({ reference_images: [] })
             setExtendedNotes("")
-
             setUserNotes("")
             setImageBase64(null)
         }
@@ -308,11 +325,11 @@ export function TargetFormDialog({
             ...existingTarget, // Preserve existing fields (comparison_weights, visual traits, etc)
             target_id: mode === 'edit' ? (existingTarget.target_id || generateId()) : generateId(),
             target_type: targetType === 'COMPANY' ? 'GENERIC' : 'PERSON',
+            identity_nature: identityNature,
             basic_identity: {
                 ...basicIdentity,
                 location: {
                     ...basicIdentity.location,
-                    region: "n/a"
                 }
             },
             contextual_identity: contextualIdentity,
@@ -322,6 +339,7 @@ export function TargetFormDialog({
                 ...visualReference,
                 reference_images: visualAssets.reference_images // Overwrite/add our images
             },
+            recognition_hints: recognitionHints,
             extended_notes: extendedNotes,
             user_notes: userNotes
         }
@@ -375,6 +393,16 @@ export function TargetFormDialog({
             setContextualIdentity(prev => ({ ...prev, target_audience: [...prev.target_audience, value.trim()] }))
         } else if (field === 'constraints' && subField === 'must_not_be_confused_with') {
             setConstraints(prev => ({ ...prev, must_not_be_confused_with: [...prev.must_not_be_confused_with, value.trim()] }))
+        } else if (field === 'recognitionHints' && subField === 'visual_markers') {
+            setRecognitionHints(prev => ({ ...prev, visual_markers: [...prev.visual_markers, value.trim()] }))
+        } else if (field === 'recognitionHints' && subField === 'contextual_markers') {
+            setRecognitionHints(prev => ({ ...prev, contextual_markers: [...prev.contextual_markers, value.trim()] }))
+        } else if (field === 'visualReference' && subField === 'colors') {
+            setVisualReference(prev => ({ ...prev, colors: [...prev.colors, value.trim()] }))
+        } else if (field === 'visualReference' && subField === 'notable_elements') {
+            setVisualReference(prev => ({ ...prev, notable_elements: [...prev.notable_elements, value.trim()] }))
+        } else if (field === 'visualReference' && subField === 'readable_text') {
+            setVisualReference(prev => ({ ...prev, readable_text: [...prev.readable_text, value.trim()] }))
         }
         setTempTags(prev => ({ ...prev, [tempKey]: "" }))
     }
@@ -384,6 +412,16 @@ export function TargetFormDialog({
             setContextualIdentity(prev => ({ ...prev, target_audience: prev.target_audience.filter((_, i) => i !== index) }))
         } else if (field === 'constraints' && subField === 'must_not_be_confused_with') {
             setConstraints(prev => ({ ...prev, must_not_be_confused_with: prev.must_not_be_confused_with.filter((_, i) => i !== index) }))
+        } else if (field === 'recognitionHints' && subField === 'visual_markers') {
+            setRecognitionHints(prev => ({ ...prev, visual_markers: prev.visual_markers.filter((_, i) => i !== index) }))
+        } else if (field === 'recognitionHints' && subField === 'contextual_markers') {
+            setRecognitionHints(prev => ({ ...prev, contextual_markers: prev.contextual_markers.filter((_, i) => i !== index) }))
+        } else if (field === 'visualReference' && subField === 'colors') {
+            setVisualReference(prev => ({ ...prev, colors: prev.colors.filter((_, i) => i !== index) }))
+        } else if (field === 'visualReference' && subField === 'notable_elements') {
+            setVisualReference(prev => ({ ...prev, notable_elements: prev.notable_elements.filter((_, i) => i !== index) }))
+        } else if (field === 'visualReference' && subField === 'readable_text') {
+            setVisualReference(prev => ({ ...prev, readable_text: prev.readable_text.filter((_, i) => i !== index) }))
         }
     }
 
@@ -458,6 +496,11 @@ export function TargetFormDialog({
                         <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
                             {basicIdentity.name || 'Sin Nombre'}
                         </h2>
+                        <div className="flex gap-2 mt-1">
+                            <Badge variant="outline" className="text-[10px] bg-primary/5 border-primary/20 text-primary uppercase">
+                                Naturaleza: {identityNature || 'comercial'}
+                            </Badge>
+                        </div>
                     </div>
 
                     <div className="md:col-span-2">
@@ -495,11 +538,18 @@ export function TargetFormDialog({
                     </div>
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                            <Label>Rol / Rubro</Label>
-                            <InfoTooltip text="La industria, categoría o profesión principal." />
+                            <Label>Naturaleza de Identidad</Label>
+                            <InfoTooltip text="Define si es comercial, personal, institucional, etc." />
                         </div>
-                        <Input readOnly={readOnly} value={basicIdentity.role} onChange={e => setBasicIdentity({ ...basicIdentity, role: e.target.value })} placeholder="Ej: Gastronomía" />
+                        <Input readOnly={readOnly} value={identityNature} onChange={e => setIdentityNature(e.target.value)} placeholder="Ej: comercial" />
                     </div>
+                </div>
+                <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                        <Label>Rol / Rubro</Label>
+                        <InfoTooltip text="La industria, categoría o profesión principal." />
+                    </div>
+                    <Input readOnly={readOnly} value={basicIdentity.role} onChange={e => setBasicIdentity({ ...basicIdentity, role: e.target.value })} placeholder="Ej: Gastronomía" />
                 </div>
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -611,7 +661,31 @@ export function TargetFormDialog({
 
 
 
-                    <div className="grid grid-cols-1 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                        <div className="space-y-4">
+                            <DataField label="Presencia Principal" value={recognitionHints.primary_presence} />
+                            <div className="space-y-2">
+                                <Label className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Marcadores Visuales</Label>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {recognitionHints.visual_markers.map((m, i) => (
+                                        <Badge key={i} variant="secondary" className="text-[10px]">{m}</Badge>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Marcadores Contextuales</Label>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {recognitionHints.contextual_markers.map((m, i) => (
+                                        <Badge key={i} variant="secondary" className="text-[10px]">{m}</Badge>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6 pt-4 border-t border-zinc-100 dark:border-zinc-900">
                         <DataField label="Contexto y Antecedentes" value={extendedNotes} />
                         <DataField label="Notas de Usuario" value={userNotes} />
                     </div>
@@ -643,12 +717,13 @@ export function TargetFormDialog({
                         ))}
                     </div>
                 </div>
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                        <Label>No confundir con</Label>
-                        <InfoTooltip text="Lista de entidades o personas con las que NO se debe confundir a este objetivo." />
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div className="space-y-2">
+                        <Label>Presencia Principal</Label>
+                        <Input value={recognitionHints.primary_presence} onChange={e => setRecognitionHints({ ...recognitionHints, primary_presence: e.target.value })} placeholder="Ej: Logo con texto 3D..." />
                     </div>
-                    {!readOnly && (
+                    <div className="space-y-2">
+                        <Label>No confundir con</Label>
                         <div className="flex gap-2">
                             <Input
                                 value={tempTags.constraints || ""}
@@ -660,12 +735,10 @@ export function TargetFormDialog({
                                 <Plus className="h-4 w-4" />
                             </Button>
                         </div>
-                    )}
-                    <div className="flex flex-wrap gap-1">
-                        {constraints.must_not_be_confused_with.map((t, i) => (
-                            <Badge key={i} variant="destructive" className="pr-1 py-0 h-7">
-                                {t}
-                                {!readOnly && (
+                        <div className="flex flex-wrap gap-1">
+                            {constraints.must_not_be_confused_with.map((t, i) => (
+                                <Badge key={i} variant="destructive" className="pr-1 py-0 h-7">
+                                    {t}
                                     <button
                                         type="button"
                                         onClick={() => removeTag('constraints', 'must_not_be_confused_with', i)}
@@ -673,9 +746,56 @@ export function TargetFormDialog({
                                     >
                                         <X className="h-3 w-3 group-hover:scale-110" />
                                     </button>
-                                )}
-                            </Badge>
-                        ))}
+                                </Badge>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label>Marcadores Visuales</Label>
+                        <div className="flex gap-2">
+                            <Input
+                                value={tempTags.visual_markers || ""}
+                                onChange={e => setTempTags({ ...tempTags, visual_markers: e.target.value })}
+                                onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), addTag('recognitionHints', 'visual_markers', tempTags.visual_markers, 'visual_markers'))}
+                                placeholder="Marcadores visuales..."
+                            />
+                            <Button type="button" size="sm" onClick={() => addTag('recognitionHints', 'visual_markers', tempTags.visual_markers, 'visual_markers')}>
+                                <Plus className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                            {recognitionHints.visual_markers.map((t, i) => (
+                                <Badge key={i} variant="secondary" className="pr-1 py-0 h-7">
+                                    {t}
+                                    <button type="button" onClick={() => removeTag('recognitionHints', 'visual_markers', i)} className="ml-1 hover:text-red-500"><X className="h-3 w-3" /></button>
+                                </Badge>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Marcadores Contextuales</Label>
+                        <div className="flex gap-2">
+                            <Input
+                                value={tempTags.contextual_markers || ""}
+                                onChange={e => setTempTags({ ...tempTags, contextual_markers: e.target.value })}
+                                onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), addTag('recognitionHints', 'contextual_markers', tempTags.contextual_markers, 'contextual_markers'))}
+                                placeholder="Marcadores contextuales..."
+                            />
+                            <Button type="button" size="sm" onClick={() => addTag('recognitionHints', 'contextual_markers', tempTags.contextual_markers, 'contextual_markers')}>
+                                <Plus className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                            {recognitionHints.contextual_markers.map((t, i) => (
+                                <Badge key={i} variant="secondary" className="pr-1 py-0 h-7">
+                                    {t}
+                                    <button type="button" onClick={() => removeTag('recognitionHints', 'contextual_markers', i)} className="ml-1 hover:text-red-500"><X className="h-3 w-3" /></button>
+                                </Badge>
+                            ))}
+                        </div>
                     </div>
                 </div>
                 <div className="space-y-2">
@@ -881,20 +1001,24 @@ export function TargetFormDialog({
                                         {/* Technical Specs: Scene, Focus, Quality */}
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                             {[
-                                                { label: "Escena", key: "scene" },
-                                                { label: "Foco", key: "focus" },
-                                                { label: "Calidad", key: "quality" },
+                                                { label: "Escena", key: "scene", tooltip: "El entorno o fondo predominante." },
+                                                { label: "Foco", key: "focus", tooltip: "El objeto o área principal de atención." },
+                                                { label: "Calidad", key: "quality", tooltip: "Nivel de detalle y resolución." },
                                             ].map(item => (
                                                 <div key={item.key}>
                                                     {mode === 'view' ? (
                                                         <DataField label={item.label} value={(visualReference as any)[item.key]} />
                                                     ) : (
                                                         <div className="space-y-1.5">
-                                                            <Label className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">{item.label}</Label>
+                                                            <div className="flex items-center gap-2">
+                                                                <Label className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">{item.label}</Label>
+                                                                <InfoTooltip text={item.tooltip} />
+                                                            </div>
                                                             <Input
                                                                 value={(visualReference as any)[item.key] || ""}
                                                                 onChange={e => setVisualReference(prev => ({ ...prev, [item.key]: e.target.value }))}
                                                                 className="h-9 text-sm bg-zinc-50/50 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800 focus:ring-primary/20"
+                                                                placeholder={`Fijar ${item.label.toLowerCase()}...`}
                                                             />
                                                         </div>
                                                     )}
@@ -902,48 +1026,81 @@ export function TargetFormDialog({
                                             ))}
                                         </div>
 
-                                        {/* Core Description: Appearance & Clothing (Long Text) */}
-                                        <div className="grid grid-cols-1 gap-6">
-                                            {[
-                                                { label: "Apariencia", key: "appearance" },
-                                                { label: "Vestimenta", key: "clothing" },
-                                            ].map(item => (
-                                                <div key={item.key}>
-                                                    {mode === 'view' ? (
-                                                        <DataField label={item.label} value={(visualReference as any)[item.key]} />
-                                                    ) : (
-                                                        <div className="space-y-1.5">
-                                                            <Label className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">{item.label}</Label>
-                                                            <Textarea
-                                                                value={(visualReference as any)[item.key] || ""}
-                                                                onChange={e => setVisualReference(prev => ({ ...prev, [item.key]: e.target.value }))}
-                                                                rows={2}
-                                                                className="text-sm bg-zinc-50/50 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800 focus:ring-primary/20"
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
+                                        <div className="flex items-center justify-between p-3 rounded-lg border border-zinc-100 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-900/10">
+                                            <div className="space-y-0.5">
+                                                <Label className="text-sm">Logo o Nombre Visible</Label>
+                                                <p className="text-xs text-muted-foreground">¿Es identificable la marca por texto o isotipo?</p>
+                                            </div>
+                                            {mode === 'view' ? (
+                                                <Badge variant={visualReference.logo_or_name_visible ? "default" : "secondary"} className={visualReference.logo_or_name_visible ? "bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400" : ""}>
+                                                    {visualReference.logo_or_name_visible ? "Sí" : "No"}
+                                                </Badge>
+                                            ) : (
+                                                <Switch
+                                                    checked={visualReference.logo_or_name_visible}
+                                                    onCheckedChange={(v: boolean) => setVisualReference(prev => ({ ...prev, logo_or_name_visible: v }))}
+                                                />
+                                            )}
                                         </div>
 
-                                        {/* Details: Hair, Face, Expression */}
+                                        {/* Core Description: Appearance (Long Text) */}
+                                        <div>
+                                            {mode === 'view' ? (
+                                                <DataField label="Apariencia General" value={visualReference.appearance} />
+                                            ) : (
+                                                <div className="space-y-1.5">
+                                                    <div className="flex items-center gap-2">
+                                                        <Label className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">Apariencia General</Label>
+                                                        <InfoTooltip text="Descripción detallada del aspecto visual." />
+                                                    </div>
+                                                    <Textarea
+                                                        value={visualReference.appearance || ""}
+                                                        onChange={e => setVisualReference(prev => ({ ...prev, appearance: e.target.value }))}
+                                                        rows={3}
+                                                        className="text-sm bg-zinc-50/50 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800 focus:ring-primary/20"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Tags: Colors, Notable Elements, Readable Text */}
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                             {[
-                                                { label: "Cabello", key: "hair" },
-                                                { label: "Rostro", key: "face" },
-                                                { label: "Expresión", key: "expression" }
+                                                { label: "Colores", key: "colors", field: "colors" },
+                                                { label: "Elementos Notables", key: "notable_elements", field: "notable_elements" },
+                                                { label: "Texto Legible", key: "readable_text", field: "readable_text" }
                                             ].map(item => (
-                                                <div key={item.key}>
+                                                <div key={item.key} className="space-y-2">
+                                                    <Label className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">{item.label}</Label>
                                                     {mode === 'view' ? (
-                                                        <DataField label={item.label} value={(visualReference as any)[item.key]} />
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {(visualReference as any)[item.field]?.map((t: string, i: number) => (
+                                                                <Badge key={i} variant="outline" className="text-[10px]">{t}</Badge>
+                                                            )) || <span className="text-xs italic text-zinc-400">N/A</span>}
+                                                        </div>
                                                     ) : (
-                                                        <div className="space-y-1.5">
-                                                            <Label className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">{item.label}</Label>
-                                                            <Input
-                                                                value={(visualReference as any)[item.key] || ""}
-                                                                onChange={e => setVisualReference(prev => ({ ...prev, [item.key]: e.target.value }))}
-                                                                className="h-9 text-sm bg-zinc-50/50 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800 focus:ring-primary/20"
-                                                            />
+                                                        <div className="space-y-2">
+                                                            <div className="flex gap-2">
+                                                                <Input
+                                                                    size={1}
+                                                                    className="h-8 text-xs"
+                                                                    value={tempTags[item.field] || ""}
+                                                                    onChange={e => setTempTags({ ...tempTags, [item.field]: e.target.value })}
+                                                                    onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), addTag('visualReference', item.field, tempTags[item.field], item.field))}
+                                                                    placeholder="..."
+                                                                />
+                                                                <Button size="sm" className="h-8 w-8" onClick={() => addTag('visualReference', item.field, tempTags[item.field], item.field)}>
+                                                                    <Plus className="h-3 w-3" />
+                                                                </Button>
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {(visualReference as any)[item.field]?.map((t: string, i: number) => (
+                                                                    <Badge key={i} variant="secondary" className="pr-1 py-0 h-6 text-[10px]">
+                                                                        {t}
+                                                                        <button type="button" onClick={() => removeTag('visualReference', item.field, i)} className="ml-1 text-zinc-400 hover:text-red-500"><X className="h-2.5 w-2.5" /></button>
+                                                                    </Badge>
+                                                                ))}
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
