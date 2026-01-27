@@ -138,7 +138,17 @@ export function TeamSwitcher({
                   <team.logo className="size-3.5 shrink-0" />
                 </div>
                 {team.name}
-                <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
+                {team.stance && (
+                  <Badge
+                    variant={team.stance === "AGAINST" ? "destructive" : "default"}
+                    className={`ml-auto h-4 px-1 text-[9px] ${team.stance === "AGAINST"
+                      ? "bg-red-600 hover:bg-red-600 dark:bg-red-500"
+                      : "bg-emerald-600 hover:bg-emerald-600 dark:bg-emerald-500"
+                      }`}
+                  >
+                    {team.stance === "AGAINST" ? "Contra" : "Favor"}
+                  </Badge>
+                )}
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
