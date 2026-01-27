@@ -322,8 +322,8 @@ export default function DashboardPage() {
                                     <div key={i} className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <div className={`w-2 h-2 rounded-full ${device.status === 'LIBRE' ? 'bg-green-500' : device.status === 'OCUPADO' ? 'bg-amber-500' : 'bg-red-500'}`} />
-                                            <span className="text-xs font-medium truncate max-w-[120px]" title={device.uuid}>
-                                                {device.name || device.uuid.substring(0, 8)}...
+                                            <span className="text-xs font-medium truncate max-w-[120px]" title={device.deviceName || device.id}>
+                                                {device.personName || device.deviceName || device.id?.substring(0, 8)}
                                             </span>
                                         </div>
                                         <span className="text-[10px] text-muted-foreground">
