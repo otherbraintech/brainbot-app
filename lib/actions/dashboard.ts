@@ -17,7 +17,8 @@ export async function getDashboardStats() {
     const isAdmin = user.role === "ADMIN"
 
     // Base query filter
-    const filter = isAdmin ? {} : { userId: session }
+    const baseFilter = isAdmin ? {} : { userId: session }
+    const orderFilter = { ...baseFilter, deletedAt: null }
 
     // 1. Totals
     const [
@@ -30,10 +31,10 @@ export async function getDashboardStats() {
         totalFollows
     ] = await Promise.all([
         prisma.user.count(),
-        prisma.project.count({ where: filter }),
-        prisma.botOrder.count({ where: filter }),
+        prisma.project.count({ where: { ...baseFilter, deletedAt: null } }),
+        prisma.botOrder.count({ where: orderFilter }),
         prisma.device.count(), // Devices are global
-        prisma.genComment.count({ where: filter }),
+        prisma.genComment.count({ where: baseFilter }),
         prisma.genLike.count({ where: { userId: session } }), // GenLike has userId but GenLike table might be mostly for the order's user
         prisma.genFollow.count({ where: { userId: session } })
     ])
@@ -41,14 +42,14 @@ export async function getDashboardStats() {
     // 2. Orders by Status
     const ordersByStatus = await prisma.botOrder.groupBy({
         by: ['status'],
-        where: filter,
+        where: orderFilter,
         _count: true
     })
 
     // 3. Orders by Social Network
     const socialDistribution = await prisma.botOrder.groupBy({
         by: ['socialNetwork'],
-        where: filter,
+        where: orderFilter,
         _count: true
     })
 
@@ -64,7 +65,7 @@ export async function getDashboardStats() {
 
     const recentOrders = await prisma.botOrder.findMany({
         where: {
-            ...filter,
+            ...orderFilter,
             createdAt: { gte: sevenDaysAgo }
         },
         orderBy: { createdAt: 'asc' },
@@ -91,7 +92,7 @@ export async function getDashboardStats() {
     // 6. Top Projects (by order count)
     const topProjectsRaw = await prisma.botOrder.groupBy({
         by: ['projectId'],
-        where: filter,
+        where: orderFilter,
         _count: true,
         orderBy: {
             _count: {

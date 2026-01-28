@@ -253,7 +253,7 @@ export async function deleteProject(id: string) {
     where: { id, userId: session },
     include: {
       _count: {
-        select: { botOrders: true },
+        select: { botOrders: { where: { deletedAt: null } } },
       },
     },
   })
