@@ -233,10 +233,13 @@ export async function deleteOrder(id: string) {
     return { error: "Orden no encontrada" }
   }
   
-  // Soft delete
+  // Soft delete and mark as CANCELADA
   await prisma.botOrder.update({
     where: { id },
-    data: { deletedAt: new (globalThis as any).Date() } as any,
+    data: { 
+      deletedAt: new (globalThis as any).Date(),
+      status: OrderStatus.CANCELADA 
+    } as any,
   })
   
   revalidatePath(`/dashboard/projects/${order.projectId}`)
