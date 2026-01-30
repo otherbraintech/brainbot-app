@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Trash2, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, Youtube, CheckCircle2, Video, Image as ImageIcon, Type, Activity } from "lucide-react"
+import { MoreHorizontal, Trash2, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, Youtube, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { deleteOrder, startOrder } from "@/lib/actions/orders"
+import { deleteOrder, startOrder, pauseOrder, resumeOrder } from "@/lib/actions/orders"
 import { EditOrderButton } from "@/components/orders/edit-order-button"
 import {
     Sheet,
@@ -65,6 +65,7 @@ type Order = {
         genComments: number
         genLikes: number
         genShares: number
+        genLives: number
     }
 }
 
@@ -74,6 +75,7 @@ const ORDER_TYPE_LABELS: Record<string, { label: string; icon: any; color: strin
     COMPARTIR: { label: "Compartidos", icon: Share2, color: "text-muted-foreground bg-muted" },
     SEGUIMIENTO: { label: "Seguidores", icon: UserPlus, color: "text-muted-foreground bg-muted" },
     REPORTE: { label: "Reportes", icon: FileText, color: "text-muted-foreground bg-muted" },
+    GENLIVE: { label: "En Vivo", icon: Activity, color: "text-muted-foreground bg-muted" },
 }
 
 const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -83,6 +85,7 @@ const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secon
     CANCELADA: { label: "Cancelada", variant: "destructive" },
     REINTENTAR: { label: "Error / Reintentar", variant: "destructive" },
     COMPLETADA: { label: "Orden Completada", variant: "default" },
+    PAUSADA: { label: "Pausada", variant: "outline" },
 }
 
 const NETWORK_LABELS: Record<string, string> = {
@@ -99,12 +102,13 @@ const NETWORK_COLORS: Record<string, string> = {
     YOUTUBE: "bg-red-50 text-red-700 border-red-100",
 }
 
-type PostType = "VIDEO" | "IMAGEN" | "TEXTO" | "OTRO" | "PAGINA" | "PUBLICACION";
+type PostType = "VIDEO" | "IMAGEN" | "TEXTO" | "LIVE" | "OTRO" | "PAGINA" | "PUBLICACION";
 
 const POST_TYPE_LABELS: Record<PostType, { label: string; icon: any }> = {
     VIDEO: { label: "Video", icon: Video },
     IMAGEN: { label: "Imagen", icon: ImageIcon },
     TEXTO: { label: "Texto", icon: Type },
+    LIVE: { label: "Live", icon: Radio },
     OTRO: { label: "Otro", icon: MoreHorizontal },
     PAGINA: { label: "Página", icon: FileText },
     PUBLICACION: { label: "Publicación", icon: FileText },
@@ -147,6 +151,18 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
 
         if ((result as any)?.error) setError((result as any).error)
         setStartingId(null)
+    }
+
+    async function handlePauseOrder(orderId: string) {
+        setLoading(true)
+        await pauseOrder(orderId)
+        setLoading(false)
+    }
+
+    async function handleResumeOrder(orderId: string) {
+        setLoading(true)
+        await resumeOrder(orderId)
+        setLoading(false)
     }
 
     const activeOrders = (orders as any).filter((o: any) => o.status !== "COMPLETADA")
@@ -266,7 +282,8 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                         order.type === "MEGUSTA" ? order._count.genLikes :
                             order.type === "COMPARTIR" ? order._count.genShares :
                                 order.type === "SEGUIMIENTO" ? (order._count as any).genFollows :
-                                    (order._count as any).genReports
+                                    order.type === "GENLIVE" ? (order._count as any).genLives :
+                                        (order._count as any).genReports
 
                     const isCompletedStatus = order.status === "COMPLETADA"
                     const isGenerated = order.status === "GENERADA"
@@ -370,17 +387,41 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                     <div></div>
 
                                     <div className="flex gap-2 items-center">
-                                        {(isGenerated || isCompletedStatus) && (
-                                            <Badge variant="secondary" className={`${isCompletedStatus ? 'bg-green-100 text-green-700 border-green-200' : 'bg-blue-50 text-blue-700 border-blue-200'} text-[10px] font-bold h-6 px-2`}>
-                                                {isCompletedStatus ? "Finalizada" : "En cola"}
+                                        {(isGenerated || isCompletedStatus || order.status === "PAUSADA") && (
+                                            <Badge variant="secondary" className={`${isCompletedStatus ? 'bg-green-100 text-green-700 border-green-200' : order.status === "PAUSADA" ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200'} text-[10px] font-bold h-6 px-2`}>
+                                                {isCompletedStatus ? "Finalizada" : order.status === "PAUSADA" ? "Pausada" : "En cola"}
                                             </Badge>
                                         )}
 
-                                        {!isGenerated && !isCompletedStatus && !isProcessing && (
+                                        {!isGenerated && !isCompletedStatus && !isProcessing && order.status !== "PAUSADA" && (
                                             <EditOrderButton order={order as any} />
                                         )}
 
-                                        {(isGenerated || isCompletedStatus) ? (
+                                        {isGenerated && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 text-xs font-bold px-4 border-amber-200 text-amber-700 hover:bg-amber-50"
+                                                onClick={() => handlePauseOrder(order.id)}
+                                                disabled={loading}
+                                            >
+                                                Pausar
+                                            </Button>
+                                        )}
+
+                                        {order.status === "PAUSADA" && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 text-xs font-bold px-4 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                                                onClick={() => handleResumeOrder(order.id)}
+                                                disabled={loading}
+                                            >
+                                                Reanudar
+                                            </Button>
+                                        )}
+
+                                        {(isGenerated || isCompletedStatus || order.status === "PAUSADA") ? (
                                             <Button variant="secondary" size="sm" className="h-8 text-xs font-bold px-4 border-slate-200 shadow-sm" asChild>
                                                 <Link href={`/dashboard/orders/${order.id}/executions`}>
                                                     <Activity className="mr-1.5 h-3.5 w-3.5" /> Ver Ejecución

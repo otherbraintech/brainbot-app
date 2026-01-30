@@ -30,6 +30,7 @@ export async function getOrders(projectId: string) {
           genShares: true,
           genFollows: true,
           genReports: true,
+          genLives: true,
         },
       },
     },
@@ -64,6 +65,7 @@ export async function getAllOrders() {
           genShares: true,
           genFollows: true,
           genReports: true,
+          genLives: true,
         },
       },
     },
@@ -106,6 +108,10 @@ export async function getOrder(id: string) {
         orderBy: { createdAt: "desc" }
       },
       genReports: {
+        include: { device: true },
+        orderBy: { createdAt: "desc" }
+      },
+      genLives: {
         include: { device: true },
         orderBy: { createdAt: "desc" }
       },
@@ -281,7 +287,7 @@ export async function startOrder(id: string) {
     }
   }
   
-  if (order.status !== "LISTA" && order.status !== "REINTENTAR" && order.status !== "CANCELADA") {
+  if (order.status !== "LISTA" && order.status !== "REINTENTAR" && order.status !== "CANCELADA" && order.status !== "PAUSADA") {
     return { error: "La orden ya fue iniciada o completada" }
   }
 
@@ -399,6 +405,14 @@ export async function getOrderWithComments(orderId: string) {
         },
         orderBy: { createdAt: "desc" },
       },
+      genLives: {
+        include: {
+          device: {
+            select: { deviceName: true }
+          }
+        },
+        orderBy: { createdAt: "desc" },
+      },
       project: {
         select: {
             name: true,
@@ -458,4 +472,62 @@ export async function getBreadcrumbData(orderId: string) {
     projectName: order.project.name,
     projectId: order.projectId
   }
+}
+
+export async function pauseOrder(id: string) {
+  const session = await getSession()
+  
+  if (!session) {
+    return { error: "No autenticado" }
+  }
+  
+  const order = await prisma.botOrder.findFirst({
+    where: { id, userId: session },
+  })
+  
+  if (!order) {
+    return { error: "Orden no encontrada" }
+  }
+
+  if (order.status !== OrderStatus.GENERADA) {
+    return { error: "Solo se pueden pausar órdenes que están en cola (GENERADA)" }
+  }
+  
+  await prisma.botOrder.update({
+    where: { id },
+    data: { status: OrderStatus.PAUSADA } as any,
+  })
+  
+  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  
+  return { success: true }
+}
+
+export async function resumeOrder(id: string) {
+  const session = await getSession()
+  
+  if (!session) {
+    return { error: "No autenticado" }
+  }
+  
+  const order = await prisma.botOrder.findFirst({
+    where: { id, userId: session },
+  })
+  
+  if (!order) {
+    return { error: "Orden no encontrada" }
+  }
+
+  if (order.status !== OrderStatus.PAUSADA) {
+    return { error: "Solo se pueden reanudar órdenes que están pausadas" }
+  }
+  
+  await prisma.botOrder.update({
+    where: { id },
+    data: { status: OrderStatus.GENERADA } as any,
+  })
+  
+  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  
+  return { success: true }
 }

@@ -38,6 +38,7 @@ const POST_TYPES = [
     { value: "VIDEO", label: "Video" },
     { value: "IMAGEN", label: "Imagen" },
     { value: "TEXTO", label: "Texto" },
+    { value: "LIVE", label: "Live" },
     { value: "OTRO", label: "Otro" },
 ] as const
 

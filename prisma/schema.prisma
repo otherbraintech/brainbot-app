@@ -24,6 +24,7 @@ model User {
   genShares     GenShare[]
   genFollows    GenFollow[]
   genReports    GenReport[]
+  genLives      GenLive[]
   integrations  IntegrationLog[]
   projects      Project[]
 }
@@ -41,6 +42,7 @@ model Project {
   deletedAt    DateTime?
   botOrders    BotOrder[]
   genComments  GenComment[]
+  genLives     GenLive[]
   integrations IntegrationLog[]
   user         User             @relation(fields: [userId], references: [id])
 
@@ -87,6 +89,7 @@ model BotOrder {
   genShares     GenShare[]
   genFollows    GenFollow[]
   genReports    GenReport[]
+  genLives      GenLive[]
   integrations  IntegrationLog[]
 
   @@index([projectId, createdAt])
@@ -176,6 +179,28 @@ model GenReport {
   @@index([orderId, createdAt])
 }
 
+model GenLive {
+  id        Int           @id @default(autoincrement())
+  orderId   String
+  userId    String
+  projectId String?
+  text      String
+  deviceId  String?
+  publishAt String?
+  status    CommentStatus @default(PENDIENTE)
+  deletedAt DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  device    Device?       @relation(fields: [deviceId], references: [id])
+  botOrder  BotOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  project   Project?      @relation(fields: [projectId], references: [id])
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@index([orderId, createdAt])
+  @@index([userId, createdAt])
+  @@index([deviceId, createdAt])
+}
+
 model Device {
   id           String       @id @default(cuid())
   deviceName   String       @unique
@@ -192,6 +217,7 @@ model Device {
   genShares    GenShare[]
   genFollows   GenFollow[]
   genReports   GenReport[]
+  genLives     GenLive[]
 
   @@map("dispositivos")
 }
@@ -236,6 +262,7 @@ enum PostType {
   VIDEO
   IMAGEN
   TEXTO
+  LIVE
   OTRO
   PAGINA
   PUBLICACION
@@ -248,6 +275,7 @@ enum OrderStatus {
   CANCELADA
   REINTENTAR
   COMPLETADA
+  PAUSADA
 }
 
 enum CommentStatus {
@@ -273,6 +301,7 @@ enum OrderType {
   COMPARTIR
   SEGUIMIENTO
   REPORTE
+  GENLIVE
 }
 
 enum DeviceStatus {
