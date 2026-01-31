@@ -579,3 +579,38 @@ export async function resumeOrder(id: string) {
   
   return { success: true }
 }
+
+export async function duplicateOrder(id: string) {
+  const session = await getSession()
+  
+  if (!session) {
+    return { error: "No autenticado" }
+  }
+  
+  const order = await prisma.botOrder.findFirst({
+    where: { id, userId: session },
+  })
+  
+  if (!order) {
+    return { error: "Orden no encontrada" }
+  }
+  
+  await prisma.botOrder.create({
+    data: {
+      userId: session,
+      projectId: order.projectId,
+      type: order.type,
+      url: order.url,
+      socialNetwork: order.socialNetwork,
+      postType: order.postType,
+      orderName: `${order.orderName} (Copia)`,
+      intent: order.intent,
+      quantity: order.quantity,
+      status: OrderStatus.GENERADA,
+    } as any,
+  })
+  
+  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  
+  return { success: true }
+}

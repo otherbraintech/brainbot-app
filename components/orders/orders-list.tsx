@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Trash2, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, Youtube, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause } from "lucide-react"
+import { MoreHorizontal, Trash2, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, Youtube, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { deleteOrder, startOrder, pauseOrder, resumeOrder, pauseAllOrders, resumeAllOrders } from "@/lib/actions/orders"
+import { deleteOrder, startOrder, pauseOrder, resumeOrder, pauseAllOrders, resumeAllOrders, duplicateOrder } from "@/lib/actions/orders"
 import { EditOrderButton } from "@/components/orders/edit-order-button"
 import {
     Sheet,
@@ -175,6 +175,16 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
     async function handleResumeAll() {
         setLoading(true)
         await resumeAllOrders(projectId)
+        setLoading(false)
+    }
+
+    async function handleDuplicate(order: Order) {
+        if (!confirm(`¿Duplicar la orden "${order.orderName}" y ponerla en cola?`)) return
+        setLoading(true)
+        const result = await duplicateOrder(order.id)
+        if ((result as any).error) {
+            setError((result as any).error)
+        }
         setLoading(false)
     }
 
@@ -417,6 +427,10 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                             <DropdownMenuItem className="cursor-pointer" onClick={() => window.open(order.url, '_blank', 'noopener,noreferrer')} {...({} as any)}>
                                                 <ExternalLink className="mr-2 h-4 w-4" />
                                                 Ver publicación
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem className="cursor-pointer" onClick={() => handleDuplicate(order)} {...({} as any)}>
+                                                <Copy className="mr-2 h-4 w-4" />
+                                                Duplicar orden
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                                 className="text-red-600"
