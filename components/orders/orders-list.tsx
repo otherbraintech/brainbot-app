@@ -327,33 +327,42 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
 
                     const isCompletedStatus = order.status === "COMPLETADA"
                     const isGenerated = order.status === "GENERADA"
-                    const isLiveOrder = order.type === "GENLIVE"
+                    const isLiveOrder = order.type === "GENLIVE" || order.postType === "LIVE"
 
                     return (
                         <Card
                             key={order.id}
                             className={`overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col h-full 
-                                ${isCompletedStatus ? 'border-green-200 bg-green-50/10' : ''} 
-                                ${isLiveOrder && !isCompletedStatus ? 'border-indigo-400 ring-2 ring-indigo-100 shadow-xl shadow-indigo-100/20 scale-[1.02]' : ''}`}
+                                ${isCompletedStatus && !isLiveOrder ? 'border-green-200 bg-green-50/10' : ''} 
+                                ${isLiveOrder ? 'border-red-200 ring-1 ring-red-100 shadow-lg shadow-red-50/50 scale-[1.01] bg-white' : ''}`}
                             {...({} as any)}
                         >
-                            {isLiveOrder && !isCompletedStatus && (
-                                <div className="bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 text-white text-[10px] font-black uppercase tracking-widest py-1.5 px-3 flex items-center justify-center gap-2 animate-pulse shadow-sm">
-                                    <span className="relative flex h-2 w-2">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                                    </span>
-                                    Prioridad: Live Activo
+                            {isLiveOrder && (
+                                <div className={`text-white text-[10px] font-black uppercase tracking-widest py-1 px-3 flex items-center justify-center gap-2 shadow-sm ${isCompletedStatus ? 'bg-emerald-600' : 'bg-red-600 animate-pulse'}`}>
+                                    {isCompletedStatus ? (
+                                        <>
+                                            <CheckCircle2 className="h-3 w-3" />
+                                            Live Finalizado
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                            </span>
+                                            Prioridad: Live Activo
+                                        </>
+                                    )}
                                 </div>
                             )}
-                            <CardHeader className={`flex flex-row items-center justify-between pb-2 min-h-[80px] ${isCompletedStatus ? 'bg-green-50/40' : isLiveOrder ? 'bg-gradient-to-r from-indigo-50/80 to-purple-50/80' : 'bg-muted/20'}`} {...({} as any)}>
+                            <CardHeader className={`flex flex-row items-center justify-between pb-2 min-h-[80px] ${isCompletedStatus && !isLiveOrder ? 'bg-green-50/40' : isLiveOrder ? 'bg-red-50/30' : 'bg-muted/20'}`} {...({} as any)}>
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-1.5 rounded-md transition-all duration-500 ${isCompletedStatus ? 'bg-green-100 text-green-700' : isLiveOrder ? 'p-2.5 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-lg shadow-indigo-300 ring-2 ring-white scale-110' : typeInfo.color}`}>
-                                            {isCompletedStatus ? <CheckCircle2 className="h-4 w-4" /> : <typeInfo.icon className={`h-4 w-4 ${isLiveOrder ? 'h-5 w-5 animate-pulse' : ''}`} />}
+                                        <div className={`p-1.5 rounded-md transition-all duration-500 ${isCompletedStatus && !isLiveOrder ? 'bg-green-100 text-green-700' : isLiveOrder ? 'p-2 bg-red-100 text-red-600 shadow-sm ring-1 ring-red-200 scale-105' : typeInfo.color}`}>
+                                            {isCompletedStatus && !isLiveOrder ? <CheckCircle2 className="h-4 w-4" /> : <typeInfo.icon className={`h-4 w-4 ${isLiveOrder && !isCompletedStatus ? 'h-5 w-5 animate-pulse' : 'h-5 w-5'}`} />}
                                         </div>
                                         <div className="flex flex-col">
-                                            <CardTitle className={`text-md font-bold truncate max-w-[150px] transition-colors ${isCompletedStatus ? 'text-green-800' : isLiveOrder ? 'text-indigo-900 font-black' : ''}`}>
+                                            <CardTitle className={`text-md font-bold truncate max-w-[150px] transition-colors ${isCompletedStatus ? 'text-green-800' : isLiveOrder ? 'text-red-900 font-black' : ''}`}>
                                                 {order.orderName}
                                             </CardTitle>
                                             {isCompletedStatus && (
@@ -427,7 +436,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                     Prioridad: Live Activo
                                 </div>
                             )}
-                            <CardContent className={`pt-2.5 space-y-4 flex-1 flex flex-col justify-between ${order.type === "GENLIVE" && order.status !== "COMPLETADA" ? 'bg-indigo-50/10' : ''}`} {...({} as any)}>
+                            <CardContent className={`pt-2.5 space-y-4 flex-1 flex flex-col justify-between ${isLiveOrder ? 'bg-red-50/5' : ''}`} {...({} as any)}>
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1 text-sm">
                                         <span className="text-[10px] text-muted-foreground font-bold uppercase block">Meta</span>
