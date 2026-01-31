@@ -606,7 +606,7 @@ export async function duplicateOrder(id: string) {
       orderName: `${order.orderName} (Copia)`,
       intent: order.intent,
       quantity: order.quantity,
-      status: "GENERADA", // Force string literal to ensure correct status
+      status: OrderStatus.LISTA,
     } as any,
   })
   

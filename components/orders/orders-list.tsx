@@ -187,7 +187,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
         setLoading(false)
     }
 
-    const activeOrders = (orders as any).filter((o: any) => o.status !== "COMPLETADA")
+    const activeOrders = (orders as any).filter((o: any) => o.status !== "COMPLETADA" || (o.status === "COMPLETADA" && (o.type === 'GENLIVE' || o.postType === 'LIVE')))
     const queueOrders = (orders as any).filter((o: any) => o.status === "GENERADA")
     const pausedOrders = (orders as any).filter((o: any) => o.status === "PAUSADA")
 
@@ -346,7 +346,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                 ${isLiveOrder ? 'border-red-200 ring-1 ring-red-100 shadow-lg shadow-red-50/50 scale-[1.01] bg-white' : ''}`}
                             {...({} as any)}
                         >
-                            {isLiveOrder && (
+                            {isLiveOrder && order.status !== 'LISTA' && (
                                 <div className={`text-white text-[10px] font-black uppercase tracking-widest py-1 px-3 flex items-center justify-center gap-2 shadow-sm ${isCompletedStatus ? 'bg-emerald-600' : 'bg-red-600 animate-pulse'}`}>
                                     {isCompletedStatus ? (
                                         <>
@@ -477,7 +477,8 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                     <div className="flex gap-2 items-center">
                                         {(isGenerated || isCompletedStatus || order.status === "PAUSADA") && (
                                             <Badge variant="secondary" className={`${isCompletedStatus ? 'bg-green-100 text-green-700 border-green-200' : order.status === "PAUSADA" ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200'} text-[10px] font-bold h-6 px-2`}>
-                                                {isCompletedStatus ? "Finalizada" : order.status === "PAUSADA" ? "Pausada" : "En cola"}
+                                                {isCompletedStatus ? "Finalizada" : order.status === "PAUSADA" ? "Pausada" :
+                                                    (order.type === 'COMENTARIO' && currentCount > 0) ? "Comentando" : "En cola"}
                                             </Badge>
                                         )}
 
