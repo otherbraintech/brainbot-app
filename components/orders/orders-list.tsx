@@ -179,7 +179,6 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
     }
 
     async function handleDuplicate(order: Order) {
-        if (!confirm(`¿Duplicar la orden "${order.orderName}" y ponerla en cola?`)) return
         setLoading(true)
         const result = await duplicateOrder(order.id)
         if ((result as any).error) {
