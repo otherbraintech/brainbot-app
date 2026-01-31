@@ -430,10 +430,14 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                     </DropdownMenu>
                                 </div>
                             </CardHeader>
-                            {order.type === "GENLIVE" && order.status !== "COMPLETADA" && (
-                                <div className="bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest py-1 px-3 flex items-center justify-center gap-2 animate-pulse">
-                                    <div className="h-1.5 w-1.5 rounded-full bg-white animate-ping" />
-                                    Prioridad: Live Activo
+                            {order.intent && (order.type === "COMENTARIO" || isLiveOrder) && (
+                                <div className="px-5 py-3 bg-muted/10 border-b border-muted/10">
+                                    <div className="flex gap-2">
+                                        <div className="min-w-[3px] rounded-full bg-muted-foreground/30" />
+                                        <p className="text-xs text-muted-foreground italic line-clamp-3 leading-relaxed">
+                                            "{order.intent}"
+                                        </p>
+                                    </div>
                                 </div>
                             )}
                             <CardContent className={`pt-2.5 space-y-4 flex-1 flex flex-col justify-between ${isLiveOrder ? 'bg-red-50/5' : ''}`} {...({} as any)}>
