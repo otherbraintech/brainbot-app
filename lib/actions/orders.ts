@@ -224,6 +224,54 @@ export async function updateOrder(input: UpdateOrderInput) {
   return { success: true }
 }
 
+export async function pauseAllOrders(projectId: string) {
+  const session = await getSession()
+  
+  if (!session) {
+    return { error: "No autenticado" }
+  }
+
+  // Update all orders in GENERADA status for this project and user
+  const result = await prisma.botOrder.updateMany({
+    where: {
+      projectId,
+      userId: session,
+      status: OrderStatus.GENERADA
+    },
+    data: {
+      status: OrderStatus.PAUSADA
+    } as any
+  })
+
+  revalidatePath(`/dashboard/projects/${projectId}`)
+
+  return { success: true, count: result.count }
+}
+
+export async function resumeAllOrders(projectId: string) {
+  const session = await getSession()
+  
+  if (!session) {
+    return { error: "No autenticado" }
+  }
+
+  // Update all orders in PAUSADA status for this project and user
+  const result = await prisma.botOrder.updateMany({
+    where: {
+      projectId,
+      userId: session,
+      status: OrderStatus.PAUSADA
+    },
+    data: {
+      status: OrderStatus.GENERADA
+    } as any
+  })
+
+  revalidatePath(`/dashboard/projects/${projectId}`)
+
+  return { success: true, count: result.count }
+}
+
 export async function deleteOrder(id: string) {
   const session = await getSession()
   

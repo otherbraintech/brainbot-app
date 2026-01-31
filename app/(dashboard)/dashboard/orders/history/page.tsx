@@ -9,7 +9,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { History, ExternalLink, Activity } from "lucide-react"
+import { History, ExternalLink, Activity, Video, Image as ImageIcon, Type, Radio, MoreHorizontal, FileText } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
@@ -20,6 +20,17 @@ const STATUS_LABELS: any = {
     CANCELADA: { label: "Cancelada", variant: "destructive" },
     REINTENTAR: { label: "Reintentar", variant: "warning" },
     COMPLETADA: { label: "Completada", variant: "default", className: "bg-green-100 text-green-700 hover:bg-green-100 border-green-200" },
+    PAUSADA: { label: "Pausada", variant: "outline", className: "bg-amber-50 text-amber-700 border-amber-200" },
+}
+
+const POST_TYPE_LABELS: any = {
+    VIDEO: { label: "Video", icon: Video },
+    IMAGEN: { label: "Imagen", icon: ImageIcon },
+    TEXTO: { label: "Texto", icon: Type },
+    LIVE: { label: "Live", icon: Radio },
+    OTRO: { label: "Otro", icon: MoreHorizontal },
+    PAGINA: { label: "Página", icon: FileText },
+    PUBLICACION: { label: "Publicación", icon: FileText },
 }
 
 const NETWORK_LABELS: Record<string, string> = {
@@ -66,7 +77,8 @@ export default async function OrdersHistoryPage() {
                             <TableRow>
                                 <TableHead>Fecha</TableHead>
                                 <TableHead>Orden / Proyecto</TableHead>
-                                <TableHead>Tipo / Red Social</TableHead>
+                                <TableHead>Tipo / Publicación</TableHead>
+                                <TableHead>Red Social</TableHead>
                                 <TableHead className="text-center">Meta / Realizado</TableHead>
                                 <TableHead>Estado</TableHead>
                                 <TableHead className="text-right">Acciones</TableHead>
@@ -114,13 +126,25 @@ export default async function OrdersHistoryPage() {
                                                     <Badge variant="outline" className="text-[10px] uppercase font-bold border-none bg-muted/50">
                                                         {order.type}
                                                     </Badge>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={`text-[10px] font-bold border-none ${NETWORK_COLORS[order.socialNetwork] || "bg-muted/50 text-muted-foreground"}`}
-                                                    >
-                                                        {NETWORK_LABELS[order.socialNetwork] || order.socialNetwork}
-                                                    </Badge>
+                                                    {(() => {
+                                                        const pt = POST_TYPE_LABELS[order.postType] || POST_TYPE_LABELS.OTRO
+                                                        const Icon = pt.icon
+                                                        return (
+                                                            <Badge variant="outline" className="text-[10px] uppercase font-bold border-none bg-blue-50 text-blue-700">
+                                                                <Icon className="mr-1 h-3 w-3" />
+                                                                {pt.label}
+                                                            </Badge>
+                                                        )
+                                                    })()}
                                                 </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant="outline"
+                                                    className={`text-[10px] font-bold border-none ${NETWORK_COLORS[order.socialNetwork] || "bg-muted/50 text-muted-foreground"}`}
+                                                >
+                                                    {NETWORK_LABELS[order.socialNetwork] || order.socialNetwork}
+                                                </Badge>
                                             </TableCell>
                                             <TableCell className="text-center">
                                                 <div className="flex items-center justify-center gap-2">
