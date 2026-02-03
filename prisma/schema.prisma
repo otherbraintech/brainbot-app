@@ -1,0 +1,315 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String           @id @default(cuid())
+  username      String           @unique
+  usernameLower String           @unique
+  passwordHash  String
+  name          String
+  role          Role             @default(USUARIO)
+  plan          Plan             @default(GRATIS)
+  commentLimit  Int              @default(500)
+  commentsUsed  Int              @default(0)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  botOrders     BotOrder[]
+  genComments   GenComment[]
+  genLikes      GenLike[]
+  genShares     GenShare[]
+  genFollows    GenFollow[]
+  genReports    GenReport[]
+  genLives      GenLive[]
+  integrations  IntegrationLog[]
+  projects      Project[]
+}
+
+model Project {
+  id                String           @id @default(cuid())
+  name              String
+  nameLower         String
+  userId            String
+  targetId          String?
+  target            Target?          @relation(fields: [targetId], references: [id])
+  stance            ProjectStance    @default(FAVOR)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  deletedAt         DateTime?
+  botOrders         BotOrder[]
+  genComments       GenComment[]
+  genLives          GenLive[]
+  integrations      IntegrationLog[]
+  autoOrdersEnabled Boolean          @default(false)
+  urlFacebook       String?
+  urlInstagram      String?
+  urlTiktok         String?
+  user              User             @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model Target {
+  id          String    @id @default(cuid())
+  name        String    @default("Sin Nombre")
+  userId      String
+  content     Json
+  imageBase64 String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  projects    Project[]
+}
+
+enum ProjectStance {
+  FAVOR
+  AGAINST
+}
+
+model BotOrder {
+  id            String           @id @default(cuid())
+  projectId     String
+  userId        String
+  type          OrderType
+  url           String
+  orderName     String           @default("Orden")
+  socialNetwork SocialNetwork
+  postType      PostType
+  intent        String?
+  quantity      Int
+  status        OrderStatus      @default(LISTA)
+  sentAt        DateTime?
+  generatedAt   DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  project       Project          @relation(fields: [projectId], references: [id])
+  user          User             @relation(fields: [userId], references: [id])
+  genComments   GenComment[]
+  genLikes      GenLike[]
+  genShares     GenShare[]
+  genFollows    GenFollow[]
+  genReports    GenReport[]
+  genLives      GenLive[]
+  integrations  IntegrationLog[]
+
+  @@index([projectId, createdAt])
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model GenComment {
+  id        Int           @id @default(autoincrement())
+  orderId   String
+  userId    String
+  projectId String?
+  text      String
+  deviceId  String?
+  publishAt String?
+  status    CommentStatus @default(PENDIENTE)
+  deletedAt DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  device    Device?       @relation(fields: [deviceId], references: [id])
+  botOrder  BotOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  project   Project?      @relation(fields: [projectId], references: [id])
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@index([orderId, createdAt])
+  @@index([userId, createdAt])
+  @@index([deviceId, createdAt])
+}
+
+model GenLike {
+  id        Int           @id @default(autoincrement())
+  orderId   String
+  userId    String
+  status    CommentStatus @default(PENDIENTE)
+  deviceId  String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @default(now())
+  device    Device?       @relation(fields: [deviceId], references: [id])
+  botOrder  BotOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@index([orderId, createdAt])
+}
+
+model GenShare {
+  id        Int           @id @default(autoincrement())
+  orderId   String
+  userId    String
+  status    CommentStatus @default(PENDIENTE)
+  deviceId  String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @default(now())
+  device    Device?       @relation(fields: [deviceId], references: [id])
+  botOrder  BotOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@index([orderId, createdAt])
+}
+
+model GenFollow {
+  id        Int           @id @default(autoincrement())
+  orderId   String
+  userId    String
+  status    CommentStatus @default(PENDIENTE)
+  deviceId  String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @default(now())
+  device    Device?       @relation(fields: [deviceId], references: [id])
+  botOrder  BotOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@index([orderId, createdAt])
+}
+
+model GenReport {
+  id        Int           @id @default(autoincrement())
+  orderId   String
+  userId    String
+  status    CommentStatus @default(PENDIENTE)
+  deviceId  String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @default(now())
+  device    Device?       @relation(fields: [deviceId], references: [id])
+  botOrder  BotOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@index([orderId, createdAt])
+}
+
+model GenLive {
+  id        Int           @id @default(autoincrement())
+  orderId   String
+  userId    String
+  projectId String?
+  text      String
+  deviceId  String?
+  publishAt String?
+  status    CommentStatus @default(PENDIENTE)
+  deletedAt DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  device    Device?       @relation(fields: [deviceId], references: [id])
+  botOrder  BotOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  project   Project?      @relation(fields: [projectId], references: [id])
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@index([orderId, createdAt])
+  @@index([userId, createdAt])
+  @@index([deviceId, createdAt])
+}
+
+model Device {
+  id           String       @id @default(cuid())
+  deviceName   String       @unique
+  personName   String?
+  urlTiktok    String?
+  urlFacebook  String?
+  urlInstagram String?
+  status       DeviceStatus @default(LIBRE)
+  blockedAt    DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  genComments  GenComment[]
+  genLikes     GenLike[]
+  genShares    GenShare[]
+  genFollows   GenFollow[]
+  genReports   GenReport[]
+  genLives     GenLive[]
+
+  @@map("dispositivos")
+}
+
+model IntegrationLog {
+  id        String               @id @default(cuid())
+  source    IntegrationSource
+  eventType IntegrationEventType
+  userId    String?
+  projectId String?
+  orderId   String?
+  payload   Json?
+  error     String?
+  createdAt DateTime             @default(now())
+  botOrder  BotOrder?            @relation(fields: [orderId], references: [id])
+  project   Project?             @relation(fields: [projectId], references: [id])
+  user      User?                @relation(fields: [userId], references: [id])
+
+  @@index([source, createdAt])
+  @@index([eventType, createdAt])
+  @@index([orderId, createdAt])
+}
+
+enum Role {
+  ADMIN
+  USUARIO
+}
+
+enum Plan {
+  GRATIS
+  PRO
+}
+
+enum SocialNetwork {
+  INSTAGRAM
+  TIKTOK
+  FACEBOOK
+  YOUTUBE
+}
+
+enum PostType {
+  VIDEO
+  IMAGEN
+  TEXTO
+  LIVE
+  OTRO
+  PAGINA
+  PUBLICACION
+}
+
+enum OrderStatus {
+  LISTA
+  GENERANDO
+  GENERADA
+  CANCELADA
+  REINTENTAR
+  COMPLETADA
+  PAUSADA
+}
+
+enum CommentStatus {
+  PENDIENTE
+  PUBLICADO
+  CANCELADO
+  SINPUBLICAR
+}
+
+enum IntegrationSource {
+  N8N
+}
+
+enum IntegrationEventType {
+  WEBHOOK_RECEIVED
+  WEBHOOK_REJECTED
+  COMMENTS_PERSISTED
+}
+
+enum OrderType {
+  COMENTARIO
+  MEGUSTA
+  COMPARTIR
+  SEGUIMIENTO
+  REPORTE
+  GENLIVE
+}
+
+enum DeviceStatus {
+  OCUPADO
+  LIBRE
+  BLOQUEADO
+}
