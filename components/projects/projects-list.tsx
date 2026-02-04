@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Pencil, Trash2, FolderOpen } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash2, FolderOpen, RefreshCw} from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
@@ -66,6 +66,10 @@ type Project = {
         content: any
     } | null
     stance?: "FAVOR" | "AGAINST"
+    autoOrdersEnabled: boolean
+    urlFacebook?: string | null
+    urlInstagram?: string | null
+    urlTiktok?: string | null
 
     _count: {
         botOrders: number
@@ -80,6 +84,10 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
     const [userTargets, setUserTargets] = useState<Array<{ id: string; name: string }>>([])
     const [editTargetId, setEditTargetId] = useState<string>("")
     const [editStance, setEditStance] = useState<"FAVOR" | "AGAINST">("FAVOR")
+    const [editAutoOrdersEnabled, setEditAutoOrdersEnabled] = useState(false)
+    const [editUrlFacebook, setEditUrlFacebook] = useState("")
+    const [editUrlInstagram, setEditUrlInstagram] = useState("")
+    const [editUrlTiktok, setEditUrlTiktok] = useState("")
     const [targetsLoading, setTargetsLoading] = useState(false)
     const [blockedTargetIds, setBlockedTargetIds] = useState<string[]>([])
     const [loading, setLoading] = useState(false)
@@ -107,7 +115,12 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
         setLoading(true)
         setError(null)
 
-        const result = await updateProject(editingProject.id, editName)
+        const result = await updateProject(editingProject.id, editName, {
+            autoOrdersEnabled: editAutoOrdersEnabled,
+            urlFacebook: editUrlFacebook || null,
+            urlInstagram: editUrlInstagram || null,
+            urlTiktok: editUrlTiktok || null
+        })
 
         if (!result.error && editTargetId && editTargetId !== "__none") {
             const assignResult = await assignTargetToProject(editingProject.id, editTargetId, editStance)
@@ -141,6 +154,7 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
         setLoading(false)
     }
 
+
     if (projects.length === 0) {
         return (
             <Card>
@@ -167,7 +181,7 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                     {project._count.botOrders} órdenes
                                 </CardDescription>
                                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                                    <Badge variant="outline" className="border-slate-200">
+                                    <Badge variant="outline" className="border-border bg-muted/30">
                                         {project.target?.name ? project.target.name : "Sin objetivo"}
                                     </Badge>
                                     {project.stance && (
@@ -183,39 +197,50 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                     )}
                                 </div>
                             </div>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                        onClick={() => {
-                                            setEditingProject(project)
-                                            setEditName(project.name)
-                                            setEditStance(project.stance || "FAVOR")
-                                            loadTargets(project.targetId || "__none")
-                                        }}
-                                    >
-                                        <Pencil className="mr-2 h-4 w-4" />
-                                        Editar
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        className="text-red-600"
-                                        onClick={() => setDeletingProject(project)}
-                                    >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Eliminar
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                            <div className="flex items-center gap-2">
+                                {project.autoOrdersEnabled && (
+                                    <div className="flex items-center justify-center p-1.5 rounded-full bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800 shadow-sm" title="Monitoreo Automático Activo">
+                                        <RefreshCw className="h-3.5 w-3.5 animate-spin-slow" />
+                                    </div>
+                                )}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem
+                                            onClick={() => {
+                                                setEditingProject(project)
+                                                setEditName(project.name)
+                                                setEditStance(project.stance || "FAVOR")
+                                                setEditAutoOrdersEnabled(project.autoOrdersEnabled)
+                                                setEditUrlFacebook(project.urlFacebook || "")
+                                                setEditUrlInstagram(project.urlInstagram || "")
+                                                setEditUrlTiktok(project.urlTiktok || "")
+                                                loadTargets(project.targetId || "__none")
+                                            }}
+                                        >
+                                            <Pencil className="mr-2 h-4 w-4" />
+                                            Editar
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            className="text-red-600"
+                                            onClick={() => setDeletingProject(project)}
+                                        >
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Eliminar
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <Button
                                 asChild
-                                variant="secondary"
-                                className="w-full border-slate-200 shadow-sm"
+                                variant="outline"
+                                className="w-full border-border bg-background hover:bg-muted shadow-xs"
                                 onClick={() => {
                                     // Update TeamSwitcher when clicking on project
                                     try {
@@ -299,7 +324,7 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                 </Select>
                             </div>
 
-                            <div className="flex items-center justify-between rounded-md border p-3">
+                            <div className="flex items-center justify-between rounded-md border bg-muted/20 p-3">
                                 <div className="space-y-0.5">
                                     <Label className="text-sm">Postura</Label>
                                     <p className="text-xs text-muted-foreground">A favor / En contra</p>
@@ -328,10 +353,56 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                     </span>
                                 </div>
                             </div>
+
+                            <div className="flex items-center justify-between border-t pt-4">
+                                <div className="space-y-0.5">
+                                    <Label className="text-sm font-semibold">Órdenes Automáticas</Label>
+                                    <p className="text-[10px] text-muted-foreground">Monitoreo automático de redes sociales.</p>
+                                </div>
+                                <Switch
+                                    checked={editAutoOrdersEnabled}
+                                    onCheckedChange={setEditAutoOrdersEnabled}
+                                />
+                            </div>
+
+                            {editAutoOrdersEnabled && (
+                                <div className="grid gap-3 animate-in fade-in slide-in-from-top-2 duration-300 bg-muted/30 p-3 rounded-md border">
+                                    <div className="grid gap-1">
+                                        <Label htmlFor="edit-fb" className="text-[10px] uppercase font-bold text-muted-foreground">Facebook URL</Label>
+                                        <Input
+                                            id="edit-fb"
+                                            placeholder="https://facebook.com/..."
+                                            value={editUrlFacebook}
+                                            onChange={(e) => setEditUrlFacebook(e.target.value)}
+                                            className="h-8 text-sm"
+                                        />
+                                    </div>
+                                    <div className="grid gap-1">
+                                        <Label htmlFor="edit-ig" className="text-[10px] uppercase font-bold text-muted-foreground">Instagram URL</Label>
+                                        <Input
+                                            id="edit-ig"
+                                            placeholder="https://instagram.com/..."
+                                            value={editUrlInstagram}
+                                            onChange={(e) => setEditUrlInstagram(e.target.value)}
+                                            className="h-8 text-sm"
+                                        />
+                                    </div>
+                                    <div className="grid gap-1">
+                                        <Label htmlFor="edit-tk" className="text-[10px] uppercase font-bold text-muted-foreground">TikTok URL</Label>
+                                        <Input
+                                            id="edit-tk"
+                                            placeholder="https://tiktok.com/@..."
+                                            value={editUrlTiktok}
+                                            onChange={(e) => setEditUrlTiktok(e.target.value)}
+                                            className="h-8 text-sm"
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="secondary" className="border-slate-200" onClick={() => setEditingProject(null)}>
+                        <Button type="button" variant="outline" className="border-border" onClick={() => setEditingProject(null)}>
                             Cancelar
                         </Button>
                         <Button onClick={handleEdit} disabled={loading}>

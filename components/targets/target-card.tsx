@@ -57,12 +57,12 @@ export function TargetCard({ target }: TargetCardProps) {
                 </div>
             </CardContent>
 
-            <div className="px-6 py-4 border-t bg-zinc-50/50 dark:bg-zinc-900/40 mt-auto grid grid-cols-2 gap-3">
+            <div className="px-6 py-4 border-t bg-muted/30 mt-auto grid grid-cols-2 gap-3">
                 <TargetFormDialog
                     initialData={target}
                     mode="view"
                     trigger={
-                        <Button size="sm" variant="secondary" className="w-full gap-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100">
+                        <Button size="sm" variant="outline" className="w-full gap-2 bg-background border-border shadow-xs">
                             <Eye className="h-3.5 w-3.5" />
                             Ver Perfil
                         </Button>
@@ -72,7 +72,7 @@ export function TargetCard({ target }: TargetCardProps) {
                     initialData={target}
                     mode="edit"
                     trigger={
-                        <Button size="sm" variant="outline" className="w-full gap-2 border-zinc-200 dark:border-zinc-800">
+                        <Button size="sm" variant="outline" className="w-full gap-2 border-border shadow-xs">
                             <Edit className="h-3.5 w-3.5" />
                             Editar
                         </Button>

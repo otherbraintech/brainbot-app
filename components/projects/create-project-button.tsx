@@ -103,17 +103,12 @@ export function CreateProjectButton() {
             return
         }
 
-        const result = await createProject(name, targetId, stance)
-
-        if (!result.error && result.project && autoOrdersEnabled) {
-            // Update with auto order info if enabled
-            await updateProject(result.project.id, name, {
-                autoOrdersEnabled,
-                urlFacebook: urlFacebook || null,
-                urlInstagram: urlInstagram || null,
-                urlTiktok: urlTiktok || null
-            })
-        }
+        const result = await createProject(name, targetId, stance, {
+            autoOrdersEnabled,
+            urlFacebook: urlFacebook || null,
+            urlInstagram: urlInstagram || null,
+            urlTiktok: urlTiktok || null
+        })
 
         if (result.error) {
             setError(result.error)
@@ -152,7 +147,7 @@ export function CreateProjectButton() {
 
                     {targetsLoading ? (
                         <div className="py-6 flex flex-col items-center text-center space-y-4">
-                            <div className="p-3 bg-slate-50 rounded-full border">
+                            <div className="p-3 bg-muted/50 rounded-full border">
                                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                             </div>
                             <div className="space-y-1">
@@ -162,13 +157,13 @@ export function CreateProjectButton() {
                         </div>
                     ) : !hasTargets && !loading ? (
                         <div className="py-6 flex flex-col items-center text-center space-y-4">
-                            <div className="p-3 bg-amber-50 rounded-full">
-                                <AlertCircle className="h-6 w-6 text-amber-600" />
-                            </div>
-                            <div className="space-y-1">
-                                <h4 className="font-semibold text-amber-900">Primero necesitas un Objetivo</h4>
-                                <p className="text-sm text-amber-700">Para crear un proyecto, primero debes configurar un objetivo en tu biblioteca.</p>
-                            </div>
+                             <div className="p-3 bg-amber-500/10 dark:bg-amber-500/20 rounded-full border border-amber-200/50 dark:border-amber-900/50">
+                                 <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                             </div>
+                             <div className="space-y-1">
+                                 <h4 className="font-semibold text-amber-950 dark:text-amber-100">Primero necesitas un Objetivo</h4>
+                                 <p className="text-sm text-amber-800 dark:text-amber-300/80">Para crear un proyecto, primero debes configurar un objetivo en tu biblioteca.</p>
+                             </div>
                             <Button asChild variant="default" className="w-full">
                                 <Link href="/dashboard/targets" onClick={() => setOpen(false)}>
                                     Ir a crear Objetivo <ArrowRight className="ml-2 h-4 w-4" />
@@ -229,7 +224,7 @@ export function CreateProjectButton() {
 
                             {targetId && (
                                 <div className="space-y-4">
-                                    <div className="flex items-center justify-between bg-slate-50 p-3 rounded-md border animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="flex items-center justify-between bg-muted/40 p-3 rounded-md border animate-in fade-in slide-in-from-top-2 duration-300">
                                         <div className="space-y-0.5">
                                             <Label className="text-sm">3. Postura Estratégica</Label>
                                             <p className="text-[10px] text-muted-foreground max-w-[200px]">IA a favor o en contra del objetivo.</p>
@@ -257,7 +252,7 @@ export function CreateProjectButton() {
                                     </div>
 
                                     {autoOrdersEnabled && (
-                                        <div className="grid gap-3 animate-in fade-in slide-in-from-top-2 duration-300 bg-slate-50 p-3 rounded-md border">
+                                        <div className="grid gap-3 animate-in fade-in slide-in-from-top-2 duration-300 bg-muted/30 p-3 rounded-md border">
                                             <div className="grid gap-1">
                                                 <Label htmlFor="fb" className="text-[10px] uppercase font-bold text-muted-foreground">Facebook URL</Label>
                                                 <Input

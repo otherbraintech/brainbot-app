@@ -157,7 +157,17 @@ export async function getBlockedTargetIds() {
   return blocked
 }
 
-export async function createProject(name: string, targetId?: string, stance: ProjectStance = "FAVOR") {
+export async function createProject(
+  name: string,
+  targetId?: string,
+  stance: ProjectStance = "FAVOR",
+  data?: {
+    autoOrdersEnabled?: boolean,
+    urlFacebook?: string | null,
+    urlInstagram?: string | null,
+    urlTiktok?: string | null
+  }
+) {
   const session = await getSession()
   
   if (!session) {
@@ -202,7 +212,10 @@ export async function createProject(name: string, targetId?: string, stance: Pro
       userId: session,
       targetId: targetId || null,
       stance: stance,
-      autoOrdersEnabled: false, // Default to false on creation
+      autoOrdersEnabled: data?.autoOrdersEnabled || false,
+      urlFacebook: data?.urlFacebook || null,
+      urlInstagram: data?.urlInstagram || null,
+      urlTiktok: data?.urlTiktok || null,
     },
   })
   

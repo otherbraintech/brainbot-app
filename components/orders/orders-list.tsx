@@ -96,10 +96,10 @@ const NETWORK_LABELS: Record<string, string> = {
 }
 
 const NETWORK_COLORS: Record<string, string> = {
-    FACEBOOK: "bg-blue-50 text-blue-700 border-blue-100",
-    INSTAGRAM: "bg-pink-50 text-pink-700 border-pink-100",
-    TIKTOK: "bg-slate-900 text-white border-slate-800",
-    YOUTUBE: "bg-red-50 text-red-700 border-red-100",
+    FACEBOOK: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200/50 dark:border-blue-900/50",
+    INSTAGRAM: "bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-200/50 dark:border-pink-900/50",
+    TIKTOK: "bg-zinc-900 dark:bg-zinc-950 text-white border-zinc-800",
+    YOUTUBE: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-200/50 dark:border-red-900/50",
 }
 
 type PostType = "VIDEO" | "IMAGEN" | "TEXTO" | "LIVE" | "OTRO" | "PAGINA" | "PUBLICACION";
@@ -200,7 +200,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                     <p className="text-muted-foreground text-center mt-1">
                         Crea tu primera orden para comenzar a interactuar.
                         <br />
-                        <Link href="/dashboard/orders/history" className="text-blue-600 hover:underline text-xs mt-2 inline-block">Ver historial de completadas</Link>
+                        <Link href="/dashboard/orders/history" className="text-primary hover:underline text-xs mt-2 inline-block">Ver historial de completadas</Link>
                     </p>
                 </CardContent>
             </Card>
@@ -341,9 +341,9 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                     return (
                         <Card
                             key={order.id}
-                            className={`overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col h-full 
-                                ${isCompletedStatus && !isLiveOrder ? 'border-green-200 bg-green-50/10' : ''} 
-                                ${isLiveOrder ? 'border-red-200 ring-1 ring-red-100 shadow-lg shadow-red-50/50 scale-[1.01] bg-white' : ''}`}
+                            className={`overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col h-full border
+                                ${isCompletedStatus && !isLiveOrder ? 'border-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-500/10' : ''} 
+                                ${isLiveOrder ? 'border-red-500/30 ring-1 ring-red-500/10 shadow-lg shadow-red-500/10 scale-[1.01] bg-card' : ''}`}
                             {...({} as any)}
                         >
                             {isLiveOrder && order.status !== 'LISTA' && (
@@ -367,11 +367,11 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                             <CardHeader className={`flex flex-row items-center justify-between pb-2 min-h-[80px] ${isCompletedStatus && !isLiveOrder ? 'bg-green-50/40' : isLiveOrder ? 'bg-red-50/30' : 'bg-muted/20'}`} {...({} as any)}>
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-1.5 rounded-md transition-all duration-500 ${isCompletedStatus && !isLiveOrder ? 'bg-green-100 text-green-700' : isLiveOrder ? 'p-2 bg-red-100 text-red-600 shadow-sm ring-1 ring-red-200 scale-105' : typeInfo.color}`}>
+                                        <div className={`p-1.5 rounded-md transition-all duration-500 ${isCompletedStatus && !isLiveOrder ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : isLiveOrder ? 'p-2 bg-red-500/20 text-red-600 dark:text-red-400 shadow-sm ring-1 ring-red-500/30 scale-105' : typeInfo.color}`}>
                                             {isCompletedStatus && !isLiveOrder ? <CheckCircle2 className="h-4 w-4" /> : <typeInfo.icon className={`h-4 w-4 ${isLiveOrder && !isCompletedStatus ? 'h-5 w-5 animate-pulse' : 'h-5 w-5'}`} />}
                                         </div>
                                         <div className="flex flex-col">
-                                            <CardTitle className={`text-md font-bold truncate max-w-[150px] transition-colors ${isCompletedStatus ? 'text-green-800' : isLiveOrder ? 'text-red-900 font-black' : ''}`}>
+                                            <CardTitle className={`text-md font-bold truncate max-w-[150px] transition-colors ${isCompletedStatus ? 'text-emerald-700 dark:text-emerald-300' : isLiveOrder ? 'text-red-700 dark:text-red-400 font-black' : ''}`}>
                                                 {order.orderName}
                                             </CardTitle>
                                             {isCompletedStatus && (
@@ -476,7 +476,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
 
                                     <div className="flex gap-2 items-center">
                                         {(isGenerated || isCompletedStatus || order.status === "PAUSADA") && (
-                                            <Badge variant="secondary" className={`${isCompletedStatus ? 'bg-green-100 text-green-700 border-green-200' : order.status === "PAUSADA" ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200'} text-[10px] font-bold h-6 px-2`}>
+                                            <Badge variant="secondary" className={`${isCompletedStatus ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' : order.status === "PAUSADA" ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' : 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20'} text-[10px] font-bold h-6 px-2`}>
                                                 {isCompletedStatus ? "Finalizada" : order.status === "PAUSADA" ? "Pausada" :
                                                     (order.type === 'COMENTARIO' && currentCount > 0) ? "Comentando" : "En cola"}
                                             </Badge>
