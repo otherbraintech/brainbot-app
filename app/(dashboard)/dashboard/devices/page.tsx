@@ -11,6 +11,7 @@ import {
 import { CreateDeviceButton, EditDeviceButton, DeleteDeviceButton, ViewDeviceButton } from "@/components/devices/device-actions"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Facebook, Instagram, Video } from "lucide-react"
+import { TikTokIcon } from "@/components/icons/tiktok-icon"
 import Link from "next/link"
 
 const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -50,23 +51,37 @@ export default async function DevicesPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-[50px]">#</TableHead>
                                 <TableHead>Nombre del Dispositivo</TableHead>
                                 <TableHead>Persona Asignada</TableHead>
+                                <TableHead>Etiqueta</TableHead>
+                                <TableHead>Teléfono</TableHead>
                                 <TableHead>Redes</TableHead>
                                 <TableHead>Estado</TableHead>
                                 <TableHead className="w-[100px]">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {devices.map((device) => {
+                            {devices.map((device, index) => {
                                 const statusInfo = STATUS_LABELS[device.status] || { label: device.status, variant: "outline" as const }
                                 return (
                                     <TableRow key={device.id}>
+                                        <TableCell className="text-muted-foreground font-mono text-xs">
+                                            {index + 1}
+                                        </TableCell>
                                         <TableCell className="font-medium">
                                             {device.deviceName}
                                         </TableCell>
                                         <TableCell>
                                             {device.personName || "-"}
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="text-sm font-medium text-primary/80">
+                                                {device.label || "-"}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="font-mono text-sm">
+                                            {device.phoneNumber || "-"}
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex gap-2">
@@ -82,9 +97,9 @@ export default async function DevicesPage() {
                                                 ) : <Facebook className="h-4 w-4 text-muted-foreground/30" />}
                                                 {device.urlTiktok ? (
                                                     <a href={device.urlTiktok} target="_blank" rel="noopener noreferrer" className="text-black hover:text-gray-700 dark:text-white dark:hover:text-gray-300">
-                                                        <Video className="h-4 w-4" />
+                                                        <TikTokIcon className="h-4 w-4" />
                                                     </a>
-                                                ) : <Video className="h-4 w-4 text-muted-foreground/30" />}
+                                                ) : <TikTokIcon className="h-4 w-4 text-muted-foreground/30" />}
                                             </div>
                                         </TableCell>
                                         <TableCell>

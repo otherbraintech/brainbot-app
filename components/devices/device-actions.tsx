@@ -33,6 +33,8 @@ type Device = {
     id: string
     deviceName: string
     personName: string | null
+    label: string | null
+    phoneNumber: string | null
     status: string
     urlTiktok: string | null
     urlFacebook: string | null
@@ -49,7 +51,11 @@ export function ViewDeviceButton({ device }: { device: Device }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-indigo-500 hover:bg-indigo-50">
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-500/10 hover:shadow-[0_0_15px_rgba(99,102,241,0.4)] transition-all duration-300"
+                >
                     <Eye className="h-4 w-4" />
                 </Button>
             </DialogTrigger>
@@ -72,6 +78,14 @@ export function ViewDeviceButton({ device }: { device: Device }) {
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right font-bold">Estado:</Label>
                         <span className="col-span-3">{device.status}</span>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right font-bold">Etiqueta:</Label>
+                        <span className="col-span-3">{device.label || "-"}</span>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label className="text-right font-bold">Teléfono:</Label>
+                        <span className="col-span-3">{device.phoneNumber || "-"}</span>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right font-bold">Bloqueado:</Label>
@@ -109,7 +123,8 @@ export function CreateDeviceButton() {
     const [loading, setLoading] = useState(false)
     const [deviceName, setDeviceName] = useState("")
     const [personName, setPersonName] = useState("")
-
+    const [label, setLabel] = useState("")
+    const [phoneNumber, setPhoneNumber] = useState("")
     const [urlTiktok, setUrlTiktok] = useState("")
     const [urlFacebook, setUrlFacebook] = useState("")
     const [urlInstagram, setUrlInstagram] = useState("")
@@ -120,6 +135,8 @@ export function CreateDeviceButton() {
         await createDevice({
             deviceName,
             personName: personName || undefined,
+            label: label || undefined,
+            phoneNumber: phoneNumber || undefined,
             urlTiktok: urlTiktok || undefined,
             urlFacebook: urlFacebook || undefined,
             urlInstagram: urlInstagram || undefined,
@@ -128,6 +145,8 @@ export function CreateDeviceButton() {
         setOpen(false)
         setDeviceName("")
         setPersonName("")
+        setLabel("")
+        setPhoneNumber("")
         setUrlTiktok("")
         setUrlFacebook("")
         setUrlInstagram("")
@@ -166,6 +185,26 @@ export function CreateDeviceButton() {
                             onChange={(e) => setPersonName(e.target.value)}
                             placeholder="Nombre de la persona"
                         />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="label">Etiqueta</Label>
+                            <Input
+                                id="label"
+                                value={label}
+                                onChange={(e) => setLabel(e.target.value)}
+                                placeholder="Ej: Celular 01"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="phoneNumber">Teléfono</Label>
+                            <Input
+                                id="phoneNumber"
+                                value={phoneNumber}
+                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                placeholder="+569..."
+                            />
+                        </div>
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="urlTiktok">URL TikTok</Label>
@@ -214,6 +253,8 @@ export function EditDeviceButton({ device }: { device: Device }) {
     const [loading, setLoading] = useState(false)
     const [deviceName, setDeviceName] = useState(device.deviceName)
     const [personName, setPersonName] = useState(device.personName || "")
+    const [label, setLabel] = useState(device.label || "")
+    const [phoneNumber, setPhoneNumber] = useState(device.phoneNumber || "")
     const [status, setStatus] = useState(device.status)
     const [urlTiktok, setUrlTiktok] = useState(device.urlTiktok || "")
     const [urlFacebook, setUrlFacebook] = useState(device.urlFacebook || "")
@@ -226,6 +267,8 @@ export function EditDeviceButton({ device }: { device: Device }) {
             id: device.id,
             deviceName,
             personName: personName || undefined,
+            label: label || undefined,
+            phoneNumber: phoneNumber || undefined,
             urlTiktok: urlTiktok || undefined,
             urlFacebook: urlFacebook || undefined,
             urlInstagram: urlInstagram || undefined,
@@ -238,7 +281,11 @@ export function EditDeviceButton({ device }: { device: Device }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-amber-500 hover:bg-amber-50">
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 hover:shadow-[0_0_15px_rgba(245,158,11,0.4)] transition-all duration-300"
+                >
                     <Pencil className="h-4 w-4" />
                 </Button>
             </DialogTrigger>
@@ -265,6 +312,24 @@ export function EditDeviceButton({ device }: { device: Device }) {
                             value={personName}
                             onChange={(e) => setPersonName(e.target.value)}
                         />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="editLabel">Etiqueta</Label>
+                            <Input
+                                id="editLabel"
+                                value={label}
+                                onChange={(e) => setLabel(e.target.value)}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="editPhoneNumber">Teléfono</Label>
+                            <Input
+                                id="editPhoneNumber"
+                                value={phoneNumber}
+                                onChange={(e) => setPhoneNumber(e.target.value)}
+                            />
+                        </div>
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="editUrlTiktok">URL TikTok</Label>
@@ -329,7 +394,13 @@ export function DeleteDeviceButton({ device }: { device: Device }) {
     }
 
     return (
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={handleDelete} disabled={loading}>
+        <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/10 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all duration-300" 
+            onClick={handleDelete} 
+            disabled={loading}
+        >
             <Trash2 className="h-4 w-4" />
         </Button>
     )

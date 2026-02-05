@@ -20,11 +20,11 @@ model User {
   updatedAt     DateTime         @updatedAt
   botOrders     BotOrder[]
   genComments   GenComment[]
-  genLikes      GenLike[]
-  genShares     GenShare[]
   genFollows    GenFollow[]
-  genReports    GenReport[]
+  genLikes      GenLike[]
   genLives      GenLive[]
+  genReports    GenReport[]
+  genShares     GenShare[]
   integrations  IntegrationLog[]
   projects      Project[]
 }
@@ -35,19 +35,19 @@ model Project {
   nameLower         String
   userId            String
   targetId          String?
-  target            Target?          @relation(fields: [targetId], references: [id])
   stance            ProjectStance    @default(FAVOR)
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   deletedAt         DateTime?
-  botOrders         BotOrder[]
-  genComments       GenComment[]
-  genLives          GenLive[]
-  integrations      IntegrationLog[]
   autoOrdersEnabled Boolean          @default(false)
   urlFacebook       String?
   urlInstagram      String?
   urlTiktok         String?
+  botOrders         BotOrder[]
+  genComments       GenComment[]
+  genLives          GenLive[]
+  integrations      IntegrationLog[]
+  target            Target?          @relation(fields: [targetId], references: [id])
   user              User             @relation(fields: [userId], references: [id])
 
   @@index([userId, createdAt])
@@ -58,15 +58,10 @@ model Target {
   name        String    @default("Sin Nombre")
   userId      String
   content     Json
-  imageBase64 String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  imageBase64 String?
   projects    Project[]
-}
-
-enum ProjectStance {
-  FAVOR
-  AGAINST
 }
 
 model BotOrder {
@@ -89,11 +84,11 @@ model BotOrder {
   project       Project          @relation(fields: [projectId], references: [id])
   user          User             @relation(fields: [userId], references: [id])
   genComments   GenComment[]
-  genLikes      GenLike[]
-  genShares     GenShare[]
   genFollows    GenFollow[]
-  genReports    GenReport[]
+  genLikes      GenLike[]
   genLives      GenLive[]
+  genReports    GenReport[]
+  genShares     GenShare[]
   integrations  IntegrationLog[]
 
   @@index([projectId, createdAt])
@@ -187,14 +182,14 @@ model GenLive {
   id        Int           @id @default(autoincrement())
   orderId   String
   userId    String
-  projectId String?
-  text      String
-  deviceId  String?
-  publishAt String?
   status    CommentStatus @default(PENDIENTE)
-  deletedAt DateTime?
+  deviceId  String?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+  deletedAt DateTime?
+  projectId String?
+  publishAt String?
+  text      String
   device    Device?       @relation(fields: [deviceId], references: [id])
   botOrder  BotOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
   project   Project?      @relation(fields: [projectId], references: [id])
@@ -209,6 +204,8 @@ model Device {
   id           String       @id @default(cuid())
   deviceName   String       @unique
   personName   String?
+  label        String?
+  phoneNumber  String?
   urlTiktok    String?
   urlFacebook  String?
   urlInstagram String?
@@ -217,11 +214,11 @@ model Device {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   genComments  GenComment[]
-  genLikes     GenLike[]
-  genShares    GenShare[]
   genFollows   GenFollow[]
-  genReports   GenReport[]
+  genLikes     GenLike[]
   genLives     GenLive[]
+  genReports   GenReport[]
+  genShares    GenShare[]
 
   @@map("dispositivos")
 }
@@ -245,6 +242,11 @@ model IntegrationLog {
   @@index([orderId, createdAt])
 }
 
+enum ProjectStance {
+  FAVOR
+  AGAINST
+}
+
 enum Role {
   ADMIN
   USUARIO
@@ -266,10 +268,10 @@ enum PostType {
   VIDEO
   IMAGEN
   TEXTO
-  LIVE
   OTRO
   PAGINA
   PUBLICACION
+  LIVE
 }
 
 enum OrderStatus {

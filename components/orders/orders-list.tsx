@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Trash2, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, Youtube, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy } from "lucide-react"
+import { MoreHorizontal, Trash2, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, Youtube, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy, Facebook, Instagram } from "lucide-react"
+import { TikTokIcon } from "@/components/icons/tiktok-icon"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -287,7 +288,10 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                                             </span>
                                                         </div>
                                                     </div>
-                                                    <Badge variant="outline" className={`text-[10px] h-5 border-none px-2 shrink-0 ${NETWORK_COLORS[order.socialNetwork]}`}>
+                                                    <Badge variant="outline" className={`text-[10px] h-5 border-none px-2 shrink-0 flex items-center gap-1.5 ${NETWORK_COLORS[order.socialNetwork]}`}>
+                                                        {order.socialNetwork === "FACEBOOK" && <Facebook className="h-3 w-3" />}
+                                                        {order.socialNetwork === "INSTAGRAM" && <Instagram className="h-3 w-3" />}
+                                                        {order.socialNetwork === "TIKTOK" && <TikTokIcon className="h-3 w-3" />}
                                                         {NETWORK_LABELS[order.socialNetwork] || order.socialNetwork}
                                                     </Badge>
                                                 </div>
@@ -380,7 +384,10 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-                                        <Badge variant="outline" className={`text-[11px] h-5 py-0 border-none px-2 ${NETWORK_COLORS[order.socialNetwork]}`}>
+                                        <Badge variant="outline" className={`text-[11px] h-5 py-0 border-none px-2 flex items-center gap-1.5 ${NETWORK_COLORS[order.socialNetwork]}`}>
+                                            {order.socialNetwork === "FACEBOOK" && <Facebook className="h-3 w-3" />}
+                                            {order.socialNetwork === "INSTAGRAM" && <Instagram className="h-3 w-3" />}
+                                            {order.socialNetwork === "TIKTOK" && <TikTokIcon className="h-3 w-3" />}
                                             {NETWORK_LABELS[order.socialNetwork] || order.socialNetwork}
                                         </Badge>
                                         {order.postType !== "OTRO" && (
@@ -573,7 +580,10 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                             <div className="grid grid-cols-3 gap-2 text-sm border-b pb-2">
                                 <span className="text-muted-foreground font-medium">Red Social:</span>
                                 <span className="col-span-2">
-                                    <Badge variant="outline" className={`h-5 ${NETWORK_COLORS[viewingOrder.socialNetwork]}`}>
+                                    <Badge variant="outline" className={`h-5 flex items-center gap-1.5 ${NETWORK_COLORS[viewingOrder.socialNetwork]}`}>
+                                        {viewingOrder.socialNetwork === "FACEBOOK" && <Facebook className="h-3 w-3" />}
+                                        {viewingOrder.socialNetwork === "INSTAGRAM" && <Instagram className="h-3 w-3" />}
+                                        {viewingOrder.socialNetwork === "TIKTOK" && <TikTokIcon className="h-3 w-3" />}
                                         {NETWORK_LABELS[viewingOrder.socialNetwork]}
                                     </Badge>
                                 </span>

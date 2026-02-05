@@ -11,6 +11,8 @@ export async function getDevices() {
       id: true,
       deviceName: true,
       personName: true,
+      label: true,
+      phoneNumber: true,
       status: true,
       urlTiktok: true,
       urlFacebook: true,
@@ -45,6 +47,8 @@ export async function getDevice(id: string) {
 type CreateDeviceInput = {
   deviceName: string
   personName?: string
+  label?: string
+  phoneNumber?: string
   urlTiktok?: string
   urlFacebook?: string
   urlInstagram?: string
@@ -55,6 +59,8 @@ export async function createDevice(input: CreateDeviceInput) {
     data: {
       deviceName: input.deviceName,
       personName: input.personName || null,
+      label: input.label || null,
+      phoneNumber: input.phoneNumber || null,
       urlTiktok: input.urlTiktok || null,
       urlFacebook: input.urlFacebook || null,
       urlInstagram: input.urlInstagram || null,
@@ -70,6 +76,8 @@ type UpdateDeviceInput = {
   id: string
   deviceName?: string
   personName?: string
+  label?: string
+  phoneNumber?: string
   urlTiktok?: string
   urlFacebook?: string
   urlInstagram?: string
@@ -82,6 +90,8 @@ export async function updateDevice(input: UpdateDeviceInput) {
     data: {
       ...(input.deviceName && { deviceName: input.deviceName }),
       personName: input.personName || null,
+      label: input.label || null,
+      phoneNumber: input.phoneNumber || null,
       urlTiktok: input.urlTiktok || null,
       urlFacebook: input.urlFacebook || null,
       urlInstagram: input.urlInstagram || null,

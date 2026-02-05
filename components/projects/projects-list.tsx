@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Pencil, Trash2, FolderOpen, RefreshCw} from "lucide-react"
+import { MoreHorizontal, Pencil, Trash2, FolderOpen, RefreshCw, Facebook, Instagram, Video } from "lucide-react"
+import { TikTokIcon } from "@/components/icons/tiktok-icon"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
@@ -176,14 +177,21 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                     <Card key={project.id}>
                         <CardHeader className="flex flex-row items-start justify-between space-y-0">
                             <div>
-                                <CardTitle className="text-lg">{project.name}</CardTitle>
+                                <CardTitle className="text-lg flex items-baseline gap-1.5 flex-wrap">
+                                    <span className="font-bold">{project.name}</span>
+                                    {project.target?.name && (
+                                        <>
+                                            <span className="text-muted-foreground/60 font-light">-</span>
+                                            <span className="text-primary/90 font-semibold text-base">
+                                                {project.target.name}
+                                            </span>
+                                        </>
+                                    )}
+                                </CardTitle>
                                 <CardDescription>
                                     {project._count.botOrders} órdenes
                                 </CardDescription>
                                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                                    <Badge variant="outline" className="border-border bg-muted/30">
-                                        {project.target?.name ? project.target.name : "Sin objetivo"}
-                                    </Badge>
                                     {project.stance && (
                                         <Badge
                                             className={
@@ -199,8 +207,24 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                             </div>
                             <div className="flex items-center gap-2">
                                 {project.autoOrdersEnabled && (
-                                    <div className="flex items-center justify-center p-1.5 rounded-full bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800 shadow-sm" title="Monitoreo Automático Activo">
-                                        <RefreshCw className="h-3.5 w-3.5 animate-spin-slow" />
+                                    <div className="flex items-center gap-1.5 p-1 rounded-full bg-muted/50 border border-border shadow-xs">
+                                        <div className="flex items-center justify-center p-1.5" title="Monitoreo Automático Activo">
+                                            <span className="relative flex h-2.5 w-2.5">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-1 px-1 border-l border-border ml-0.5">
+                                            {project.urlFacebook && (
+                                                <Facebook className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                            )}
+                                            {project.urlInstagram && (
+                                                <Instagram className="h-3.5 w-3.5 text-pink-600 dark:text-pink-400" />
+                                            )}
+                                            {project.urlTiktok && (
+                                                <TikTokIcon className="h-3.5 w-3.5 text-black dark:text-white" />
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                                 <DropdownMenu>
@@ -274,7 +298,7 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                     </DialogHeader>
                     <div className="py-4">
                         {error && (
-                            <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                            <div className="mb-4 rounded-md bg-red-500/10 p-3 text-sm text-red-600 border border-red-200/50 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
                                 {error}
                             </div>
                         )}

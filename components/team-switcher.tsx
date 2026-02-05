@@ -126,7 +126,7 @@ export function TeamSwitcher({
             </DropdownMenuLabel>
             {teams.map((team, index) => (
               <DropdownMenuItem
-                key={team.name}
+                key={team.id || index}
                 onClick={() => {
                   setActiveTeam(team)
                   if (team.url) router.push(team.url)

@@ -173,13 +173,13 @@ export function CreateProjectButton() {
                     ) : (
                         <div className="grid gap-5 py-4">
                             {error && (
-                                <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 border border-red-100 dark:bg-red-900/20 dark:text-red-400">
+                                <div className="rounded-md bg-red-500/10 p-3 text-sm text-red-600 border border-red-200/50 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
                                     {error}
                                 </div>
                             )}
 
                             {stanceWarning && (
-                                <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-700 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-300">
+                                <div className="rounded-md bg-blue-500/10 p-3 text-sm text-blue-700 border border-blue-200/50 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800">
                                     {stanceWarning}
                                 </div>
                             )}
@@ -187,7 +187,7 @@ export function CreateProjectButton() {
                             <div className="grid gap-2">
                                 <Label>1. Selecciona el Objetivo</Label>
                                 <Select value={targetId} onValueChange={setTargetId} required>
-                                    <SelectTrigger className={!targetId ? "border-amber-300 ring-2 ring-amber-100" : ""}>
+                                    <SelectTrigger className={!targetId ? "border-amber-500/50 ring-2 ring-amber-500/10" : "border-border"}>
                                         <SelectValue placeholder="Selecciona..." />
                                     </SelectTrigger>
                                     <SelectContent>
