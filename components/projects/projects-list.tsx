@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Pencil, Trash2, FolderOpen, RefreshCw, Facebook, Instagram, Video } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash2, FolderOpen, RefreshCw, Facebook, Instagram, Video, Eye, ExternalLink, Calendar, Target, ShieldCheck, ShieldAlert } from "lucide-react"
 import { TikTokIcon } from "@/components/icons/tiktok-icon"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -78,8 +78,38 @@ type Project = {
     }
 }
 
+const SocialLink = ({ url, icon, label, colorClass }: { url?: string | null, icon: any, label: string, colorClass: string }) => {
+    if (!url) return (
+        <div className="flex items-center gap-3 p-2.5 rounded-xl border border-dashed border-border/50 opacity-40 grayscale select-none">
+            <div className="p-1.5 rounded-lg bg-muted text-muted-foreground">
+                {icon}
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground italic">{label} no configurado</span>
+        </div>
+    );
+
+    return (
+        <a 
+            href={url} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 group min-w-0 max-w-full ${colorClass}`}
+        >
+            <div className="flex-shrink-0 p-1.5 rounded-lg bg-current/10">
+                {icon}
+            </div>
+            <div className="flex-1 min-w-0">
+                <div className="text-[9px] font-black uppercase tracking-tighter opacity-70 leading-none mb-0.5">{label}</div>
+                <div className="text-[11px] font-medium truncate opacity-90 w-full">{url}</div>
+            </div>
+            <ExternalLink className="flex-shrink-0 h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+        </a>
+    );
+};
+
 export function ProjectsList({ projects }: { projects: Project[] }) {
     const [editingProject, setEditingProject] = useState<Project | null>(null)
+    const [viewingProject, setViewingProject] = useState<Project | null>(null)
     const [deletingProject, setDeletingProject] = useState<Project | null>(null)
     const [editName, setEditName] = useState("")
     const [userTargets, setUserTargets] = useState<Array<{ id: string; name: string }>>([])
@@ -227,6 +257,14 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                         </div>
                                     </div>
                                 )}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-500/10 hover:shadow-[0_0_15px_rgba(99,102,241,0.4)] transition-all duration-300"
+                                    onClick={() => setViewingProject(project)}
+                                >
+                                    <Eye className="h-4 w-4" />
+                                </Button>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
@@ -234,6 +272,12 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
+                                        <DropdownMenuItem
+                                            onClick={() => setViewingProject(project)}
+                                        >
+                                            <Eye className="mr-2 h-4 w-4" />
+                                            Ver detalles
+                                        </DropdownMenuItem>
                                         <DropdownMenuItem
                                             onClick={() => {
                                                 setEditingProject(project)
@@ -457,13 +501,131 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                         <AlertDialogAction
                             onClick={handleDelete}
                             className="bg-red-600 hover:bg-red-700"
-                            disabled={loading}
                         >
-                            {loading ? "Eliminando..." : "Eliminar"}
+                            Eliminar
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* View Details Dialog */}
+            <Dialog open={!!viewingProject} onOpenChange={() => setViewingProject(null)}>
+                <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden border-none shadow-2xl bg-background">
+                    <div className="bg-primary/5 p-6 pb-4 border-b">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2.5 text-xl font-bold">
+                                <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                                    <FolderOpen className="h-5 w-5" />
+                                </div>
+                                <span className="truncate">Detalles del Proyecto</span>
+                            </DialogTitle>
+                            <DialogDescription className="text-xs uppercase font-bold tracking-widest text-muted-foreground/70 ml-10 truncate">
+                                Configuración y Estado Actual
+                            </DialogDescription>
+                        </DialogHeader>
+                    </div>
+
+                    {viewingProject && (
+                        <div className="p-6 space-y-5 overflow-x-hidden">
+                            {/* Main Info Grid */}
+                            <div className="grid gap-3.5">
+                                <div className="grid grid-cols-2 items-center gap-2 group min-w-0">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 truncate">Nombre del Proyecto</span>
+                                    <span className="text-sm font-bold text-foreground truncate text-right" title={viewingProject.name}>
+                                        {viewingProject.name}
+                                    </span>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 items-center gap-2 group min-w-0">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 truncate">ID del Sistema</span>
+                                    <div className="flex justify-end min-w-0">
+                                        <span className="text-[9px] font-mono text-muted-foreground bg-muted p-1 px-1.5 rounded border border-border/50 truncate max-w-full" title={viewingProject.id}>
+                                            {viewingProject.id}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 items-center gap-2 group min-w-0">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 flex items-center gap-1.5 truncate">
+                                        <Calendar className="h-3 w-3 text-primary/60 flex-shrink-0" /> Fecha de Creación
+                                    </span>
+                                    <span className="text-xs font-medium text-right truncate">{new Date(viewingProject.createdAt).toLocaleDateString("es-ES", { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+                                </div>
+
+                                <div className="grid grid-cols-2 items-center gap-2 group min-w-0">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 flex items-center gap-1.5 truncate">
+                                        <ShieldCheck className="h-3 w-3 text-primary/60 flex-shrink-0" /> Postura Política
+                                    </span>
+                                    <div className="flex justify-end">
+                                        <Badge
+                                            variant={viewingProject.stance === "AGAINST" ? "destructive" : "default"}
+                                            className={`h-4 text-[9px] font-bold px-2 ${viewingProject.stance === "AGAINST" ? "bg-red-500 hover:bg-red-500" : "bg-emerald-500 hover:bg-emerald-500"}`}
+                                        >
+                                            {viewingProject.stance === "AGAINST" ? "En Contra" : "A Favor"}
+                                        </Badge>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 items-center gap-2 group min-w-0">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 flex items-center gap-1.5 truncate">
+                                        <Target className="h-3 w-3 text-primary/60 flex-shrink-0" /> Objetivo Asignado
+                                    </span>
+                                    <span className="text-xs font-bold text-primary truncate text-right" title={viewingProject.target?.name || "Sin objetivo"}>
+                                        {viewingProject.target?.name || "Sin objetivo"}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3 pt-4 border-t border-dashed">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Canales Sociales</span>
+                                <div className="grid gap-2.5">
+                                    <SocialLink 
+                                        url={viewingProject.urlFacebook} 
+                                        icon={<Facebook className="h-4 w-4" />} 
+                                        label="Facebook"
+                                        colorClass="text-blue-600 bg-blue-500/5 border-blue-200 dark:border-blue-900/30"
+                                    />
+                                    <SocialLink 
+                                        url={viewingProject.urlInstagram} 
+                                        icon={<Instagram className="h-4 w-4" />} 
+                                        label="Instagram"
+                                        colorClass="text-pink-600 bg-pink-500/5 border-pink-200 dark:border-pink-900/30"
+                                    />
+                                    <SocialLink 
+                                        url={viewingProject.urlTiktok} 
+                                        icon={<TikTokIcon className="h-4 w-4" />} 
+                                        label="TikTok"
+                                        colorClass="text-foreground bg-foreground/5 border-border dark:border-zinc-800"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    
+                    <div className="p-4 bg-muted/30 border-t flex justify-end gap-3">
+                        <Button variant="outline" size="sm" className="h-9 px-5 font-bold text-xs uppercase tracking-wider" onClick={() => setViewingProject(null)}>
+                            Cerrar
+                        </Button>
+                        <Button
+                            size="sm"
+                            className="h-9 px-5 font-bold text-xs uppercase tracking-wider bg-indigo-600 hover:bg-indigo-700 shadow-[0_0_15px_rgba(79,70,229,0.3)]"
+                            onClick={() => {
+                                setViewingProject(null);
+                                setEditingProject(viewingProject);
+                                setEditName(viewingProject?.name || "");
+                                setEditStance(viewingProject?.stance || "FAVOR");
+                                setEditAutoOrdersEnabled(viewingProject?.autoOrdersEnabled || false);
+                                setEditUrlFacebook(viewingProject?.urlFacebook || "");
+                                setEditUrlInstagram(viewingProject?.urlInstagram || "");
+                                setEditUrlTiktok(viewingProject?.urlTiktok || "");
+                                loadTargets(viewingProject?.targetId || "__none");
+                            }}
+                        >
+                            <Pencil className="mr-2 h-3 w-3" /> Editar Proyecto
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </>
     )
 }
