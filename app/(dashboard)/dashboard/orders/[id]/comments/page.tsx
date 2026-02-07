@@ -78,7 +78,7 @@ export default async function OrderCommentsPage({ params }: { params: Promise<{ 
                             <span className="text-[10px] uppercase font-bold text-muted-foreground/70 flex items-center gap-1">
                                 <Hash className="h-3 w-3" /> Cantidad
                             </span>
-                            <p className="text-lg font-bold">{order.quantity} <span className="text-xs font-normal text-muted-foreground">solicitados</span></p>
+                            <p className="text-lg font-bold">{order.genComments.length} de {order.quantity} <span className="text-xs font-normal text-muted-foreground">finalizados</span></p>
                         </div>
                         <div className="flex flex-col gap-1">
                             <span className="text-[10px] uppercase font-bold text-muted-foreground/70 flex items-center gap-1">

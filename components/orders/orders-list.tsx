@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Trash2, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, Youtube, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy, Facebook, Instagram } from "lucide-react"
+import { MoreHorizontal, Trash2, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, Youtube, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy, Facebook, Instagram, ListChecks, Hash } from "lucide-react"
 import { TikTokIcon } from "@/components/icons/tiktok-icon"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -49,7 +49,6 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ListChecks } from "lucide-react"
 
 type Order = {
     id: string
@@ -192,6 +191,19 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
     const queueOrders = (orders as any).filter((o: any) => o.status === "GENERADA")
     const pausedOrders = (orders as any).filter((o: any) => o.status === "PAUSADA")
 
+    const stats = activeOrders.reduce((acc: any, order: any) => {
+        acc.totalRequested += order.quantity;
+        const count = order.type === "COMENTARIO" ? order._count.genComments :
+            order.type === "MEGUSTA" ? order._count.genLikes :
+                order.type === "COMPARTIR" ? order._count.genShares :
+                    order.type === "SEGUIMIENTO" ? (order._count as any).genFollows :
+                        order.type === "GENLIVE" ? (order._count as any).genLives :
+                            (order._count as any).genReports;
+        acc.totalCompleted += count;
+        acc[order.socialNetwork] = (acc[order.socialNetwork] || 0) + 1;
+        return acc;
+    }, { totalRequested: 0, totalCompleted: 0, FACEBOOK: 0, INSTAGRAM: 0, TIKTOK: 0, YOUTUBE: 0 });
+
     if (activeOrders.length === 0 && queueOrders.length === 0) {
         return (
             <Card>
@@ -210,7 +222,84 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
 
     return (
         <>
-            <div className="flex flex-wrap items-center justify-end gap-3 mb-6">
+            <div className="flex flex-col gap-6 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <Card className="bg-white border-indigo-100 shadow-sm">
+                        <CardContent className="p-3 flex flex-col items-center justify-center">
+                            <span className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Total Órdenes</span>
+                            <span className="text-xl font-black text-indigo-600">{activeOrders.length}</span>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-blue-50/50 border-blue-100 shadow-sm border">
+                        <CardContent className="p-3 flex flex-col items-center justify-center">
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <Facebook className="h-3 w-3 text-blue-600" />
+                                <span className="text-[10px] uppercase font-bold text-blue-700">Facebook</span>
+                            </div>
+                            <span className="text-xl font-black text-blue-600">{stats.FACEBOOK}</span>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-pink-50/50 border-pink-100 shadow-sm border">
+                        <CardContent className="p-3 flex flex-col items-center justify-center">
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <Instagram className="h-3 w-3 text-pink-600" />
+                                <span className="text-[10px] uppercase font-bold text-pink-700">Instagram</span>
+                            </div>
+                            <span className="text-xl font-black text-pink-600">{stats.INSTAGRAM}</span>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-zinc-100 border-zinc-200 shadow-sm border">
+                        <CardContent className="p-3 flex flex-col items-center justify-center">
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <TikTokIcon className="h-3 w-3 text-zinc-900" />
+                                <span className="text-[10px] uppercase font-bold text-zinc-900">TikTok</span>
+                            </div>
+                            <span className="text-xl font-black text-zinc-900">{stats.TIKTOK}</span>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-red-50/50 border-red-100 shadow-sm border">
+                        <CardContent className="p-3 flex flex-col items-center justify-center">
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <Youtube className="h-3 w-3 text-red-600" />
+                                <span className="text-[10px] uppercase font-bold text-red-700">YouTube</span>
+                            </div>
+                            <span className="text-xl font-black text-red-600">{stats.YOUTUBE}</span>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-4 bg-muted/30 p-4 rounded-xl border border-dashed border-muted-foreground/30">
+                    <div className="flex flex-wrap items-center gap-6">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                                <Hash className="h-3 w-3" /> Total Solicitados
+                            </span>
+                            <span className="text-lg font-bold">{stats.totalRequested}</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                                <CheckCircle2 className="h-3 w-3" /> Total Realizados
+                            </span>
+                            <span className="text-lg font-bold text-primary">{stats.totalCompleted}</span>
+                        </div>
+                        <div className="hidden sm:flex h-8 w-[1px] bg-muted-foreground/20" />
+                        <div className="flex flex-col">
+                            <span className="text-[10px] uppercase font-bold text-muted-foreground">Progreso Global</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-black text-indigo-600">
+                                    {stats.totalRequested > 0 ? Math.round((stats.totalCompleted / stats.totalRequested) * 100) : 0}%
+                                </span>
+                                <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
+                                    <div 
+                                        className="h-full bg-indigo-600 transition-all duration-500" 
+                                        style={{ width: `${stats.totalRequested > 0 ? Math.min(100, (stats.totalCompleted / stats.totalRequested) * 100) : 0}%` }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
                 {queueOrders.length > 0 && (
                     <Button
                         variant="outline"
@@ -321,6 +410,8 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                         </div>
                     </SheetContent>
                 </Sheet>
+                    </div>
+                </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
