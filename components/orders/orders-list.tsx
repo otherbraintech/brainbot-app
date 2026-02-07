@@ -224,46 +224,46 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
         <>
             <div className="flex flex-col gap-6 mb-8">
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                    <Card className="bg-white border-indigo-100 shadow-sm">
+                    <Card className="bg-card border-border shadow-sm">
                         <CardContent className="p-3 flex flex-col items-center justify-center">
                             <span className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Total Órdenes</span>
-                            <span className="text-xl font-black text-indigo-600">{activeOrders.length}</span>
+                            <span className="text-xl font-black text-primary">{activeOrders.length}</span>
                         </CardContent>
                     </Card>
-                    <Card className="bg-blue-50/50 border-blue-100 shadow-sm border">
+                    <Card className="bg-blue-500/5 border-blue-500/10 dark:border-blue-500/20 shadow-sm border">
                         <CardContent className="p-3 flex flex-col items-center justify-center">
                             <div className="flex items-center gap-1.5 mb-1">
-                                <Facebook className="h-3 w-3 text-blue-600" />
-                                <span className="text-[10px] uppercase font-bold text-blue-700">Facebook</span>
+                                <Facebook className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                                <span className="text-[10px] uppercase font-bold text-blue-700 dark:text-blue-300">Facebook</span>
                             </div>
-                            <span className="text-xl font-black text-blue-600">{stats.FACEBOOK}</span>
+                            <span className="text-xl font-black text-blue-600 dark:text-blue-400">{stats.FACEBOOK}</span>
                         </CardContent>
                     </Card>
-                    <Card className="bg-pink-50/50 border-pink-100 shadow-sm border">
+                    <Card className="bg-pink-500/5 border-pink-500/10 dark:border-pink-500/20 shadow-sm border">
                         <CardContent className="p-3 flex flex-col items-center justify-center">
                             <div className="flex items-center gap-1.5 mb-1">
-                                <Instagram className="h-3 w-3 text-pink-600" />
-                                <span className="text-[10px] uppercase font-bold text-pink-700">Instagram</span>
+                                <Instagram className="h-3 w-3 text-pink-600 dark:text-pink-400" />
+                                <span className="text-[10px] uppercase font-bold text-pink-700 dark:text-pink-300">Instagram</span>
                             </div>
-                            <span className="text-xl font-black text-pink-600">{stats.INSTAGRAM}</span>
+                            <span className="text-xl font-black text-pink-600 dark:text-pink-400">{stats.INSTAGRAM}</span>
                         </CardContent>
                     </Card>
-                    <Card className="bg-zinc-100 border-zinc-200 shadow-sm border">
+                    <Card className="bg-muted/30 border-border shadow-sm border">
                         <CardContent className="p-3 flex flex-col items-center justify-center">
                             <div className="flex items-center gap-1.5 mb-1">
-                                <TikTokIcon className="h-3 w-3 text-zinc-900" />
-                                <span className="text-[10px] uppercase font-bold text-zinc-900">TikTok</span>
+                                <TikTokIcon className="h-3 w-3 text-foreground" />
+                                <span className="text-[10px] uppercase font-bold text-foreground">TikTok</span>
                             </div>
-                            <span className="text-xl font-black text-zinc-900">{stats.TIKTOK}</span>
+                            <span className="text-xl font-black text-foreground">{stats.TIKTOK}</span>
                         </CardContent>
                     </Card>
-                    <Card className="bg-red-50/50 border-red-100 shadow-sm border">
+                    <Card className="bg-red-500/5 border-red-500/10 dark:border-red-500/20 shadow-sm border">
                         <CardContent className="p-3 flex flex-col items-center justify-center">
                             <div className="flex items-center gap-1.5 mb-1">
-                                <Youtube className="h-3 w-3 text-red-600" />
-                                <span className="text-[10px] uppercase font-bold text-red-700">YouTube</span>
+                                <Youtube className="h-3 w-3 text-red-600 dark:text-red-400" />
+                                <span className="text-[10px] uppercase font-bold text-red-700 dark:text-red-300">YouTube</span>
                             </div>
-                            <span className="text-xl font-black text-red-600">{stats.YOUTUBE}</span>
+                            <span className="text-xl font-black text-red-600 dark:text-red-400">{stats.YOUTUBE}</span>
                         </CardContent>
                     </Card>
                 </div>
@@ -286,12 +286,12 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                         <div className="flex flex-col">
                             <span className="text-[10px] uppercase font-bold text-muted-foreground">Progreso Global</span>
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-black text-indigo-600">
+                                <span className="text-sm font-black text-primary">
                                     {stats.totalRequested > 0 ? Math.round((stats.totalCompleted / stats.totalRequested) * 100) : 0}%
                                 </span>
-                                <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div className="w-24 h-1.5 bg-background rounded-full overflow-hidden ring-1 ring-border">
                                     <div 
-                                        className="h-full bg-indigo-600 transition-all duration-500" 
+                                        className="h-full bg-primary transition-all duration-500" 
                                         style={{ width: `${stats.totalRequested > 0 ? Math.min(100, (stats.totalCompleted / stats.totalRequested) * 100) : 0}%` }}
                                     />
                                 </div>
