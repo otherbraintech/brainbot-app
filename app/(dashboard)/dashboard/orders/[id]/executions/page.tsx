@@ -92,7 +92,7 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                                         </TableCell>
                                         {order.type === "COMENTARIO" && (
                                             <TableCell className="max-w-[300px] truncate italic text-muted-foreground">
-                                                &quot;{item.text}&quot;
+                                                {item.text}
                                             </TableCell>
                                         )}
                                         <TableCell>

@@ -455,7 +455,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                     <div className="flex gap-2">
                                         <div className="min-w-[3px] rounded-full bg-muted-foreground/30" />
                                         <p className="text-xs text-muted-foreground italic line-clamp-3 leading-relaxed">
-                                            "{order.intent}"
+                                            {order.intent}
                                         </p>
                                     </div>
                                 </div>
@@ -630,7 +630,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                 <div className="grid gap-1.5 text-sm bg-muted/30 p-3 rounded-lg border border-dashed border-muted-foreground/30">
                                     <span className="text-muted-foreground font-bold uppercase text-[10px]">Intención / Contexto:</span>
                                     <p className="italic leading-relaxed whitespace-pre-wrap">
-                                        &quot;{viewingOrder.intent}&quot;
+                                        {viewingOrder.intent}
                                     </p>
                                 </div>
                             )}
