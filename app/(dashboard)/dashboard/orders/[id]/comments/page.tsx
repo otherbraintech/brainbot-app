@@ -39,14 +39,14 @@ export default async function OrderCommentsPage({ params }: { params: Promise<{ 
                 </div>
             </div>
 
-            <Card className="overflow-hidden border-indigo-100 bg-indigo-50/10">
-                <CardHeader className="pb-3 border-b bg-white/50">
+            <Card className="overflow-hidden border-border bg-card">
+                <CardHeader className="pb-3 border-b bg-muted/30">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
-                            <Info className="h-5 w-5 text-indigo-600" />
+                            <Info className="h-5 w-5 text-primary" />
                             <CardTitle className="text-lg">Información de la Orden</CardTitle>
                         </div>
-                        <Badge variant="outline" className="bg-white">
+                        <Badge variant="outline" className="bg-background">
                             {order.status}
                         </Badge>
                     </div>
@@ -58,7 +58,7 @@ export default async function OrderCommentsPage({ params }: { params: Promise<{ 
                                 <Globe className="h-3 w-3" /> Enlace de la Publicación
                             </span>
                             <div className="flex items-center gap-2">
-                                <div className="flex-1 bg-white border rounded-md px-3 py-1.5 text-sm text-muted-foreground truncate">
+                                <div className="flex-1 bg-muted/20 border rounded-md px-3 py-1.5 text-sm text-muted-foreground truncate">
                                     {order.url}
                                 </div>
                                 <div className="flex shrink-0 gap-1.5">
