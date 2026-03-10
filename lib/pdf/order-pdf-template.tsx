@@ -108,8 +108,13 @@ interface OrderPDFProps {
 }
 
 export const OrderPDFTemplate = ({ order, project, comments }: OrderPDFProps) => {
-  const date = new (globalThis as any).Date(order.createdAt).toLocaleDateString("es-ES", {
-    year: 'numeric', month: 'long', day: 'numeric',
+  const orderDate = new (globalThis as any).Date(order.createdAt).toLocaleString("es-ES", {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit'
+  });
+
+  const reportDate = new (globalThis as any).Date().toLocaleString("es-ES", {
+    year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit'
   });
 
@@ -120,7 +125,7 @@ export const OrderPDFTemplate = ({ order, project, comments }: OrderPDFProps) =>
         <View style={styles.header}>
           <View>
             <Text style={styles.title}>BrainBot - Reporte de Orden</Text>
-            <Text style={{ color: '#6b7280', marginTop: 2 }}>{date}</Text>
+            <Text style={{ color: '#6b7280', marginTop: 2, fontSize: 9 }}>Reporte generado el: {reportDate}</Text>
           </View>
         </View>
 
@@ -151,6 +156,10 @@ export const OrderPDFTemplate = ({ order, project, comments }: OrderPDFProps) =>
             <View style={styles.gridItem}>
               <Text style={styles.label}>Tipo de Publicación</Text>
               <Text style={styles.value}>{order.postType}</Text>
+            </View>
+            <View style={styles.gridItem}>
+              <Text style={styles.label}>Fecha de Creación (Orden)</Text>
+              <Text style={styles.value}>{orderDate}</Text>
             </View>
           </View>
         </View>
