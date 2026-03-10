@@ -147,7 +147,9 @@ export const OrderPDFTemplate = ({ order, project, comments }: OrderPDFProps) =>
             </View>
             <View style={styles.gridItem}>
               <Text style={styles.label}>Estado</Text>
-              <Text style={styles.value}>{order.status}</Text>
+              <Text style={styles.value}>
+                {order.status === 'GENERADA' ? 'En Operación' : order.status}
+              </Text>
             </View>
             <View style={styles.gridItem}>
               <Text style={styles.label}>Cantidad Solicitada</Text>

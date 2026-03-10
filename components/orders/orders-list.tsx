@@ -82,7 +82,7 @@ const ORDER_TYPE_LABELS: Record<string, { label: string; icon: any; color: strin
 const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
     LISTA: { label: "Listo para iniciar", variant: "outline" },
     GENERANDO: { label: "En proceso...", variant: "secondary" },
-    GENERADA: { label: "Generada", variant: "default" },
+    GENERADA: { label: "En Operación", variant: "default" },
     CANCELADA: { label: "Cancelada", variant: "destructive" },
     REINTENTAR: { label: "Error / Reintentar", variant: "destructive" },
     COMPLETADA: { label: "Orden Completada", variant: "default" },
@@ -578,7 +578,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                         {(isGenerated || isCompletedStatus || order.status === "PAUSADA") && (
                                             <Badge variant="secondary" className={`${isCompletedStatus ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' : order.status === "PAUSADA" ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' : 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20'} text-[10px] font-bold h-6 px-2`}>
                                                 {isCompletedStatus ? "Finalizada" : order.status === "PAUSADA" ? "Pausada" :
-                                                    (order.type === 'COMENTARIO' && currentCount > 0) ? "Comentando" : "En cola"}
+                                                    (order.type === 'COMENTARIO' && currentCount > 0) ? "Comentando" : "En Operación"}
                                             </Badge>
                                         )}
 

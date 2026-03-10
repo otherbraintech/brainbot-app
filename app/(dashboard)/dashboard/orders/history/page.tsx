@@ -17,7 +17,7 @@ import { DownloadPDFButton } from "@/components/orders/download-pdf-button"
 const STATUS_LABELS: any = {
     LISTA: { label: "Lista", variant: "outline" },
     GENERANDO: { label: "Generando", variant: "secondary" },
-    GENERADA: { label: "En Cola", variant: "default" },
+    GENERADA: { label: "En Operación", variant: "default" },
     CANCELADA: { label: "Cancelada", variant: "destructive" },
     REINTENTAR: { label: "Reintentar", variant: "warning" },
     COMPLETADA: { label: "Completada", variant: "default", className: "bg-green-100 text-green-700 hover:bg-green-100 border-green-200" },
