@@ -5,6 +5,7 @@ import { MoreHorizontal, Trash2, ExternalLink, MessageSquare, Play, Eye, Heart, 
 import { TikTokIcon } from "@/components/icons/tiktok-icon"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { DownloadPDFButton } from "@/components/orders/download-pdf-button"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -510,6 +511,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                     >
                                         <Eye className="h-4 w-4" />
                                     </Button>
+                                    <DownloadPDFButton orderId={order.id} orderName={order.orderName} />
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">

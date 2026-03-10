@@ -12,6 +12,7 @@ import {
 import { History, ExternalLink, Activity, Video, Image as ImageIcon, Type, Radio, MoreHorizontal, FileText } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { DownloadPDFButton } from "@/components/orders/download-pdf-button"
 
 const STATUS_LABELS: any = {
     LISTA: { label: "Lista", variant: "outline" },
@@ -163,6 +164,7 @@ export default async function OrdersHistoryPage() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-1">
+                                                    <DownloadPDFButton orderId={order.id} orderName={order.orderName} />
                                                     {!isDeleted && (
                                                         <Button variant="ghost" size="icon" className="h-7 w-7" asChild title="Ver Ejecución">
                                                             <Link href={`/dashboard/orders/${order.id}/executions`}>

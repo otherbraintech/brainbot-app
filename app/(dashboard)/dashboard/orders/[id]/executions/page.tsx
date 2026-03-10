@@ -14,6 +14,7 @@ import {
 import { ArrowLeft, Activity, UserPlus, Heart, Share2, AlertTriangle, MessageSquare, ExternalLink, Globe, Hash, Info, Layers } from "lucide-react"
 import Link from "next/link"
 import { CopyUrlButton } from "@/components/orders/copy-url-button"
+import { DownloadPDFButton } from "@/components/orders/download-pdf-button"
 
 const TYPE_CONFIG: any = {
     COMENTARIO: { label: "Comentarios", icon: MessageSquare, color: "text-blue-600" },
@@ -66,9 +67,12 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                             <Info className="h-5 w-5 text-primary" />
                             <CardTitle className="text-lg">Información de la Orden</CardTitle>
                         </div>
-                        <Badge variant="outline" className="bg-background">
-                            {order.status}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                            <DownloadPDFButton orderId={order.id} orderName={order.orderName} />
+                            <Badge variant="outline" className="bg-background">
+                                {order.status}
+                            </Badge>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent className="pt-4 grid gap-6 md:grid-cols-2">
