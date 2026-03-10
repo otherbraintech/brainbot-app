@@ -67,18 +67,12 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                             <Info className="h-5 w-5 text-primary" />
                             <CardTitle className="text-lg">Información de la Orden</CardTitle>
                         </div>
-<<<<<<< HEAD
                         <div className="flex items-center gap-2">
                             <DownloadPDFButton orderId={order.id} orderName={order.orderName} />
                             <Badge variant="outline" className="bg-background">
                                 {order.status}
                             </Badge>
                         </div>
-=======
-                        <Badge variant="outline" className="bg-background">
-                            {order.status}
-                        </Badge>
->>>>>>> 27c5d69c79beb8a0d0950a1c89b6ecd3de4985a8
                     </div>
                 </CardHeader>
                 <CardContent className="pt-4 grid gap-6 md:grid-cols-2">
