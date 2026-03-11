@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Brain Bot",
+  title: "OB Bot",
   description: "Aplicación web para gestionar órdenes para los bots de redes sociales",
 };
 

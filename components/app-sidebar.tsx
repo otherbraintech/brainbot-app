@@ -173,7 +173,7 @@ export function AppSidebar({
       <SidebarHeader>
         <div className="flex items-center gap-2 px-4 py-2 group-data-[collapsible=icon]:px-2">
           <Bot className="h-6 w-6" />
-          <span className="font-semibold group-data-[collapsible=icon]:hidden">Brain Bot</span>
+          <span className="font-semibold group-data-[collapsible=icon]:hidden">OB Bot</span>
         </div>
         {teams.length > 0 && (
           <div>
