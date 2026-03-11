@@ -56,8 +56,8 @@ export async function createTargetWithWebhook(payload: any) {
             return { error: responseData.Message || "Error en el servidor de n8n" }
         }
 
-        // 2. Create Target in DB
-        // Support both old flat structure and new nested structure during transition
+        // Local Prisma creation disabled as per user request (handled by n8n)
+        /*
         const targetData = payload.target_input.target?.[0] || payload.target_input
         const identityName = targetData.basic_identity?.name || "Sin Nombre"
         const role = targetData.basic_identity?.role || ""
@@ -71,10 +71,11 @@ export async function createTargetWithWebhook(payload: any) {
                 imageBase64: payload.imageBase64 || null
             }
         })
+        */
 
         revalidatePath("/dashboard/projects")
         revalidatePath("/dashboard/targets")
-        return { success: true, target: newTarget, message: responseData.Message }
+        return { success: true, message: responseData.Message }
     } catch (error: any) {
         console.error("Error in createTargetWithWebhook:", error)
         if (error.name === 'AbortError') {

@@ -337,7 +337,8 @@ export async function createTargetAction(payload: any) {
       return { error: responseData.Message || "Error en el servidor de n8n" }
     }
 
-    // 2. Update local DB (Create Target and Link)
+    // Local Prisma creation and linking disabled as per user request (handled by n8n)
+    /*
     const targetData = payload.target_input.target?.[0] || payload.target_input
     const identityName = targetData.basic_identity?.name || "Nuevo Objetivo"
     const role = targetData.basic_identity?.role || ""
@@ -357,6 +358,7 @@ export async function createTargetAction(payload: any) {
         targetId: newTarget.id
       }
     })
+    */
 
     revalidatePath("/dashboard/projects")
     return { success: true, message: responseData.Message }
