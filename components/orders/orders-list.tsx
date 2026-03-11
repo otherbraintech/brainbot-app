@@ -130,6 +130,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [confirmAction, setConfirmAction] = useState<{ id: string, name: string, type: 'pausar' | 'reanudar' | 'finalizar' } | null>(null)
+    const [confirmBulk, setConfirmBulk] = useState<'pausar' | 'reanudar' | null>(null)
 
     async function handleDelete() {
         if (!deletingOrder) return
@@ -175,16 +176,11 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
     }
 
     async function handlePauseAll() {
-        if (!confirm("¿Estás seguro de que quieres pausar todas las órdenes en cola?")) return
-        setLoading(true)
-        await pauseAllOrders(projectId)
-        setLoading(false)
+        setConfirmBulk('pausar')
     }
 
     async function handleResumeAll() {
-        setLoading(true)
-        await resumeAllOrders(projectId)
-        setLoading(false)
+        setConfirmBulk('reanudar')
     }
 
     async function handleDuplicate(order: Order) {
@@ -209,6 +205,15 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
         else if (confirmAction.type === 'reanudar') await resumeOrder(confirmAction.id)
         else if (confirmAction.type === 'finalizar') await completeOrder(confirmAction.id)
         setConfirmAction(null)
+        setLoading(false)
+    }
+
+    async function executeConfirmBulk() {
+        if (!confirmBulk) return
+        setLoading(true)
+        if (confirmBulk === 'pausar') await pauseAllOrders(projectId)
+        else if (confirmBulk === 'reanudar') await resumeAllOrders(projectId)
+        setConfirmBulk(null)
         setLoading(false)
     }
 
@@ -285,15 +290,6 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                 <span className="text-[10px] uppercase font-bold text-foreground">TikTok</span>
                             </div>
                             <span className="text-xl font-black text-foreground">{stats.TIKTOK}</span>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-red-500/5 border-red-500/10 dark:border-red-500/20 shadow-sm border">
-                        <CardContent className="p-3 flex flex-col items-center justify-center">
-                            <div className="flex items-center gap-1.5 mb-1">
-                                <Youtube className="h-3 w-3 text-red-600 dark:text-red-400" />
-                                <span className="text-[10px] uppercase font-bold text-red-700 dark:text-red-300">YouTube</span>
-                            </div>
-                            <span className="text-xl font-black text-red-600 dark:text-red-400">{stats.YOUTUBE}</span>
                         </CardContent>
                     </Card>
                 </div>
@@ -744,6 +740,35 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                             disabled={loading}
                         >
                             {loading ? "Procesando..." : confirmAction?.type ? confirmAction.type.charAt(0).toUpperCase() + confirmAction.type.slice(1) : "Confirmar"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Bulk Actions Confirmation Dialog */}
+            <AlertDialog open={!!confirmBulk} onOpenChange={() => setConfirmBulk(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            {confirmBulk === 'pausar' ? '¿Pausar todas las órdenes?' : '¿Reanudar todas las órdenes?'}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {confirmBulk === 'pausar' 
+                                ? 'Esta acción pausará todas las órdenes que se encuentran actualmente en cola de generación.' 
+                                : 'Esta acción reanudará todas las órdenes que se encuentren pausadas.'}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={loading}>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={(e) => {
+                                e.preventDefault()
+                                executeConfirmBulk()
+                            }}
+                            className={confirmBulk === 'pausar' ? "bg-amber-600 hover:bg-amber-700" : "bg-indigo-600 hover:bg-indigo-700"}
+                            disabled={loading}
+                        >
+                            {loading ? "Procesando..." : confirmBulk === 'pausar' ? "Pausar todo" : "Reanudar todo"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
