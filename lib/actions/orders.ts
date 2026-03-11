@@ -494,8 +494,6 @@ export async function getNextOrderName(projectId: string) {
     where: {
       projectId,
       userId: session,
-      deletedAt: null,
-      status: { not: OrderStatus.COMPLETADA },
     },
   })
   
