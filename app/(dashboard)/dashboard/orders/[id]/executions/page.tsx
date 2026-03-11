@@ -41,6 +41,10 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                 order.type === "SEGUIMIENTO" ? (order as any).genFollows :
                     (order as any).genReports) || []
 
+    const publishedCount = interactions.filter((i: any) => i.status === "PUBLICADO").length;
+    const generatedCount = interactions.filter((i: any) => i.status === "PUBLICADO" || i.status === "SINPUBLICAR").length;
+    const publishedLabel = order.type === 'COMENTARIO' ? 'COMENTADO' : 'EJECUTADO';
+
     return (
         <div className="flex flex-col gap-6">
             <div className="flex items-center gap-4">
@@ -70,7 +74,7 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                         <div className="flex items-center gap-2">
                             <DownloadPDFButton orderId={order.id} orderName={order.orderName} />
                             <Badge variant="outline" className="bg-background">
-                                {order.status}
+                                {order.status === 'GENERADA' ? 'En Operación' : order.status === 'COMPLETADA' ? 'Finalizada' : order.status}
                             </Badge>
                         </div>
                     </div>
@@ -100,9 +104,9 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                     <div className="grid grid-cols-2 gap-4">
                         <div className="flex flex-col gap-1">
                             <span className="text-[10px] uppercase font-bold text-muted-foreground/70 flex items-center gap-1">
-                                <Hash className="h-3 w-3" /> Cantidad
+                                <Hash className="h-3 w-3" /> Progreso
                             </span>
-                            <p className="text-lg font-bold">{interactions.length} de {order.quantity} <span className="text-xs font-normal text-muted-foreground">finalizados</span></p>
+                            <p className="text-lg font-bold">{publishedCount} <span className="text-sm font-normal text-muted-foreground">de</span> {generatedCount} <span className="text-xs font-normal text-muted-foreground capitalize">{publishedLabel.toLowerCase()}s</span></p>
                         </div>
                         <div className="flex flex-col gap-1">
                             <span className="text-[10px] uppercase font-bold text-muted-foreground/70 flex items-center gap-1">
@@ -125,7 +129,7 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                 <CardHeader>
                     <CardTitle>Detalles de Ejecución</CardTitle>
                     <CardDescription>
-                        Mostrando {interactions.length} registros de {config.label.toLowerCase()}
+                        Mostrando {generatedCount} ejecuciones ({publishedCount} {publishedLabel.toLowerCase()}s)
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -183,7 +187,7 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                                                         : ""
                                                 }
                                             >
-                                                {item.status}
+                                                {item.status === "PUBLICADO" ? publishedLabel : item.status}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right text-xs text-muted-foreground">
