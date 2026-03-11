@@ -66,8 +66,16 @@ type Order = {
         genComments: number
         genLikes: number
         genShares: number
+        genFollows: number
         genLives: number
+        genReports: number
     }
+    genComments?: { status: string }[]
+    genLikes?: { status: string }[]
+    genShares?: { status: string }[]
+    genFollows?: { status: string }[]
+    genLives?: { status: string }[]
+    genReports?: { status: string }[]
 }
 
 const ORDER_TYPE_LABELS: Record<string, { label: string; icon: any; color: string }> = {
@@ -193,17 +201,22 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
     const pausedOrders = (orders as any).filter((o: any) => o.status === "PAUSADA")
 
     const stats = activeOrders.reduce((acc: any, order: any) => {
+        const subItems = order.type === "COMENTARIO" ? order.genComments :
+            order.type === "MEGUSTA" ? order.genLikes :
+                order.type === "COMPARTIR" ? order.genShares :
+                    order.type === "SEGUIMIENTO" ? order.genFollows :
+                        order.type === "GENLIVE" ? order.genLives :
+                            order.genReports;
+
+        const published = subItems?.filter((i: any) => i.status === "PUBLICADO").length || 0;
+        const generated = subItems?.filter((i: any) => i.status === "PUBLICADO" || i.status === "SINPUBLICAR").length || 0;
+
         acc.totalRequested += order.quantity;
-        const count = order.type === "COMENTARIO" ? order._count.genComments :
-            order.type === "MEGUSTA" ? order._count.genLikes :
-                order.type === "COMPARTIR" ? order._count.genShares :
-                    order.type === "SEGUIMIENTO" ? (order._count as any).genFollows :
-                        order.type === "GENLIVE" ? (order._count as any).genLives :
-                            (order._count as any).genReports;
-        acc.totalCompleted += count;
+        acc.totalCompleted += published;
+        acc.totalGenerated += generated;
         acc[order.socialNetwork] = (acc[order.socialNetwork] || 0) + 1;
         return acc;
-    }, { totalRequested: 0, totalCompleted: 0, FACEBOOK: 0, INSTAGRAM: 0, TIKTOK: 0, YOUTUBE: 0 });
+    }, { totalRequested: 0, totalCompleted: 0, totalGenerated: 0, FACEBOOK: 0, INSTAGRAM: 0, TIKTOK: 0, YOUTUBE: 0 });
 
     if (activeOrders.length === 0 && queueOrders.length === 0) {
         return (
@@ -279,9 +292,9 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
-                                <CheckCircle2 className="h-3 w-3" /> Total Realizados
+                                <CheckCircle2 className="h-3 w-3" /> Total Ejecutados
                             </span>
-                            <span className="text-lg font-bold text-primary">{stats.totalCompleted}</span>
+                            <span className="text-lg font-bold text-primary">{stats.totalCompleted} <span className="text-xs font-normal text-muted-foreground">de {stats.totalGenerated}</span></span>
                         </div>
                         <div className="hidden sm:flex h-8 w-[1px] bg-muted-foreground/20" />
                         <div className="flex flex-col">
@@ -423,12 +436,16 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                     const isProcessing = order.status === "GENERANDO"
                     const isCompleted = order.status === "GENERADA"
 
-                    const currentCount = order.type === "COMENTARIO" ? order._count.genComments :
-                        order.type === "MEGUSTA" ? order._count.genLikes :
-                            order.type === "COMPARTIR" ? order._count.genShares :
-                                order.type === "SEGUIMIENTO" ? (order._count as any).genFollows :
-                                    order.type === "GENLIVE" ? (order._count as any).genLives :
-                                        (order._count as any).genReports
+                    const subItems = order.type === "COMENTARIO" ? order.genComments :
+                        order.type === "MEGUSTA" ? order.genLikes :
+                            order.type === "COMPARTIR" ? order.genShares :
+                                order.type === "SEGUIMIENTO" ? order.genFollows :
+                                    order.type === "GENLIVE" ? order.genLives :
+                                        order.genReports
+
+                    const publishedCount = subItems?.filter((i: any) => i.status === "PUBLICADO").length || 0;
+                    const generatedCount = subItems?.filter((i: any) => i.status === "PUBLICADO" || i.status === "SINPUBLICAR").length || 0;
+                    const publishedLabel = order.type === 'COMENTARIO' ? 'COMENTADOS' : 'EJECUTADOS';
 
                     const isCompletedStatus = order.status === "COMPLETADA"
                     const isGenerated = order.status === "GENERADA"
@@ -563,10 +580,10 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                         </div>
                                     </div>
                                     <div className="text-right space-y-1">
-                                        <span className="text-[10px] text-muted-foreground font-bold uppercase block">Realizados</span>
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase block">{publishedLabel}</span>
                                         <div className="flex items-center justify-end gap-2">
-                                            <span className="text-xl font-bold text-primary">{currentCount}</span>
-                                            <span className="text-xs text-muted-foreground">exitosos</span>
+                                            <span className="text-xl font-bold text-primary">{publishedCount}</span>
+                                            <span className="text-xs text-muted-foreground">de {generatedCount}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -578,7 +595,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                         {(isGenerated || isCompletedStatus || order.status === "PAUSADA") && (
                                             <Badge variant="secondary" className={`${isCompletedStatus ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' : order.status === "PAUSADA" ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' : 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20'} text-[10px] font-bold h-6 px-2`}>
                                                 {isCompletedStatus ? "Finalizada" : order.status === "PAUSADA" ? "Pausada" :
-                                                    (order.type === 'COMENTARIO' && currentCount > 0) ? "Comentando" : "En Operación"}
+                                                    (order.type === 'COMENTARIO' && publishedCount > 0) ? "Comentando" : "En Operación"}
                                             </Badge>
                                         )}
 

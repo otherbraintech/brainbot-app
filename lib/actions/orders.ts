@@ -23,6 +23,12 @@ export async function getOrders(projectId: string) {
     },
     orderBy: { createdAt: "desc" },
     include: {
+      genComments: { select: { status: true } },
+      genLikes: { select: { status: true } },
+      genShares: { select: { status: true } },
+      genFollows: { select: { status: true } },
+      genReports: { select: { status: true } },
+      genLives: { select: { status: true } },
       _count: {
         select: {
           genComments: true,
@@ -58,6 +64,12 @@ export async function getAllOrders() {
           id: true
         }
       },
+      genComments: { select: { status: true } },
+      genLikes: { select: { status: true } },
+      genShares: { select: { status: true } },
+      genFollows: { select: { status: true } },
+      genReports: { select: { status: true } },
+      genLives: { select: { status: true } },
       _count: {
         select: {
           genComments: true,
