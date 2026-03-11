@@ -38,14 +38,12 @@ const NETWORK_LABELS: Record<string, string> = {
     INSTAGRAM: "Instagram",
     FACEBOOK: "Facebook",
     TIKTOK: "TikTok",
-    YOUTUBE: "YouTube",
 }
 
 const NETWORK_COLORS: Record<string, string> = {
     FACEBOOK: "bg-blue-50 text-blue-700 border-blue-100",
     INSTAGRAM: "bg-pink-50 text-pink-700 border-pink-100",
     TIKTOK: "bg-slate-900 text-white border-slate-800",
-    YOUTUBE: "bg-red-50 text-red-700 border-red-100",
 }
 
 export default async function OrdersHistoryPage() {

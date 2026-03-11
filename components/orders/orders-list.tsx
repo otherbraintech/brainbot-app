@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Trash2, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, Youtube, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy, Facebook, Instagram, ListChecks, Hash } from "lucide-react"
+import { MoreHorizontal, Trash2, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy, Facebook, Instagram, ListChecks, Hash } from "lucide-react"
 import { TikTokIcon } from "@/components/icons/tiktok-icon"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { deleteOrder, startOrder, pauseOrder, resumeOrder, pauseAllOrders, resumeAllOrders, duplicateOrder, completeOrder } from "@/lib/actions/orders"
 import { EditOrderButton } from "@/components/orders/edit-order-button"
 import {
@@ -101,14 +102,12 @@ const NETWORK_LABELS: Record<string, string> = {
     INSTAGRAM: "Instagram",
     FACEBOOK: "Facebook",
     TIKTOK: "TikTok",
-    YOUTUBE: "YouTube",
 }
 
 const NETWORK_COLORS: Record<string, string> = {
     FACEBOOK: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200/50 dark:border-blue-900/50",
     INSTAGRAM: "bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-200/50 dark:border-pink-900/50",
     TIKTOK: "bg-zinc-900 dark:bg-zinc-950 text-white border-zinc-800",
-    YOUTUBE: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-200/50 dark:border-red-900/50",
 }
 
 type PostType = "VIDEO" | "IMAGEN" | "TEXTO" | "LIVE" | "OTRO" | "PAGINA" | "PUBLICACION";
@@ -130,6 +129,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
     const [startingId, setStartingId] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [confirmAction, setConfirmAction] = useState<{ id: string, name: string, type: 'pausar' | 'reanudar' | 'finalizar' } | null>(null)
 
     async function handleDelete() {
         if (!deletingOrder) return
@@ -202,6 +202,16 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
         setLoading(false)
     }
 
+    async function executeConfirmAction() {
+        if (!confirmAction) return
+        setLoading(true)
+        if (confirmAction.type === 'pausar') await pauseOrder(confirmAction.id)
+        else if (confirmAction.type === 'reanudar') await resumeOrder(confirmAction.id)
+        else if (confirmAction.type === 'finalizar') await completeOrder(confirmAction.id)
+        setConfirmAction(null)
+        setLoading(false)
+    }
+
     const activeOrders = orders as any
     const queueOrders = (orders as any).filter((o: any) => o.status === "GENERADA")
     const pausedOrders = (orders as any).filter((o: any) => o.status === "PAUSADA")
@@ -222,7 +232,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
         acc.totalGenerated += generated;
         acc[order.socialNetwork] = (acc[order.socialNetwork] || 0) + 1;
         return acc;
-    }, { totalRequested: 0, totalCompleted: 0, totalGenerated: 0, FACEBOOK: 0, INSTAGRAM: 0, TIKTOK: 0, YOUTUBE: 0 });
+    }, { totalRequested: 0, totalCompleted: 0, totalGenerated: 0, FACEBOOK: 0, INSTAGRAM: 0, TIKTOK: 0 });
 
     if (activeOrders.length === 0 && queueOrders.length === 0) {
         return (
@@ -597,7 +607,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                 <div className="flex items-center justify-between pt-2 border-t">
                                     <div></div>
 
-                                    <div className="flex gap-2 items-center">
+                                    <div className="flex gap-1.5 items-center">
                                         {(isGenerated || isCompletedStatus || order.status === "PAUSADA") && (
                                             <Badge variant="secondary" className={`${isCompletedStatus ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' : order.status === "PAUSADA" ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' : 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20'} text-[10px] font-bold h-6 px-2`}>
                                                 {isCompletedStatus ? "Finalizada" : order.status === "PAUSADA" ? "Pausada" :
@@ -609,59 +619,83 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                             <EditOrderButton order={order as any} />
                                         )}
 
-                                        {isGenerated && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-8 text-xs font-bold px-4 border-amber-200 text-amber-700 hover:bg-amber-50"
-                                                onClick={() => handlePauseOrder(order.id)}
-                                                disabled={loading}
-                                            >
-                                                Pausar
-                                            </Button>
-                                        )}
+                                        <TooltipProvider>
+                                            <div className="flex items-center gap-1">
+                                                {isGenerated && (
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="icon"
+                                                                className="h-8 w-8 border-amber-200 text-amber-600 hover:bg-amber-50"
+                                                                onClick={() => setConfirmAction({ id: order.id, name: order.orderName, type: 'pausar' })}
+                                                                disabled={loading}
+                                                            >
+                                                                <Pause className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Pausar orden</TooltipContent>
+                                                    </Tooltip>
+                                                )}
 
-                                        {order.status === "PAUSADA" && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-8 text-xs font-bold px-4 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
-                                                onClick={() => handleResumeOrder(order.id)}
-                                                disabled={loading}
-                                            >
-                                                Reanudar
-                                            </Button>
-                                        )}
+                                                {order.status === "PAUSADA" && (
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="icon"
+                                                                className="h-8 w-8 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                                                                onClick={() => setConfirmAction({ id: order.id, name: order.orderName, type: 'reanudar' })}
+                                                                disabled={loading}
+                                                            >
+                                                                <Play className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Reanudar orden</TooltipContent>
+                                                    </Tooltip>
+                                                )}
 
-                                        {(isGenerated || order.status === "PAUSADA") && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-8 text-xs font-bold px-4 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                                                onClick={() => handleCompleteOrder(order.id)}
-                                                disabled={loading}
-                                            >
-                                                Finalizar
-                                            </Button>
-                                        )}
+                                                {(isGenerated || order.status === "PAUSADA") && (
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="icon"
+                                                                className="h-8 w-8 border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                                                                onClick={() => setConfirmAction({ id: order.id, name: order.orderName, type: 'finalizar' })}
+                                                                disabled={loading}
+                                                            >
+                                                                <CheckCircle2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Finalizar orden</TooltipContent>
+                                                    </Tooltip>
+                                                )}
 
-                                        {(isGenerated || isCompletedStatus || order.status === "PAUSADA") ? (
-                                            <Button variant="secondary" size="sm" className="h-8 text-xs font-bold px-4 border-slate-200 shadow-sm" asChild>
-                                                <Link href={`/dashboard/orders/${order.id}/executions`}>
-                                                    <Activity className="mr-1.5 h-3.5 w-3.5" /> Ver Ejecución
-                                                </Link>
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                size="sm"
-                                                className="h-8 text-xs font-bold px-4"
-                                                onClick={() => handleStartOrder(order.id)}
-                                                disabled={isStarting || isProcessing}
-                                            >
-                                                {isStarting || isProcessing ? "En curso..." :
-                                                    <><Play className="mr-1.5 h-3.5 w-3.5" /> Enviar orden</>}
-                                            </Button>
-                                        )}
+                                                {(isGenerated || isCompletedStatus || order.status === "PAUSADA") ? (
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button variant="secondary" size="icon" className="h-8 w-8 border-slate-200 shadow-sm" asChild>
+                                                                <Link href={`/dashboard/orders/${order.id}/executions`}>
+                                                                    <Activity className="h-4 w-4" />
+                                                                </Link>
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Ver Ejecución</TooltipContent>
+                                                    </Tooltip>
+                                                ) : (
+                                                    <Button
+                                                        size="sm"
+                                                        className="h-8 text-xs font-bold px-4"
+                                                        onClick={() => handleStartOrder(order.id)}
+                                                        disabled={isStarting || isProcessing}
+                                                    >
+                                                        {isStarting || isProcessing ? "..." :
+                                                            <><Play className="mr-1.5 h-3.5 w-3.5" /> Enviar</>}
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </TooltipProvider>
                                     </div>
                                 </div>
                             </CardContent>
@@ -687,6 +721,29 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                             disabled={loading}
                         >
                             {loading ? "Eliminando..." : "Eliminar"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* General Action Confirmation */}
+            <AlertDialog open={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="capitalize">¿{confirmAction?.type} orden?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            ¿Estás seguro de que quieres {confirmAction?.type} la orden <span className="font-bold text-foreground">"{confirmAction?.name}"</span>?
+                            {confirmAction?.type === 'finalizar' && " Esta acción marcará la orden como completada y detendrá cualquier proceso pendiente."}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={loading}>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={executeConfirmAction}
+                            className={confirmAction?.type === 'pausar' ? "bg-amber-600 hover:bg-amber-700" : confirmAction?.type === 'finalizar' ? "bg-emerald-600 hover:bg-emerald-700" : "bg-primary"}
+                            disabled={loading}
+                        >
+                            {loading ? "Procesando..." : confirmAction?.type ? confirmAction.type.charAt(0).toUpperCase() + confirmAction.type.slice(1) : "Confirmar"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

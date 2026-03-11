@@ -31,7 +31,6 @@ const SOCIAL_NETWORKS = [
     { value: "INSTAGRAM", label: "Instagram" },
     { value: "FACEBOOK", label: "Facebook" },
     { value: "TIKTOK", label: "TikTok" },
-    { value: "YOUTUBE", label: "YouTube" },
 ] as const
 
 const POST_TYPES = [
