@@ -188,7 +188,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
         setLoading(false)
     }
 
-    const activeOrders = (orders as any).filter((o: any) => o.status !== "COMPLETADA" || (o.status === "COMPLETADA" && (o.type === 'GENLIVE' || o.postType === 'LIVE')))
+    const activeOrders = orders as any
     const queueOrders = (orders as any).filter((o: any) => o.status === "GENERADA")
     const pausedOrders = (orders as any).filter((o: any) => o.status === "PAUSADA")
 
