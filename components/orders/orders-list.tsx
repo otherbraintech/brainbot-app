@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { deleteOrder, startOrder, pauseOrder, resumeOrder, pauseAllOrders, resumeAllOrders, duplicateOrder } from "@/lib/actions/orders"
+import { deleteOrder, startOrder, pauseOrder, resumeOrder, pauseAllOrders, resumeAllOrders, duplicateOrder, completeOrder } from "@/lib/actions/orders"
 import { EditOrderButton } from "@/components/orders/edit-order-button"
 import {
     Sheet,
@@ -193,6 +193,12 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
         if ((result as any).error) {
             setError((result as any).error)
         }
+        setLoading(false)
+    }
+
+    async function handleCompleteOrder(orderId: string) {
+        setLoading(true)
+        await completeOrder(orderId)
         setLoading(false)
     }
 
@@ -624,6 +630,18 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                                 disabled={loading}
                                             >
                                                 Reanudar
+                                            </Button>
+                                        )}
+
+                                        {(isGenerated || order.status === "PAUSADA") && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 text-xs font-bold px-4 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                                                onClick={() => handleCompleteOrder(order.id)}
+                                                disabled={loading}
+                                            >
+                                                Finalizar
                                             </Button>
                                         )}
 

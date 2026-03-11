@@ -626,3 +626,27 @@ export async function duplicateOrder(id: string) {
   
   return { success: true }
 }
+export async function completeOrder(id: string) {
+  const session = await getSession()
+  
+  if (!session) {
+    return { error: "No autenticado" }
+  }
+  
+  const order = await prisma.botOrder.findFirst({
+    where: { id, userId: session },
+  })
+  
+  if (!order) {
+    return { error: "Orden no encontrada" }
+  }
+
+  await prisma.botOrder.update({
+    where: { id },
+    data: { status: OrderStatus.COMPLETADA } as any,
+  })
+  
+  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  
+  return { success: true }
+}
