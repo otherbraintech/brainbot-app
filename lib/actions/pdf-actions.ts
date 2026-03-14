@@ -16,7 +16,11 @@ export async function getOrderForPDF(orderId: string) {
       userId: session,
     },
     include: {
-      project: true,
+      project: {
+        include: {
+          target: true
+        }
+      },
       genComments: {
         include: {
           device: true

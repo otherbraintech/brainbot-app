@@ -100,7 +100,11 @@ export async function getOrder(id: string) {
       deletedAt: null,
     },
     include: {
-      project: true,
+      project: {
+        include: {
+          target: true
+        }
+      },
       genComments: {
         include: {
           device: true
@@ -475,8 +479,12 @@ export async function getOrderWithComments(orderId: string) {
       },
       project: {
         select: {
-            name: true,
-            id: true
+          name: true,
+          id: true,
+          stance: true,
+          target: {
+            select: { name: true }
+          }
         }
       }
     },

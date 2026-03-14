@@ -89,8 +89,8 @@ export function TeamSwitcher({
           <DropdownMenuTrigger {...({ asChild: true } as any)}>
             <SidebarMenuButton
               size="default"
-              tooltip={activeTeam.name}
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:justify-center"
+              title={activeTeam.name}
             >
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg group-data-[collapsible=icon]:mx-auto">
                 <activeTeam.logo className="size-4" />

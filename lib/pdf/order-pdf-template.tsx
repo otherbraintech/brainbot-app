@@ -88,6 +88,8 @@ const styles = StyleSheet.create({
   },
   statusPublished: { color: '#059669' },
   statusPending: { color: '#d97706' },
+  stanceFavor: { color: '#16a34a', fontWeight: 'bold' },
+  stanceAgainst: { color: '#dc2626', fontWeight: 'bold' },
   footer: {
     position: 'absolute',
     bottom: 30,
@@ -175,8 +177,21 @@ export const OrderPDFTemplate = ({ order, project, comments }: OrderPDFProps) =>
               <Text style={styles.value}>{project.name}</Text>
             </View>
             <View style={styles.gridItem}>
-              <Text style={styles.label}>Postura (Stance)</Text>
-              <Text style={styles.value}>{project.stance}</Text>
+              <Text style={styles.label}>Postura de la Orden</Text>
+              <View style={{ flexDirection: 'row', marginTop: 3 }}>
+                {project.stance === 'AGAINST' ? (
+                  <Text style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '2px 6px', borderRadius: 4, fontSize: 9, fontWeight: 'bold' }}>En Contra</Text>
+                ) : project.stance === 'FAVOR' ? (
+                  <Text style={{ backgroundColor: '#dcfce7', color: '#16a34a', padding: '2px 6px', borderRadius: 4, fontSize: 9, fontWeight: 'bold' }}>A Favor</Text>
+                ) : (
+                  <Text style={styles.value}>{project.stance}</Text>
+                )}
+              </View>
+              {project.target?.name && (
+                <Text style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>
+                  Objetivo: {project.target.name}
+                </Text>
+              )}
             </View>
             <View style={styles.gridItem}>
               <Text style={styles.label}>URL Original</Text>
