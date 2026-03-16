@@ -776,84 +776,110 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
 
             {/* View Details Modal */}
             <Dialog open={!!viewingOrder} onOpenChange={() => setViewingOrder(null)}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Detalles de la Orden</DialogTitle>
-                        <DialogDescription>Información completa de la solicitud</DialogDescription>
+                        <DialogTitle className="text-xl font-bold">Detalles de la Orden</DialogTitle>
+                        <DialogDescription>Información completa de la solicitud para control y seguimiento</DialogDescription>
                     </DialogHeader>
-                    {viewingOrder && (
-                        <div className="space-y-4 py-2">
-                            <div className="grid grid-cols-3 gap-2 text-sm border-b pb-2">
-                                <span className="text-muted-foreground font-medium">Nombre:</span>
-                                <span className="col-span-2 font-bold">{viewingOrder.orderName}</span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 text-sm border-b pb-2">
-                                <span className="text-muted-foreground font-medium">Red Social:</span>
-                                <span className="col-span-2">
-                                    <Badge variant="outline" className={`h-5 flex items-center gap-1.5 ${NETWORK_COLORS[viewingOrder.socialNetwork]}`}>
-                                        {viewingOrder.socialNetwork === "FACEBOOK" && <Facebook className="h-3 w-3" />}
-                                        {viewingOrder.socialNetwork === "INSTAGRAM" && <Instagram className="h-3 w-3" />}
-                                        {viewingOrder.socialNetwork === "TIKTOK" && <TikTokIcon className="h-3 w-3" />}
-                                        {NETWORK_LABELS[viewingOrder.socialNetwork]}
-                                    </Badge>
-                                </span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 text-sm border-b pb-2">
-                                <span className="text-muted-foreground font-medium">Tipo:</span>
-                                <span className="col-span-2 flex items-center gap-2">
-                                    {(() => {
-                                        const typeCfg = ORDER_TYPE_LABELS[viewingOrder.type] || { icon: Activity, label: viewingOrder.type }
-                                        const Icon = typeCfg.icon
-                                        return (
-                                            <>
-                                                <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                                                {typeCfg.label}
-                                            </>
-                                        )
-                                    })()}
-                                </span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 text-sm border-b pb-2">
-                                <span className="text-muted-foreground font-medium">Cantidad:</span>
-                                <span className="col-span-2 font-bold text-primary">{viewingOrder.quantity} unidades</span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 text-sm border-b pb-2">
-                                <span className="text-muted-foreground font-medium">Estado:</span>
-                                <span className="col-span-2">
-                                    <Badge variant={STATUS_LABELS[viewingOrder.status]?.variant || "outline"}>
-                                        {STATUS_LABELS[viewingOrder.status]?.label || viewingOrder.status}
-                                    </Badge>
-                                </span>
-                            </div>
-                            <div className="grid gap-1.5 text-sm border-b pb-2">
-                                <span className="text-muted-foreground font-medium">URL de la publicación:</span>
-                                <a
-                                    href={viewingOrder.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:underline break-all flex items-center gap-1"
-                                >
-                                    <ExternalLink className="h-3.5 w-3.5" /> {viewingOrder.url}
-                                </a>
-                            </div>
-                            {viewingOrder.intent && (
-                                <div className="grid gap-1.5 text-sm bg-muted/30 p-3 rounded-lg border border-dashed border-muted-foreground/30">
-                                    <span className="text-muted-foreground font-bold uppercase text-[10px]">Intención / Contexto:</span>
-                                    <p className="italic leading-relaxed whitespace-pre-wrap">
-                                        {viewingOrder.intent}
-                                    </p>
+                    <ScrollArea className="max-h-[70vh] pr-4">
+                        {viewingOrder && (
+                            <div className="space-y-6 py-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                                    <div className="space-y-1">
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase">Nombre de la Orden</span>
+                                        <p className="font-bold text-lg leading-tight">{viewingOrder.orderName}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase">Red Social</span>
+                                        <div className="pt-1">
+                                            <Badge variant="outline" className={`h-6 flex items-center gap-2 w-fit px-3 ${NETWORK_COLORS[viewingOrder.socialNetwork]}`}>
+                                                {viewingOrder.socialNetwork === "FACEBOOK" && <Facebook className="h-3.5 w-3.5" />}
+                                                {viewingOrder.socialNetwork === "INSTAGRAM" && <Instagram className="h-3.5 w-3.5" />}
+                                                {viewingOrder.socialNetwork === "TIKTOK" && <TikTokIcon className="h-3.5 w-3.5" />}
+                                                {NETWORK_LABELS[viewingOrder.socialNetwork]}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1 border-t pt-4 md:border-t-0 md:pt-0">
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase">Tipo de Acción</span>
+                                        <div className="flex items-center gap-2 pt-1">
+                                            {(() => {
+                                                const typeCfg = ORDER_TYPE_LABELS[viewingOrder.type] || { icon: Activity, label: viewingOrder.type }
+                                                const Icon = typeCfg.icon
+                                                return (
+                                                    <div className="flex items-center gap-2 bg-muted/50 px-3 py-1 rounded-md border text-sm font-medium">
+                                                        <Icon className="h-4 w-4 text-muted-foreground" />
+                                                        {typeCfg.label}
+                                                    </div>
+                                                )
+                                            })()}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1 border-t pt-4 md:border-t-0 md:pt-0">
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase">Meta Solicitada</span>
+                                        <p className="text-lg font-bold text-primary pt-1">{viewingOrder.quantity} <span className="text-sm font-normal text-muted-foreground">unidades</span></p>
+                                    </div>
+                                    <div className="space-y-1 border-t pt-4">
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase">Estado Actual</span>
+                                        <div className="pt-1">
+                                            <Badge 
+                                                variant={STATUS_LABELS[viewingOrder.status]?.variant || "outline"}
+                                                className="font-bold px-3 py-0.5"
+                                            >
+                                                {STATUS_LABELS[viewingOrder.status]?.label || viewingOrder.status}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1 border-t pt-4">
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase">Fecha de Creación</span>
+                                        <p className="text-sm font-medium pt-1">
+                                            {new (globalThis as any).Date(viewingOrder.createdAt).toLocaleDateString("es", {
+                                                day: '2-digit',
+                                                month: 'long',
+                                                year: 'numeric'
+                                            })}
+                                        </p>
+                                    </div>
+                                    
+                                    <div className="col-span-1 md:col-span-2 space-y-2 border-t pt-4">
+                                        <span className="text-[10px] text-muted-foreground font-bold uppercase">URL del Contenido</span>
+                                        <div className="flex items-start gap-2 bg-blue-50/50 dark:bg-blue-900/10 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                                            <ExternalLink className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                                            <a
+                                                href={viewingOrder.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 hover:underline break-all text-sm font-medium"
+                                            >
+                                                {viewingOrder.url}
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    {viewingOrder.intent && (
+                                        <div className="col-span-1 md:col-span-2 space-y-2 border-t pt-4">
+                                            <span className="text-[10px] text-muted-foreground font-bold uppercase">Intención / Contexto</span>
+                                            <div className="bg-muted/30 p-4 rounded-xl border border-dashed border-muted-foreground/30">
+                                                <p className="text-sm italic leading-relaxed whitespace-pre-wrap text-muted-foreground font-medium">
+                                                    "{viewingOrder.intent}"
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    )}
-                    <DialogFooter>
-                        <Button variant="secondary" onClick={() => setViewingOrder(null)}>Cerrar</Button>
+                            </div>
+                        )}
+                    </ScrollArea>
+                    <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
+                        <Button variant="ghost" onClick={() => setViewingOrder(null)} className="font-medium">
+                            Cerrar
+                        </Button>
                         {viewingOrder && (
                             <Button
                                 onClick={() => window.open(viewingOrder.url, '_blank')}
-                                className="bg-blue-600 hover:bg-blue-700"
+                                className="bg-blue-600 hover:bg-blue-700 font-bold px-6 shadow-md shadow-blue-200 dark:shadow-none"
                             >
-                                <ExternalLink className="mr-2 h-4 w-4" /> Ver Publicación
+                                <ExternalLink className="mr-2 h-4 w-4" /> Ir a la Publicación
                             </Button>
                         )}
                     </DialogFooter>
