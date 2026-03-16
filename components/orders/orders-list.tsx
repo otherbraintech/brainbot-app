@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Trash2, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy, Facebook, Instagram, ListChecks, Hash } from "lucide-react"
+import { MoreHorizontal, Trash2, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy, Facebook, Instagram, ListChecks, Hash, RefreshCw } from "lucide-react"
 import { TikTokIcon } from "@/components/icons/tiktok-icon"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -40,7 +40,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { deleteOrder, startOrder, pauseOrder, resumeOrder, pauseAllOrders, resumeAllOrders, duplicateOrder, completeOrder } from "@/lib/actions/orders"
+import { deleteOrder, startOrder, pauseOrder, resumeOrder, pauseAllOrders, resumeAllOrders, duplicateOrder, completeOrder, retryOrder } from "@/lib/actions/orders"
 import { EditOrderButton } from "@/components/orders/edit-order-button"
 import {
     Sheet,
@@ -159,6 +159,14 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
             return
         }
 
+        if ((result as any)?.error) setError((result as any).error)
+        setStartingId(null)
+    }
+
+    async function handleRetryOrder(orderId: string) {
+        setStartingId(orderId)
+        setError(null)
+        const result = await retryOrder(orderId)
         if ((result as any)?.error) setError((result as any).error)
         setStartingId(null)
     }
@@ -669,16 +677,34 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                                 )}
 
                                                 {(isGenerated || isCompletedStatus || order.status === "PAUSADA") ? (
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button variant="secondary" size="icon" className="h-8 w-8 border-slate-200 shadow-sm" asChild>
-                                                                <Link href={`/dashboard/orders/${order.id}/executions`}>
-                                                                    <Activity className="h-4 w-4" />
-                                                                </Link>
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>Ver Ejecución</TooltipContent>
-                                                    </Tooltip>
+                                                    <div className="flex items-center gap-1">
+                                                        {publishedCount < order.quantity && (
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <Button 
+                                                                        variant="outline" 
+                                                                        size="icon" 
+                                                                        className="h-8 w-8 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                                                                        onClick={() => handleRetryOrder(order.id)}
+                                                                        disabled={isStarting}
+                                                                    >
+                                                                        {isStarting ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                                                                    </Button>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>Completar / Re-enviar faltantes</TooltipContent>
+                                                            </Tooltip>
+                                                        )}
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="secondary" size="icon" className="h-8 w-8 border-slate-200 shadow-sm" asChild>
+                                                                    <Link href={`/dashboard/orders/${order.id}/executions`}>
+                                                                        <Activity className="h-4 w-4" />
+                                                                    </Link>
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Ver Ejecución</TooltipContent>
+                                                        </Tooltip>
+                                                    </div>
                                                 ) : (
                                                     <Button
                                                         size="sm"

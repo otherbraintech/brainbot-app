@@ -447,6 +447,107 @@ export async function startOrder(id: string) {
   return { success: true }
 }
 
+/**
+ * Re-envía una orden al webhook ignorando las restricciones de estado de startOrder.
+ * Útil para completar órdenes que se quedaron cortas.
+ */
+export async function retryOrder(id: string) {
+  const session = await getSession()
+  
+  if (!session) {
+    return { error: "No autenticado" }
+  }
+  
+  const order = await prisma.botOrder.findFirst({
+    where: { id, userId: session },
+    include: {
+      project: {
+        include: {
+          target: true,
+        },
+      },
+    },
+  })
+  
+  if (!order) {
+    return { error: "Orden no encontrada" }
+  }
+
+  // Actualizamos el estado a GENERANDO antes de disparar el webhook
+  await prisma.botOrder.update({
+    where: { id },
+    data: { status: OrderStatus.GENERANDO } as any
+  })
+  
+  try {
+    const webhookPayload = {
+      orderId: order.id,
+      projectId: order.projectId,
+      userId: order.userId,
+      type: order.type,
+      url: order.url,
+      orderName: (order as any).orderName,
+      socialNetwork: order.socialNetwork,
+      postType: order.postType,
+      quantity: order.quantity,
+      intent: order.intent || null,
+      status: OrderStatus.GENERANDO,
+      order: {
+        id: order.id,
+        projectId: order.projectId,
+        userId: order.userId,
+        type: order.type,
+        url: order.url,
+        orderName: (order as any).orderName,
+        socialNetwork: order.socialNetwork,
+        postType: order.postType,
+        intent: order.intent || null,
+        quantity: order.quantity,
+        status: OrderStatus.GENERANDO,
+        sentAt: order.sentAt,
+        generatedAt: order.generatedAt,
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
+      },
+      project: order.project ? {
+        id: order.project.id,
+        name: order.project.name,
+        userId: order.project.userId,
+        stance: (order.project as any).stance,
+        target: order.project.target ? {
+          id: order.project.target.id,
+          name: order.project.target.name,
+          content: (order.project.target as any).content,
+        } : null,
+      } : null,
+    }
+
+    const response = await fetch(N8N_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: (globalThis as any).JSON.stringify([webhookPayload]),
+    })
+    
+    if (!response.ok) {
+      await prisma.botOrder.update({
+        where: { id },
+        data: { status: OrderStatus.REINTENTAR } as any
+      })
+      return { error: "Error al re-enviar la orden." }
+    }
+  } catch (error) {
+    await prisma.botOrder.update({
+      where: { id },
+      data: { status: OrderStatus.REINTENTAR } as any
+    })
+    return { error: "Error de red al re-enviar la orden." }
+  }
+  
+  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  
+  return { success: true }
+}
+
 export async function getOrderWithComments(orderId: string) {
   const session = await getSession()
   
