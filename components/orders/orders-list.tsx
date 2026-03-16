@@ -266,38 +266,56 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
     return (
         <>
             <div className="flex flex-col gap-6 mb-8">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                    <Card className="bg-card border-border shadow-sm">
-                        <CardContent className="p-3 flex flex-col items-center justify-center">
-                            <span className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Total Órdenes</span>
-                            <span className="text-xl font-black text-primary">{activeOrders.length}</span>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card className="bg-indigo-500/5 border-indigo-500/10 dark:border-indigo-500/20 shadow-sm border overflow-hidden relative">
+                        <div className="absolute top-0 right-0 p-2 opacity-10">
+                            <ListChecks className="h-12 w-12 text-indigo-600" />
+                        </div>
+                        <CardContent className="p-4 flex flex-col items-start justify-center relative">
+                            <span className="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 mb-1 tracking-wider">Total Órdenes</span>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-2xl font-black text-indigo-700 dark:text-indigo-300">{activeOrders.length}</span>
+                                <span className="text-[10px] text-indigo-600/60 font-medium">activas</span>
+                            </div>
                         </CardContent>
                     </Card>
-                    <Card className="bg-blue-500/5 border-blue-500/10 dark:border-blue-500/20 shadow-sm border">
-                        <CardContent className="p-3 flex flex-col items-center justify-center">
+
+                    <Card className="bg-blue-500/5 border-blue-500/10 dark:border-blue-500/20 shadow-sm border overflow-hidden relative">
+                        <div className="absolute top-0 right-0 p-2 opacity-10">
+                            <Facebook className="h-12 w-12 text-blue-600" />
+                        </div>
+                        <CardContent className="p-4 flex flex-col items-start justify-center relative">
                             <div className="flex items-center gap-1.5 mb-1">
-                                <Facebook className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                                <span className="text-[10px] uppercase font-bold text-blue-700 dark:text-blue-300">Facebook</span>
+                                <Facebook className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                <span className="text-[10px] uppercase font-bold text-blue-700 dark:text-blue-300 tracking-wider">Facebook</span>
                             </div>
-                            <span className="text-xl font-black text-blue-600 dark:text-blue-400">{stats.FACEBOOK}</span>
+                            <span className="text-2xl font-black text-blue-600 dark:text-blue-400">{stats.FACEBOOK}</span>
                         </CardContent>
                     </Card>
-                    <Card className="bg-pink-500/5 border-pink-500/10 dark:border-pink-500/20 shadow-sm border">
-                        <CardContent className="p-3 flex flex-col items-center justify-center">
+
+                    <Card className="bg-pink-500/5 border-pink-500/10 dark:border-pink-500/20 shadow-sm border overflow-hidden relative">
+                        <div className="absolute top-0 right-0 p-2 opacity-10">
+                            <Instagram className="h-12 w-12 text-pink-600" />
+                        </div>
+                        <CardContent className="p-4 flex flex-col items-start justify-center relative">
                             <div className="flex items-center gap-1.5 mb-1">
-                                <Instagram className="h-3 w-3 text-pink-600 dark:text-pink-400" />
-                                <span className="text-[10px] uppercase font-bold text-pink-700 dark:text-pink-300">Instagram</span>
+                                <Instagram className="h-3.5 w-3.5 text-pink-600 dark:text-pink-400" />
+                                <span className="text-[10px] uppercase font-bold text-pink-700 dark:text-pink-300 tracking-wider">Instagram</span>
                             </div>
-                            <span className="text-xl font-black text-pink-600 dark:text-pink-400">{stats.INSTAGRAM}</span>
+                            <span className="text-2xl font-black text-pink-600 dark:text-pink-400">{stats.INSTAGRAM}</span>
                         </CardContent>
                     </Card>
-                    <Card className="bg-muted/30 border-border shadow-sm border">
-                        <CardContent className="p-3 flex flex-col items-center justify-center">
+
+                    <Card className="bg-zinc-500/5 border-zinc-500/10 dark:border-zinc-500/20 shadow-sm border overflow-hidden relative">
+                        <div className="absolute top-0 right-0 p-2 opacity-10">
+                            <TikTokIcon className="h-12 w-12 text-zinc-600" />
+                        </div>
+                        <CardContent className="p-4 flex flex-col items-start justify-center relative">
                             <div className="flex items-center gap-1.5 mb-1">
-                                <TikTokIcon className="h-3 w-3 text-foreground" />
-                                <span className="text-[10px] uppercase font-bold text-foreground">TikTok</span>
+                                <TikTokIcon className="h-3.5 w-3.5 text-zinc-900 dark:text-white" />
+                                <span className="text-[10px] uppercase font-bold text-zinc-900 dark:text-zinc-100 tracking-wider">TikTok</span>
                             </div>
-                            <span className="text-xl font-black text-foreground">{stats.TIKTOK}</span>
+                            <span className="text-2xl font-black text-zinc-900 dark:text-zinc-100">{stats.TIKTOK}</span>
                         </CardContent>
                     </Card>
                 </div>
@@ -507,6 +525,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                             <CardTitle className={`text-md font-bold truncate max-w-[150px] transition-colors ${isCompletedStatus ? 'text-emerald-700 dark:text-emerald-300' : isLiveOrder ? 'text-red-700 dark:text-red-400 font-black' : ''}`}>
                                                 {order.orderName}
                                             </CardTitle>
+                                            <span className="text-[10px] font-mono text-muted-foreground">ID: #{order.id}</span>
                                             {isCompletedStatus && (
                                                 <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider">Orden Completada</span>
                                             )}
@@ -813,7 +832,10 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                                     <div className="space-y-1">
                                         <span className="text-[10px] text-muted-foreground font-bold uppercase">Nombre de la Orden</span>
-                                        <p className="font-bold text-lg leading-tight">{viewingOrder.orderName}</p>
+                                        <div className="flex flex-col">
+                                            <p className="font-bold text-lg leading-tight">{viewingOrder.orderName}</p>
+                                            <span className="text-[10px] font-mono text-muted-foreground">#{viewingOrder.id}</span>
+                                        </div>
                                     </div>
                                     <div className="space-y-1">
                                         <span className="text-[10px] text-muted-foreground font-bold uppercase">Red Social</span>

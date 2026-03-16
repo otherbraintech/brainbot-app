@@ -58,9 +58,12 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                         <config.icon className={`h-6 w-6 ${config.color}`} />
                         {order.orderName || `Ejecución de ${config.label}`}
                     </h1>
-                    <p className="text-muted-foreground text-sm">
-                        {order.project.name} · Verificando ejecución de la orden
-                    </p>
+                    <div className="flex items-center gap-2">
+                        <p className="text-muted-foreground text-sm">
+                            {order.project.name} · Verificando ejecución de la orden
+                        </p>
+                        <Badge variant="secondary" className="font-mono text-[10px] h-4 px-1.5 py-0">#{order.id}</Badge>
+                    </div>
                 </div>
             </div>
 
