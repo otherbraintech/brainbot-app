@@ -23,6 +23,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 import { createOrder, getNextOrderName } from "@/lib/actions/orders"
 import { getAvailableDevicesCount } from "@/lib/actions/devices"
@@ -158,113 +159,155 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="orderName">Nombre de la Orden</Label>
-                            <Input
-                                id="orderName"
-                                value={orderName}
-                                onChange={(e) => setOrderName(e.target.value)}
-                                placeholder="Ej: Orden #1"
-                                required
-                            />
-                        </div>
-
-                        {error && (
-                            <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
-                                {error}
+                    <ScrollArea className="max-h-[70vh] px-1">
+                        <div className="grid gap-4 py-4 pr-3">
+                            <div className="grid gap-2">
+                                <Label htmlFor="orderName">Nombre de la Orden</Label>
+                                <Input
+                                    id="orderName"
+                                    value={orderName}
+                                    onChange={(e) => setOrderName(e.target.value)}
+                                    placeholder="Ej: Orden #1"
+                                    required
+                                />
                             </div>
-                        )}
 
-                        <div className="grid gap-2">
-                            <Label>Tipo de Acción</Label>
-                            <Select
-                                value={orderType}
-                                onValueChange={(v) => {
-                                    const newType = v as OrderType
-                                    setOrderType(newType)
-                                    // Auto-switch from Instagram to Facebook if COMPARTIR is selected
-                                    if (newType === "COMPARTIR" && socialNetwork === "INSTAGRAM") {
-                                        setSocialNetwork("FACEBOOK")
-                                    }
-                                }}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {(ORDER_TYPES as any).map((ot: any) => (
-                                        <SelectItem key={ot.value} value={ot.value}>
-                                            {ot.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                            {error && (
+                                <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                                    {error}
+                                </div>
+                            )}
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="link">Enlace de la publicación</Label>
-                            <Input
-                                id="link"
-                                placeholder="https://facebook.com/..."
-                                value={link}
-                                onChange={(e) => setLink(e.target.value)}
-                                required
-                            />
-                        </div>
+                            <div className="grid gap-2">
+                                <Label>Tipo de Acción</Label>
+                                <Select
+                                    value={orderType}
+                                    onValueChange={(v) => {
+                                        const newType = v as OrderType
+                                        setOrderType(newType)
+                                        // Auto-switch from Instagram to Facebook if COMPARTIR is selected
+                                        if (newType === "COMPARTIR" && socialNetwork === "INSTAGRAM") {
+                                            setSocialNetwork("FACEBOOK")
+                                        }
+                                    }}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {(ORDER_TYPES as any).map((ot: any) => (
+                                            <SelectItem key={ot.value} value={ot.value}>
+                                                {ot.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                        {isPostAction && (
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="grid gap-2">
-                                    <Label>Red Social</Label>
-                                    <Select
-                                        value={socialNetwork}
-                                        onValueChange={(v) => setSocialNetwork(v as SocialNetwork)}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {(SOCIAL_NETWORKS as any).map((sn: any) => {
-                                                // Disable Instagram for COMPARTIR (Share) orders
-                                                const isDisabled = orderType === "COMPARTIR" && sn.value === "INSTAGRAM"
-                                                return (
-                                                    <SelectItem
-                                                        key={sn.value}
-                                                        value={sn.value}
-                                                        disabled={isDisabled}
-                                                    >
-                                                        {sn.label}{isDisabled ? " (No disponible)" : ""}
+                            <div className="grid gap-2">
+                                <Label htmlFor="link">Enlace de la publicación</Label>
+                                <Input
+                                    id="link"
+                                    placeholder="https://facebook.com/..."
+                                    value={link}
+                                    onChange={(e) => setLink(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            {isPostAction && (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label>Red Social</Label>
+                                        <Select
+                                            value={socialNetwork}
+                                            onValueChange={(v) => setSocialNetwork(v as SocialNetwork)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {(SOCIAL_NETWORKS as any).map((sn: any) => {
+                                                    // Disable Instagram for COMPARTIR (Share) orders
+                                                    const isDisabled = orderType === "COMPARTIR" && sn.value === "INSTAGRAM"
+                                                    return (
+                                                        <SelectItem
+                                                            key={sn.value}
+                                                            value={sn.value}
+                                                            disabled={isDisabled}
+                                                        >
+                                                            {sn.label}{isDisabled ? " (No disponible)" : ""}
+                                                        </SelectItem>
+                                                    )
+                                                })}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label>Tipo de publicación</Label>
+                                        <Select
+                                            value={postType}
+                                            onValueChange={(v) => setPostType(v as PostType)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {(POST_TYPES_FOR_POST_ACTIONS as any).map((pt: any) => (
+                                                    <SelectItem key={pt.value} value={pt.value}>
+                                                        {pt.label}
                                                     </SelectItem>
-                                                )
-                                            })}
-                                        </SelectContent>
-                                    </Select>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
+                            )}
 
-                                <div className="grid gap-2">
-                                    <Label>Tipo de publicación</Label>
-                                    <Select
-                                        value={postType}
-                                        onValueChange={(v) => setPostType(v as PostType)}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {(POST_TYPES_FOR_POST_ACTIONS as any).map((pt: any) => (
-                                                <SelectItem key={pt.value} value={pt.value}>
-                                                    {pt.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                            {isReportAction && (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label>Red Social</Label>
+                                        <Select
+                                            value={socialNetwork}
+                                            onValueChange={(v) => setSocialNetwork(v as SocialNetwork)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {(SOCIAL_NETWORKS as any).map((sn: any) => (
+                                                    <SelectItem key={sn.value} value={sn.value}>
+                                                        {sn.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label>Tipo de reporte</Label>
+                                        <Select
+                                            value={reportType}
+                                            onValueChange={(v) => setReportType(v as ReportType)}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {(REPORT_TYPES as any).map((rt: any) => (
+                                                    <SelectItem key={rt.value} value={rt.value}>
+                                                        {rt.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {isReportAction && (
-                            <div className="grid grid-cols-2 gap-4">
+                            {!isPostAction && !isReportAction && (
                                 <div className="grid gap-2">
                                     <Label>Red Social</Label>
                                     <Select
@@ -283,84 +326,44 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                                         </SelectContent>
                                     </Select>
                                 </div>
+                            )}
 
-                                <div className="grid gap-2">
-                                    <Label>Tipo de reporte</Label>
-                                    <Select
-                                        value={reportType}
-                                        onValueChange={(v) => setReportType(v as ReportType)}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {(REPORT_TYPES as any).map((rt: any) => (
-                                                <SelectItem key={rt.value} value={rt.value}>
-                                                    {rt.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                        )}
-
-                        {!isPostAction && !isReportAction && (
                             <div className="grid gap-2">
-                                <Label>Red Social</Label>
-                                <Select
-                                    value={socialNetwork}
-                                    onValueChange={(v) => setSocialNetwork(v as SocialNetwork)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {(SOCIAL_NETWORKS as any).map((sn: any) => (
-                                            <SelectItem key={sn.value} value={sn.value}>
-                                                {sn.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        )}
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="quantity">
-                                {orderType === "COMENTARIO" ? "Cantidad de comentarios" :
-                                    orderType === "MEGUSTA" ? "Cantidad de likes" :
-                                        orderType === "COMPARTIR" ? "Cantidad de shares" :
-                                            orderType === "SEGUIMIENTO" ? "Cantidad de seguidores" :
-                                                "Cantidad de reportes"}
-                            </Label>
-                            <Input
-                                id="quantity"
-                                type="number"
-                                min={1}
-                                max={maxDevices}
-                                value={quantity}
-                                onChange={(e) => setQuantity(Math.min(Number(e.target.value) || 1, maxDevices))}
-                                required
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Dispositivos disponibles: {maxDevices}
-                            </p>
-                        </div>
-
-                        {orderType === "COMENTARIO" && (
-                            <div className="grid gap-2">
-                                <Label htmlFor="intent">Intención de los comentarios (opcional)</Label>
-                                <Textarea
-                                    id="intent"
-                                    placeholder="Ej: Comentarios naturales y positivos sobre el producto"
-                                    value={intent}
-                                    onChange={(e) => setIntent(e.target.value)}
-                                    rows={3}
+                                <Label htmlFor="quantity">
+                                    {orderType === "COMENTARIO" ? "Cantidad de comentarios" :
+                                        orderType === "MEGUSTA" ? "Cantidad de likes" :
+                                            orderType === "COMPARTIR" ? "Cantidad de shares" :
+                                                orderType === "SEGUIMIENTO" ? "Cantidad de seguidores" :
+                                                    "Cantidad de reportes"}
+                                </Label>
+                                <Input
+                                    id="quantity"
+                                    type="number"
+                                    min={1}
+                                    max={maxDevices}
+                                    value={quantity}
+                                    onChange={(e) => setQuantity(Math.min(Number(e.target.value) || 1, maxDevices))}
+                                    required
                                 />
+                                <p className="text-xs text-muted-foreground">
+                                    Dispositivos disponibles: {maxDevices}
+                                </p>
                             </div>
-                        )}
-                    </div>
+
+                            {orderType === "COMENTARIO" && (
+                                <div className="grid gap-2">
+                                    <Label htmlFor="intent">Intención de los comentarios (opcional)</Label>
+                                    <Textarea
+                                        id="intent"
+                                        placeholder="Ej: Comentarios naturales y positivos sobre el producto"
+                                        value={intent}
+                                        onChange={(e) => setIntent(e.target.value)}
+                                        rows={3}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </ScrollArea>
 
                     <DialogFooter>
                         <Button
