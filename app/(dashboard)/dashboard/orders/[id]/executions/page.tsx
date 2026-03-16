@@ -43,7 +43,6 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
 
     const publishedCount = interactions.filter((i: any) => i.status === "PUBLICADO").length;
     const generatedCount = interactions.filter((i: any) => i.status === "PUBLICADO" || i.status === "SINPUBLICAR").length;
-    const publishedLabel = order.type === 'COMENTARIO' ? 'COMENTADO' : 'EJECUTADO';
 
     return (
         <div className="flex flex-col gap-6">
@@ -201,7 +200,7 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                 <CardHeader>
                     <CardTitle>Detalles de Ejecución</CardTitle>
                     <CardDescription>
-                        Mostrando {generatedCount} ejecuciones ({publishedCount} {publishedLabel.toLowerCase()}s)
+                        Mostrando {generatedCount} ejecuciones ({publishedCount} ejecutados)
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -259,7 +258,7 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                                                         : ""
                                                 }
                                             >
-                                                {item.status === "PUBLICADO" ? publishedLabel : item.status}
+                                                {item.status === "PUBLICADO" ? "EJECUTADO" : item.status === "SINPUBLICAR" ? "SIN EJECUTAR" : item.status}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right text-xs text-muted-foreground">

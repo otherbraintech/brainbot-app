@@ -656,3 +656,28 @@ export async function completeOrder(id: string) {
   
   return { success: true }
 }
+
+export async function updateGenComment(id: number, text: string) {
+  const session = await getSession()
+  
+  if (!session) {
+    return { error: "No autenticado" }
+  }
+  
+  const comment = await prisma.genComment.findFirst({
+    where: { id, userId: session },
+  })
+  
+  if (!comment) {
+    return { error: "Comentario no encontrado" }
+  }
+  
+  await prisma.genComment.update({
+    where: { id },
+    data: { text } as any,
+  })
+  
+  revalidatePath(`/dashboard/orders/${comment.orderId}/comments`)
+  
+  return { success: true }
+}

@@ -457,7 +457,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
 
                     const publishedCount = subItems?.filter((i: any) => i.status === "PUBLICADO").length || 0;
                     const generatedCount = subItems?.filter((i: any) => i.status === "PUBLICADO" || i.status === "SINPUBLICAR").length || 0;
-                    const publishedLabel = order.type === 'COMENTARIO' ? 'COMENTADOS' : 'EJECUTADOS';
+                    const publishedLabel = 'EJECUTADOS';
 
                     const isCompletedStatus = order.status === "COMPLETADA"
                     const isGenerated = order.status === "GENERADA"

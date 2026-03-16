@@ -14,6 +14,7 @@ import {
 import { ArrowLeft, MessageSquare, ExternalLink, Globe, Hash, Info, Target, CalendarDays, AlignLeft, BarChart3 } from "lucide-react"
 import Link from "next/link"
 import { CopyUrlButton } from "@/components/orders/copy-url-button"
+import { EditableCommentRow } from "@/components/orders/editable-comment-row"
 
 export default async function OrderCommentsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
@@ -195,22 +196,7 @@ export default async function OrderCommentsPage({ params }: { params: Promise<{ 
                                 </TableRow>
                             ) : (
                                 order.genComments.map((comment: any) => (
-                                    <TableRow key={comment.id}>
-                                        <TableCell className="font-medium">{comment.text}</TableCell>
-                                        <TableCell>
-                                            <code className="text-xs bg-muted px-1 rounded">
-                                                {comment.device?.deviceName || "N/A"}
-                                            </code>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={comment.status === "PUBLICADO" ? "default" : "secondary"}>
-                                                {comment.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right text-muted-foreground">
-                                            {new (globalThis as any).Date(comment.createdAt).toLocaleDateString("es")}
-                                        </TableCell>
-                                    </TableRow>
+                                    <EditableCommentRow key={comment.id} comment={comment} />
                                 ))
                             )}
                         </TableBody>
