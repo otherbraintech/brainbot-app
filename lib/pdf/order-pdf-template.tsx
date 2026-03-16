@@ -219,7 +219,7 @@ export const OrderPDFTemplate = ({ order, project, comments }: OrderPDFProps) =>
                   styles.colStatus,
                   comment.status === 'PUBLICADO' ? styles.statusPublished : styles.statusPending
                 ]}>
-                  {comment.status === 'PUBLICADO' ? (order.type === 'COMENTARIO' ? 'COMENTADO' : 'EJECUTADO') : comment.status}
+                  {comment.status === 'PUBLICADO' ? 'EJECUTADO' : comment.status === 'SINPUBLICAR' ? 'SIN EJECUTAR' : comment.status}
                 </Text>
               </View>
             ))}

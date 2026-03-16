@@ -4,12 +4,18 @@ import { useState } from "react"
 import { TableCell, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Pencil, Check, X, Loader2 } from "lucide-react"
 import { updateGenComment } from "@/lib/actions/orders"
 import { toast } from "sonner"
 
-export function EditableCommentRow({ comment }: { comment: any }) {
+export function EditableCommentRow({ 
+    comment, 
+    variant = "default" 
+}: { 
+    comment: any, 
+    variant?: "default" | "execution" 
+}) {
     const [isEditing, setIsEditing] = useState(false)
     const [text, setText] = useState(comment.text)
     const [isLoading, setIsLoading] = useState(false)
@@ -37,53 +43,142 @@ export function EditableCommentRow({ comment }: { comment: any }) {
 
     const displayStatus = statusMap[comment.status] || comment.status
 
+    if (variant === "execution") {
+        return (
+            <TableRow>
+                <TableCell className="font-mono text-[10px] text-muted-foreground">
+                    #{comment.id}
+                </TableCell>
+                <TableCell>
+                    {isEditing ? (
+                        <div className="flex flex-col gap-2 w-full">
+                            <Textarea 
+                                value={text} 
+                                onChange={(e) => setText(e.target.value)} 
+                                className="min-h-[80px] w-full italic text-sm resize-none"
+                                autoFocus
+                            />
+                            <div className="flex justify-end gap-2">
+                                <Button 
+                                    variant="outline"
+                                    size="sm" 
+                                    className="h-8 text-green-600 hover:text-green-700 hover:bg-green-50 gap-1"
+                                    onClick={handleSave}
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                                    Guardar
+                                </Button>
+                                <Button 
+                                    variant="outline"
+                                    size="sm" 
+                                    className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 gap-1"
+                                    onClick={() => {
+                                        setText(comment.text)
+                                        setIsEditing(false)
+                                    }}
+                                    disabled={isLoading}
+                                >
+                                    <X className="h-3 w-3" />
+                                    Cancelar
+                                </Button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-start gap-2 group italic text-muted-foreground">
+                            <span className="whitespace-normal break-words min-w-[200px]">{comment.text}</span>
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5"
+                                onClick={() => setIsEditing(true)}
+                            >
+                                <Pencil className="h-3 w-3" />
+                            </Button>
+                        </div>
+                    )}
+                </TableCell>
+                <TableCell>
+                    <div className="flex flex-col gap-0.5">
+                        <span className="font-medium text-sm">
+                            {comment.device?.deviceName || "Sin asignar"}
+                        </span>
+                        {comment.device?.personName && (
+                            <span className="text-[10px] text-muted-foreground italic">
+                                {comment.device.personName}
+                            </span>
+                        )}
+                    </div>
+                </TableCell>
+                <TableCell>
+                    <Badge
+                        variant={comment.status === "PUBLICADO" ? "default" : "secondary"}
+                        className={
+                            comment.status === "PUBLICADO"
+                                ? "bg-green-100 text-green-700 hover:bg-green-100 border-green-200"
+                                : ""
+                        }
+                    >
+                        {displayStatus}
+                    </Badge>
+                </TableCell>
+                <TableCell className="text-right text-xs text-muted-foreground">
+                    {new Date(comment.createdAt).toLocaleString("es", {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}
+                </TableCell>
+            </TableRow>
+        )
+    }
+
     return (
         <TableRow>
             <TableCell className="font-medium">
                 {isEditing ? (
-                    <div className="flex items-center gap-2">
-                        <Input 
+                    <div className="flex flex-col gap-2 w-full">
+                        <Textarea 
                             value={text} 
                             onChange={(e) => setText(e.target.value)} 
-                            className="h-8 min-w-[300px]"
+                            className="min-h-[80px] w-full text-sm resize-none"
                             autoFocus
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleSave()
-                                if (e.key === 'Escape') {
+                        />
+                        <div className="flex justify-end gap-2">
+                            <Button 
+                                variant="outline"
+                                size="sm" 
+                                className="h-8 text-green-600 hover:text-green-700 hover:bg-green-50 gap-1"
+                                onClick={handleSave}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                                Guardar
+                            </Button>
+                            <Button 
+                                variant="outline"
+                                size="sm" 
+                                className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 gap-1"
+                                onClick={() => {
                                     setText(comment.text)
                                     setIsEditing(false)
-                                }
-                            }}
-                        />
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
-                            onClick={handleSave}
-                            disabled={isLoading}
-                        >
-                            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                        </Button>
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => {
-                                setText(comment.text)
-                                setIsEditing(false)
-                            }}
-                            disabled={isLoading}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
+                                }}
+                                disabled={isLoading}
+                            >
+                                <X className="h-3 w-3" />
+                                Cancelar
+                            </Button>
+                        </div>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-2 group">
-                        <span>{comment.text}</span>
+                    <div className="flex items-start gap-2 group">
+                        <span className="whitespace-normal break-words">{comment.text}</span>
                         <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5"
                             onClick={() => setIsEditing(true)}
                         >
                             <Pencil className="h-3 w-3" />

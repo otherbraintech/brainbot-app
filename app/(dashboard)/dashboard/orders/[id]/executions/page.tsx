@@ -15,6 +15,7 @@ import { ArrowLeft, Activity, UserPlus, Heart, Share2, AlertTriangle, MessageSqu
 import Link from "next/link"
 import { CopyUrlButton } from "@/components/orders/copy-url-button"
 import { DownloadPDFButton } from "@/components/orders/download-pdf-button"
+import { EditableCommentRow } from "@/components/orders/editable-comment-row"
 
 const TYPE_CONFIG: any = {
     COMENTARIO: { label: "Comentarios", icon: MessageSquare, color: "text-blue-600" },
@@ -223,55 +224,56 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                interactions.map((item: any) => (
-                                    <TableRow key={item.id}>
-                                        <TableCell className="font-mono text-[10px] text-muted-foreground">
-                                            #{item.id}
-                                        </TableCell>
-                                        {order.type === "COMENTARIO" && (
-                                            <TableCell className="max-w-[300px] truncate italic text-muted-foreground">
-                                                {item.text}
+                                interactions.map((item: any) => {
+                                    if (order.type === "COMENTARIO") {
+                                        return <EditableCommentRow key={item.id} comment={item} variant="execution" />
+                                    }
+
+                                    return (
+                                        <TableRow key={item.id}>
+                                            <TableCell className="font-mono text-[10px] text-muted-foreground">
+                                                #{item.id}
                                             </TableCell>
-                                        )}
-                                        <TableCell>
-                                            <div className="flex flex-col gap-0.5">
-                                                <span className="font-medium text-sm">
-                                                    {item.device?.deviceName || "Sin asignar"}
-                                                </span>
-                                                {item.device?.personName && (
-                                                    <span className="text-[10px] text-muted-foreground italic">
-                                                        {item.device.personName}
+                                            <TableCell>
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="font-medium text-sm">
+                                                        {item.device?.deviceName || "Sin asignar"}
                                                     </span>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant={
-                                                    item.status === "PUBLICADO" || item.status === "CONFIRMADO"
-                                                        ? "default"
-                                                        : "secondary"
-                                                }
-                                                className={
-                                                    item.status === "PUBLICADO" || item.status === "CONFIRMADO"
-                                                        ? "bg-green-100 text-green-700 hover:bg-green-100 border-green-200"
-                                                        : ""
-                                                }
-                                            >
-                                                {item.status === "PUBLICADO" ? "EJECUTADO" : item.status === "SINPUBLICAR" ? "SIN EJECUTAR" : item.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right text-xs text-muted-foreground">
-                                            {new (globalThis as any).Date(item.createdAt).toLocaleString("es", {
-                                                day: '2-digit',
-                                                month: '2-digit',
-                                                year: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            })}
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                                    {item.device?.personName && (
+                                                        <span className="text-[10px] text-muted-foreground italic">
+                                                            {item.device.personName}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant={
+                                                        item.status === "PUBLICADO" || item.status === "CONFIRMADO"
+                                                            ? "default"
+                                                            : "secondary"
+                                                    }
+                                                    className={
+                                                        item.status === "PUBLICADO" || item.status === "CONFIRMADO"
+                                                            ? "bg-green-100 text-green-700 hover:bg-green-100 border-green-200"
+                                                            : ""
+                                                    }
+                                                >
+                                                    {item.status === "PUBLICADO" ? "EJECUTADO" : item.status === "SINPUBLICAR" ? "SIN EJECUTAR" : item.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right text-xs text-muted-foreground">
+                                                {new (globalThis as any).Date(item.createdAt).toLocaleString("es", {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </TableCell>
+                                        </TableRow>
+                                    )
+                                })
                             )}
                         </TableBody>
                     </Table>
