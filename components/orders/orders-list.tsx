@@ -697,7 +697,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
 
                                                 {(isGenerated || isCompletedStatus || order.status === "PAUSADA") ? (
                                                     <div className="flex items-center gap-1">
-                                                        {publishedCount < order.quantity && (
+                                                        {generatedCount < order.quantity && (
                                                             <Tooltip>
                                                                 <TooltipTrigger asChild>
                                                                     <Button 
