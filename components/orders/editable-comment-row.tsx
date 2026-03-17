@@ -100,16 +100,14 @@ export function EditableCommentRow({
                 </TableCell>
                 <TableCell>
                     <div className="flex flex-col gap-0.5">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="font-medium text-sm">
-                                {comment.device?.deviceName || "Sin asignar"}
+                        <span className="font-medium text-sm">
+                            {comment.device?.deviceName || "Sin asignar"}
+                        </span>
+                        {comment.device?.label && (
+                            <span className="text-[10px] text-blue-600 font-bold uppercase tracking-tight">
+                                {comment.device.label}
                             </span>
-                            {comment.device?.label && (
-                                <Badge variant="outline" className="text-[9px] h-3.5 px-1 py-0 bg-blue-50/50 text-blue-600 border-blue-100 uppercase tracking-wider font-bold">
-                                    {comment.device.label}
-                                </Badge>
-                            )}
-                        </div>
+                        )}
                         {comment.device?.personName && (
                             <span className="text-[10px] text-muted-foreground italic">
                                 {comment.device.personName}

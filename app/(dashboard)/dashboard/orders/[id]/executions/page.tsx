@@ -239,16 +239,14 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col gap-0.5">
-                                                    <div className="flex flex-wrap items-center gap-1.5">
-                                                        <span className="font-medium text-sm">
-                                                            {item.device?.deviceName || "Sin asignar"}
+                                                    <span className="font-medium text-sm">
+                                                        {item.device?.deviceName || "Sin asignar"}
+                                                    </span>
+                                                    {item.device?.label && (
+                                                        <span className="text-[10px] text-blue-600 font-bold uppercase tracking-tight">
+                                                            {item.device.label}
                                                         </span>
-                                                        {item.device?.label && (
-                                                            <Badge variant="outline" className="text-[9px] h-3.5 px-1 py-0 bg-blue-50/50 text-blue-600 border-blue-100 uppercase tracking-wider font-bold">
-                                                                {item.device.label}
-                                                            </Badge>
-                                                        )}
-                                                    </div>
+                                                    )}
                                                     {item.device?.personName && (
                                                         <span className="text-[10px] text-muted-foreground italic">
                                                             {item.device.personName}
