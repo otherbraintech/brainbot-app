@@ -100,9 +100,16 @@ export function EditableCommentRow({
                 </TableCell>
                 <TableCell>
                     <div className="flex flex-col gap-0.5">
-                        <span className="font-medium text-sm">
-                            {comment.device?.deviceName || "Sin asignar"}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="font-medium text-sm">
+                                {comment.device?.deviceName || "Sin asignar"}
+                            </span>
+                            {comment.device?.label && (
+                                <Badge variant="outline" className="text-[9px] h-3.5 px-1 py-0 bg-blue-50/50 text-blue-600 border-blue-100 uppercase tracking-wider font-bold">
+                                    {comment.device.label}
+                                </Badge>
+                            )}
+                        </div>
                         {comment.device?.personName && (
                             <span className="text-[10px] text-muted-foreground italic">
                                 {comment.device.personName}
@@ -187,9 +194,16 @@ export function EditableCommentRow({
                 )}
             </TableCell>
             <TableCell>
-                <code className="text-xs bg-muted px-1 rounded">
-                    {comment.device?.deviceName || "N/A"}
-                </code>
+                <div className="flex items-center gap-1.5">
+                    <code className="text-xs bg-muted px-1 rounded">
+                        {comment.device?.deviceName || "N/A"}
+                    </code>
+                    {comment.device?.label && (
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">
+                            ({comment.device.label})
+                        </span>
+                    )}
+                </div>
             </TableCell>
             <TableCell>
                 <Badge variant={comment.status === "PUBLICADO" ? "default" : "secondary"}>

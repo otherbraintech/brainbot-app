@@ -565,7 +565,7 @@ export async function getOrderWithComments(orderId: string) {
       genComments: {
         include: {
           device: {
-            select: { deviceName: true }
+            select: { deviceName: true, label: true }
           }
         },
         orderBy: { createdAt: "desc" },
@@ -573,7 +573,7 @@ export async function getOrderWithComments(orderId: string) {
       genLives: {
         include: {
           device: {
-            select: { deviceName: true }
+            select: { deviceName: true, label: true }
           }
         },
         orderBy: { createdAt: "desc" },
