@@ -21,6 +21,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { updateOrder } from "@/lib/actions/orders"
 import { Pencil } from "lucide-react"
 
@@ -107,87 +108,90 @@ export function EditOrderButton({ order }: { order: Order }) {
                         Modifica los datos de la orden antes de procesarla.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    {error && (
-                        <div className="text-sm text-destructive">{error}</div>
-                    )}
-                    <div className="grid gap-2">
-                        <Label htmlFor="editOrderName">Nombre de la Orden</Label>
-                        <Input
-                            id="editOrderName"
-                            value={orderName}
-                            onChange={(e) => setOrderName(e.target.value)}
-                        />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="editLink">Enlace de la publicación *</Label>
-                        <Input
-                            id="editLink"
-                            value={link}
-                            onChange={(e) => setLink(e.target.value)}
-                            placeholder="https://..."
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                <ScrollArea className="max-h-[60vh] pr-4">
+                    <div className="grid gap-4 py-4">
+                        {error && (
+                            <div className="text-sm text-destructive">{error}</div>
+                        )}
                         <div className="grid gap-2">
-                            <Label htmlFor="editNetwork">Red Social</Label>
-                            <Select value={socialNetwork} onValueChange={setSocialNetwork}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {SOCIAL_NETWORKS.map((sn) => (
-                                        <SelectItem key={sn.value} value={sn.value}>
-                                            {sn.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="editPostType">Tipo de Publicación</Label>
-                            <Select value={postType} onValueChange={setPostType}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {POST_TYPES.map((pt) => (
-                                        <SelectItem key={pt.value} value={pt.value}>
-                                            {pt.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="editQuantity">
-                            {order.type === "COMENTARIO" ? "Cantidad de comentarios" :
-                                order.type === "MEGUSTA" ? "Cantidad de likes" :
-                                    "Cantidad de shares"}
-                        </Label>
-                        <Input
-                            id="editQuantity"
-                            type="number"
-                            min="1"
-                            max="500"
-                            value={quantity}
-                            onChange={(e) => setQuantity(e.target.value)}
-                        />
-                    </div>
-                    {order.type === "COMENTARIO" && (
-                        <div className="grid gap-2">
-                            <Label htmlFor="editIntent">Intención de comentarios (opcional)</Label>
-                            <Textarea
-                                id="editIntent"
-                                value={intent}
-                                onChange={(e) => setIntent(e.target.value)}
-                                placeholder="Describe el tono o estilo de los comentarios..."
-                                rows={3}
+                            <Label htmlFor="editOrderName">Nombre de la Orden</Label>
+                            <Input
+                                id="editOrderName"
+                                value={orderName}
+                                onChange={(e) => setOrderName(e.target.value)}
                             />
                         </div>
-                    )}
-                </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="editLink">Enlace de la publicación *</Label>
+                            <Input
+                                id="editLink"
+                                value={link}
+                                onChange={(e) => setLink(e.target.value)}
+                                placeholder="https://..."
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="editNetwork">Red Social</Label>
+                                <Select value={socialNetwork} onValueChange={setSocialNetwork}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {SOCIAL_NETWORKS.map((sn) => (
+                                            <SelectItem key={sn.value} value={sn.value}>
+                                                {sn.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="editPostType">Tipo de Publicación</Label>
+                                <Select value={postType} onValueChange={setPostType}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {POST_TYPES.map((pt) => (
+                                            <SelectItem key={pt.value} value={pt.value}>
+                                                {pt.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="editQuantity">
+                                {order.type === "COMENTARIO" ? "Cantidad de comentarios" :
+                                    order.type === "MEGUSTA" ? "Cantidad de likes" :
+                                        "Cantidad de shares"}
+                            </Label>
+                            <Input
+                                id="editQuantity"
+                                type="number"
+                                min="1"
+                                max="500"
+                                value={quantity}
+                                onChange={(e) => setQuantity(e.target.value)}
+                            />
+                        </div>
+                        {order.type === "COMENTARIO" && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="editIntent">Intención de comentarios (opcional)</Label>
+                                <Textarea
+                                    id="editIntent"
+                                    value={intent}
+                                    onChange={(e) => setIntent(e.target.value)}
+                                    placeholder="Describe el tono o estilo de los comentarios..."
+                                    rows={3}
+                                    className="max-h-32 overflow-y-auto"
+                                />
+                            </div>
+                        )}
+                    </div>
+                </ScrollArea>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setOpen(false)}>
                         Cancelar

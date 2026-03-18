@@ -399,7 +399,7 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                             </SheetHeader>
                         </div>
 
-                        <ScrollArea className="flex-1 p-6" {...({} as any)}>
+                        <ScrollArea className="flex-1 min-h-0 p-6" {...({} as any)}>
                             <div className="space-y-4 pr-1">
                                 {queueOrders.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center py-20 text-muted-foreground/40">

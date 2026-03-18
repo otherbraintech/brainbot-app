@@ -359,6 +359,7 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                                         value={intent}
                                         onChange={(e) => setIntent(e.target.value)}
                                         rows={3}
+                                        className="max-h-32 overflow-y-auto"
                                     />
                                 </div>
                             )}
