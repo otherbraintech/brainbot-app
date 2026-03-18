@@ -40,7 +40,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { deleteOrder, startOrder, pauseOrder, resumeOrder, pauseAllOrders, resumeAllOrders, duplicateOrder, completeOrder, retryOrder } from "@/lib/actions/orders"
+import { deleteOrder, startOrder, pauseOrder, resumeOrder, duplicateOrder, completeOrder, retryOrder, pauseAllGlobalOrders } from "@/lib/actions/orders"
 import { EditOrderButton } from "@/components/orders/edit-order-button"
 import {
     Sheet,
@@ -122,7 +122,7 @@ const POST_TYPE_LABELS: Record<PostType, { label: string; icon: any }> = {
     PUBLICACION: { label: "Publicación", icon: FileText },
 }
 
-export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: string }) {
+export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]; projectId: string; globalQueue?: Order[] }) {
     const router = useRouter()
     const [deletingOrder, setDeletingOrder] = useState<Order | null>(null)
     const [viewingOrder, setViewingOrder] = useState<Order | null>(null)
@@ -130,7 +130,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [confirmAction, setConfirmAction] = useState<{ id: string, name: string, type: 'pausar' | 'reanudar' | 'finalizar' } | null>(null)
-    const [confirmBulk, setConfirmBulk] = useState<'pausar' | 'reanudar' | null>(null)
+    const [activateWithPause, setActivateWithPause] = useState<{ id: string, name: string, action: 'reanudar' | 'enviar' } | null>(null)
 
     async function handleDelete() {
         if (!deletingOrder) return
@@ -148,6 +148,17 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
     }
 
     async function handleStartOrder(orderId: string) {
+        // Check if there are other active orders globally
+        const activeGlobal = (queueOrders as any[]).filter((o: any) => o.status === "GENERADA" && o.id !== orderId)
+        if (activeGlobal.length > 0) {
+            const orderData = (orders as any[]).find((o: any) => o.id === orderId) || (queueOrders as any[]).find((o: any) => o.id === orderId)
+            setActivateWithPause({ id: orderId, name: orderData?.orderName || 'Orden', action: 'enviar' })
+            return
+        }
+        await executeStartOrder(orderId)
+    }
+
+    async function executeStartOrder(orderId: string) {
         setStartingId(orderId)
         setError(null)
         const result = await startOrder(orderId)
@@ -178,17 +189,31 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
     }
 
     async function handleResumeOrder(orderId: string) {
+        // Check if there are other active orders globally
+        const activeGlobal = (queueOrders as any[]).filter((o: any) => o.status === "GENERADA" && o.id !== orderId)
+        if (activeGlobal.length > 0) {
+            const orderData = (orders as any[]).find((o: any) => o.id === orderId) || (queueOrders as any[]).find((o: any) => o.id === orderId)
+            setActivateWithPause({ id: orderId, name: orderData?.orderName || 'Orden', action: 'reanudar' })
+            return
+        }
         setLoading(true)
         await resumeOrder(orderId)
         setLoading(false)
     }
 
-    async function handlePauseAll() {
-        setConfirmBulk('pausar')
-    }
-
-    async function handleResumeAll() {
-        setConfirmBulk('reanudar')
+    async function executeActivateWithPause() {
+        if (!activateWithPause) return
+        setLoading(true)
+        // Pause all other active orders first
+        await pauseAllGlobalOrders(activateWithPause.id)
+        // Then activate the selected one
+        if (activateWithPause.action === 'reanudar') {
+            await resumeOrder(activateWithPause.id)
+        } else {
+            await startOrder(activateWithPause.id)
+        }
+        setActivateWithPause(null)
+        setLoading(false)
     }
 
     async function handleDuplicate(order: Order) {
@@ -208,25 +233,21 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
 
     async function executeConfirmAction() {
         if (!confirmAction) return
+        if (confirmAction.type === 'reanudar') {
+            // Route through handleResumeOrder to enforce single-active-order rule
+            setConfirmAction(null)
+            handleResumeOrder(confirmAction.id)
+            return
+        }
         setLoading(true)
         if (confirmAction.type === 'pausar') await pauseOrder(confirmAction.id)
-        else if (confirmAction.type === 'reanudar') await resumeOrder(confirmAction.id)
         else if (confirmAction.type === 'finalizar') await completeOrder(confirmAction.id)
         setConfirmAction(null)
         setLoading(false)
     }
 
-    async function executeConfirmBulk() {
-        if (!confirmBulk) return
-        setLoading(true)
-        if (confirmBulk === 'pausar') await pauseAllOrders(projectId)
-        else if (confirmBulk === 'reanudar') await resumeAllOrders(projectId)
-        setConfirmBulk(null)
-        setLoading(false)
-    }
-
     const activeOrders = orders as any
-    const queueOrders = (orders as any).filter((o: any) => o.status === "GENERADA")
+    const queueOrders = globalQueue || (orders as any).filter((o: any) => o.status === "GENERADA")
     const pausedOrders = (orders as any).filter((o: any) => o.status === "PAUSADA")
 
     const stats = activeOrders.reduce((acc: any, order: any) => {
@@ -352,31 +373,6 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
-                {queueOrders.length > 0 && (
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 border-amber-200 bg-amber-50/50 text-amber-700 hover:bg-amber-100 hover:border-amber-300 transition-all font-bold text-xs uppercase"
-                        onClick={handlePauseAll}
-                        disabled={loading}
-                    >
-                        <Pause className="h-3.5 w-3.5" />
-                        Pausar todo
-                    </Button>
-                )}
-
-                {pausedOrders.length > 0 && (
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 border-indigo-200 bg-indigo-50/50 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300 transition-all font-bold text-xs uppercase"
-                        onClick={handleResumeAll}
-                        disabled={loading}
-                    >
-                        <Play className="h-3.5 w-3.5" />
-                        Reanudar todo
-                    </Button>
-                )}
 
                 <Sheet>
                     <SheetTrigger {...({ asChild: true } as any)}>
@@ -398,7 +394,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                     Cola de Órdenes
                                 </SheetTitle>
                                 <SheetDescription className="text-xs uppercase font-bold tracking-widest text-muted-foreground/70" {...({} as any)}>
-                                    Listo para Procesar (GENERADAS)
+                                    {globalQueue ? "Órdenes Activas Globales" : "Listo para Procesar (GENERADAS)"}
                                 </SheetDescription>
                             </SheetHeader>
                         </div>
@@ -424,17 +420,42 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                                             <span className="font-bold text-sm leading-tight truncate max-w-[180px]">
                                                                 {order.orderName}
                                                             </span>
-                                                            <span className="text-[10px] uppercase font-bold text-muted-foreground/70">
-                                                                {typeCfg.label}
-                                                            </span>
+                                                            <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                                                                <span className="text-[10px] uppercase font-bold text-muted-foreground/70">
+                                                                    {typeCfg.label}
+                                                                </span>
+                                                                {order.project?.name && (
+                                                                    <>
+                                                                    <span className="text-[10px] text-muted-foreground/40">•</span>
+                                                                    <span className="text-[10px] uppercase font-bold text-indigo-600/80 truncate max-w-[120px]">
+                                                                        {order.project.name}
+                                                                    </span>
+                                                                    </>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <Badge variant="outline" className={`text-[10px] h-5 border-none px-2 shrink-0 flex items-center gap-1.5 ${NETWORK_COLORS[order.socialNetwork]}`}>
-                                                        {order.socialNetwork === "FACEBOOK" && <Facebook className="h-3 w-3" />}
-                                                        {order.socialNetwork === "INSTAGRAM" && <Instagram className="h-3 w-3" />}
-                                                        {order.socialNetwork === "TIKTOK" && <TikTokIcon className="h-3 w-3" />}
-                                                        {NETWORK_LABELS[order.socialNetwork] || order.socialNetwork}
-                                                    </Badge>
+                                                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                                                        <Badge variant="outline" className={`text-[10px] h-5 border-none px-2 flex items-center gap-1.5 ${NETWORK_COLORS[order.socialNetwork]}`}>
+                                                            {order.socialNetwork === "FACEBOOK" && <Facebook className="h-3 w-3" />}
+                                                            {order.socialNetwork === "INSTAGRAM" && <Instagram className="h-3 w-3" />}
+                                                            {order.socialNetwork === "TIKTOK" && <TikTokIcon className="h-3 w-3" />}
+                                                            {NETWORK_LABELS[order.socialNetwork] || order.socialNetwork}
+                                                        </Badge>
+                                                        <Badge variant="secondary" className={`text-[8px] h-3.5 px-1.5 py-0 uppercase ${
+                                                            order.status === 'GENERADA' ? 'bg-blue-500/10 text-blue-700 border-blue-200' :
+                                                            order.status === 'PAUSADA' ? 'bg-amber-500/10 text-amber-700 border-amber-200' :
+                                                            order.status === 'GENERANDO' ? 'bg-violet-500/10 text-violet-700 border-violet-200' :
+                                                            order.status === 'LISTA' ? 'bg-slate-500/10 text-slate-700 border-slate-200' :
+                                                            order.status === 'REINTENTAR' ? 'bg-red-500/10 text-red-700 border-red-200' : ''
+                                                        }`}>
+                                                            {order.status === 'GENERADA' ? 'Activa' :
+                                                             order.status === 'PAUSADA' ? 'Pausada' :
+                                                             order.status === 'GENERANDO' ? 'Generando...' :
+                                                             order.status === 'LISTA' ? 'Lista' :
+                                                             order.status === 'REINTENTAR' ? 'Error' : order.status}
+                                                        </Badge>
+                                                    </div>
                                                 </div>
 
                                                 <div className="flex items-center justify-between text-[11px] font-medium pt-3 border-t border-dashed">
@@ -442,11 +463,45 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                                         <span className="font-bold text-foreground">{order.quantity}</span>
                                                         <span>solicitados</span>
                                                     </div>
-                                                    <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold uppercase tracking-tight hover:bg-indigo-100/50 hover:text-indigo-700 underline-offset-4 hover:underline" asChild>
-                                                        <Link href={`/dashboard/orders/${order.id}/executions`}>
-                                                            Detalles <ExternalLink className="ml-1 h-3 w-3" />
-                                                        </Link>
-                                                    </Button>
+                                                    <div className="flex items-center gap-1">
+                                                        {order.status === 'GENERADA' && (
+                                                            <Button variant="outline" size="sm" className="h-6 px-2 text-[9px] font-bold uppercase border-amber-200 text-amber-600 hover:bg-amber-50 gap-1"
+                                                                onClick={() => setConfirmAction({ id: order.id, name: order.orderName, type: 'pausar' })}
+                                                                disabled={loading}
+                                                            >
+                                                                <Pause className="h-3 w-3" /> Pausar
+                                                            </Button>
+                                                        )}
+                                                        {order.status === 'PAUSADA' && (
+                                                            <Button variant="outline" size="sm" className="h-6 px-2 text-[9px] font-bold uppercase border-indigo-200 text-indigo-600 hover:bg-indigo-50 gap-1"
+                                                                onClick={() => handleResumeOrder(order.id)}
+                                                                disabled={loading}
+                                                            >
+                                                                <Play className="h-3 w-3" /> Reanudar
+                                                            </Button>
+                                                        )}
+                                                        {order.status === 'LISTA' && (
+                                                            <Button variant="outline" size="sm" className="h-6 px-2 text-[9px] font-bold uppercase border-emerald-200 text-emerald-600 hover:bg-emerald-50 gap-1"
+                                                                onClick={() => handleStartOrder(order.id)}
+                                                                disabled={loading || startingId === order.id}
+                                                            >
+                                                                <Play className="h-3 w-3" /> Enviar
+                                                            </Button>
+                                                        )}
+                                                        {(order.status === 'GENERADA' || order.status === 'PAUSADA') && (
+                                                            <Button variant="outline" size="sm" className="h-6 px-2 text-[9px] font-bold uppercase border-emerald-200 text-emerald-600 hover:bg-emerald-50 gap-1"
+                                                                onClick={() => setConfirmAction({ id: order.id, name: order.orderName, type: 'finalizar' })}
+                                                                disabled={loading}
+                                                            >
+                                                                <CheckCircle2 className="h-3 w-3" />
+                                                            </Button>
+                                                        )}
+                                                        <Button variant="ghost" size="sm" className="h-6 px-1.5 text-[9px] font-bold uppercase tracking-tight hover:bg-indigo-100/50 hover:text-indigo-700" asChild>
+                                                            <Link href={`/dashboard/orders/${order.id}/executions`}>
+                                                                <ExternalLink className="h-3 w-3" />
+                                                            </Link>
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )
@@ -493,7 +548,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                         <Card
                             key={order.id}
                             className={`overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col h-full border
-                                ${isCompletedStatus && !isLiveOrder ? 'border-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-500/10' : ''} 
+                                ${isCompletedStatus && !isLiveOrder ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/40 dark:border-emerald-500/30' : ''} 
                                 ${isLiveOrder ? 'border-red-500/30 ring-1 ring-red-500/10 shadow-lg shadow-red-500/10 scale-[1.01] bg-card' : ''}`}
                             {...({} as any)}
                         >
@@ -515,7 +570,7 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                     )}
                                 </div>
                             )}
-                            <CardHeader className={`flex flex-row items-center justify-between pb-2 min-h-[80px] ${isCompletedStatus && !isLiveOrder ? 'bg-green-50/40' : isLiveOrder ? 'bg-red-50/30' : 'bg-muted/20'}`} {...({} as any)}>
+                            <CardHeader className={`flex flex-row items-center justify-between pb-2 min-h-[80px] ${isCompletedStatus && !isLiveOrder ? 'bg-green-50/40 dark:bg-emerald-950/30' : isLiveOrder ? 'bg-red-50/30 dark:bg-red-950/20' : 'bg-muted/20'}`} {...({} as any)}>
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3">
                                         <div className={`p-1.5 rounded-md transition-all duration-500 ${isCompletedStatus && !isLiveOrder ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : isLiveOrder ? 'p-2 bg-red-500/20 text-red-600 dark:text-red-400 shadow-sm ring-1 ring-red-500/30 scale-105' : typeInfo.color}`}>
@@ -526,8 +581,9 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                                                 {order.orderName}
                                             </CardTitle>
                                             <span className="text-[10px] font-mono text-muted-foreground">ID: #{order.id}</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">{typeInfo.label}</span>
                                             {isCompletedStatus && (
-                                                <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider">Orden Completada</span>
+                                                <span className="text-[10px] font-bold text-green-600 dark:text-emerald-400 uppercase tracking-wider">Orden Completada</span>
                                             )}
                                         </div>
                                     </div>
@@ -790,30 +846,31 @@ export function OrdersList({ orders, projectId }: { orders: Order[]; projectId: 
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* Bulk Actions Confirmation Dialog */}
-            <AlertDialog open={!!confirmBulk} onOpenChange={() => setConfirmBulk(null)}>
+            {/* Activate with Pause Dialog */}
+            <AlertDialog open={!!activateWithPause} onOpenChange={() => setActivateWithPause(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>
-                            {confirmBulk === 'pausar' ? '¿Pausar todas las órdenes?' : '¿Reanudar todas las órdenes?'}
+                        <AlertDialogTitle className="flex items-center gap-2">
+                            <Pause className="h-5 w-5 text-amber-600" />
+                            Pausar órdenes activas
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                            {confirmBulk === 'pausar' 
-                                ? 'Esta acción pausará todas las órdenes que se encuentran actualmente en cola de generación.' 
-                                : 'Esta acción reanudará todas las órdenes que se encuentren pausadas.'}
+                            Solo puede haber <span className="font-bold text-foreground">una orden activa</span> a la vez. 
+                            Al {activateWithPause?.action === 'reanudar' ? 'reanudar' : 'enviar'} la orden <span className="font-bold text-foreground">"{activateWithPause?.name}"</span>, 
+                            se pausarán automáticamente las demás órdenes activas.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel disabled={loading}>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogAction
                             onClick={(e) => {
                                 e.preventDefault()
-                                executeConfirmBulk()
+                                executeActivateWithPause()
                             }}
-                            className={confirmBulk === 'pausar' ? "bg-amber-600 hover:bg-amber-700" : "bg-indigo-600 hover:bg-indigo-700"}
+                            className="bg-indigo-600 hover:bg-indigo-700"
                             disabled={loading}
                         >
-                            {loading ? "Procesando..." : confirmBulk === 'pausar' ? "Pausar todo" : "Reanudar todo"}
+                            {loading ? "Procesando..." : `Pausar las demás y ${activateWithPause?.action === 'reanudar' ? 'reanudar' : 'enviar'}`}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

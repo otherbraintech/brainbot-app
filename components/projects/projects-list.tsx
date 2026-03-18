@@ -212,9 +212,20 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                     {project.target?.name && (
                                         <>
                                             <span className="text-muted-foreground/60 font-light">-</span>
-                                            <span className="text-primary/90 font-semibold text-base">
-                                                {project.target.name}
-                                            </span>
+                                            <div className="flex items-center gap-1.5">
+                                                {(project.target as any).imageBase64 && (
+                                                    <div className="h-6 w-6 rounded-full overflow-hidden border border-border/50 shrink-0 bg-primary/5">
+                                                        <img 
+                                                            src={(project.target as any).imageBase64} 
+                                                            alt={project.target.name} 
+                                                            className="h-full w-full object-cover"
+                                                        />
+                                                    </div>
+                                                )}
+                                                <span className="text-primary/90 font-semibold text-base">
+                                                    {project.target.name}
+                                                </span>
+                                            </div>
                                         </>
                                     )}
                                 </CardTitle>

@@ -320,6 +320,7 @@ export async function createTargetAction(payload: any) {
     // 1. Send to Webhook
     const webhookBody = [{
       ...payload.target_input,
+      imageBase64: payload.imageBase64,
       user_id: session
     }]
     

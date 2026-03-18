@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import { getProject } from "@/lib/actions/projects"
-import { getOrders } from "@/lib/actions/orders"
+import { getOrders, getGlobalActiveOrders } from "@/lib/actions/orders"
 import { OrdersList } from "@/components/orders/orders-list"
 import { CreateOrderButton } from "@/components/orders/create-order-button"
 import { CreateTargetButton } from "@/components/projects/create-target-button"
@@ -22,6 +22,7 @@ export default async function ProjectDetailPage({
     }
 
     const orders = (await getOrders(id)) as any[]
+    const globalQueue = (await getGlobalActiveOrders()) as any[]
 
     return (
         <div className="space-y-6">
@@ -59,7 +60,7 @@ export default async function ProjectDetailPage({
                 </div>
             </div>
 
-            <OrdersList orders={orders} projectId={id} />
+            <OrdersList orders={orders} projectId={id} globalQueue={globalQueue} />
         </div>
     )
 }

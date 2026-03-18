@@ -317,6 +317,60 @@ export async function deleteOrder(id: string) {
   return { success: true }
 }
 
+export async function getGlobalActiveOrders() {
+  const session = await getSession()
+  
+  if (!session) {
+    return []
+  }
+  
+  const orders = await prisma.botOrder.findMany({
+    where: { 
+      userId: session,
+      deletedAt: null,
+      status: {
+        in: [
+          OrderStatus.GENERADA, 
+          OrderStatus.GENERANDO, 
+          OrderStatus.PAUSADA, 
+          OrderStatus.REINTENTAR, 
+          OrderStatus.LISTA
+        ]
+      }
+    },
+    orderBy: { createdAt: "desc" },
+    include: {
+      project: { select: { name: true } }
+    }
+  })
+  
+  return orders;
+}
+
+export async function pauseAllGlobalOrders(excludeOrderId?: string) {
+  const session = await getSession()
+  
+  if (!session) {
+    return { error: "No autenticado" }
+  }
+
+  const result = await prisma.botOrder.updateMany({
+    where: {
+      userId: session,
+      status: OrderStatus.GENERADA,
+      ...(excludeOrderId ? { id: { not: excludeOrderId } } : {}),
+    },
+    data: {
+      status: OrderStatus.PAUSADA
+    } as any
+  })
+
+  // Revalidate all project paths
+  revalidatePath("/dashboard")
+
+  return { success: true, count: result.count }
+}
+
 const N8N_WEBHOOK_URL = "https://intelexia-labs-n8n.af9gwe.easypanel.host/webhook/run-orders-gen-comment"
 
 export async function startOrder(id: string) {

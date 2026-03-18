@@ -35,6 +35,7 @@ export async function createTargetWithWebhook(payload: any) {
         // The webhook expects an array, we add user_id for identification
         const webhookBody = [{
             ...payload.target_input,
+            imageBase64: payload.imageBase64,
             user_id: session
         }]
         
