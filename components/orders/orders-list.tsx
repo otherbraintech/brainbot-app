@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Trash2, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy, Facebook, Instagram, ListChecks, Hash, RefreshCw } from "lucide-react"
+import { MoreHorizontal, Ban, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy, Facebook, Instagram, ListChecks, Hash, RefreshCw } from "lucide-react"
 import { TikTokIcon } from "@/components/icons/tiktok-icon"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -40,7 +40,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { deleteOrder, startOrder, pauseOrder, resumeOrder, duplicateOrder, completeOrder, retryOrder, pauseAllGlobalOrders } from "@/lib/actions/orders"
+import { startOrder, pauseOrder, resumeOrder, duplicateOrder, completeOrder, retryOrder, pauseAllGlobalOrders, cancelOrder } from "@/lib/actions/orders"
 import { EditOrderButton } from "@/components/orders/edit-order-button"
 import {
     Sheet,
@@ -132,15 +132,15 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
     const [confirmAction, setConfirmAction] = useState<{ id: string, name: string, type: 'pausar' | 'reanudar' | 'finalizar' } | null>(null)
     const [activateWithPause, setActivateWithPause] = useState<{ id: string, name: string, action: 'reanudar' | 'enviar' } | null>(null)
 
-    async function handleDelete() {
+    async function handleCancel() {
         if (!deletingOrder) return
         setLoading(true)
         setError(null)
 
-        const result = await deleteOrder(deletingOrder.id)
+        const result = await cancelOrder(deletingOrder.id)
 
-        if (result.error) {
-            setError(result.error)
+        if ((result as any).error) {
+            setError((result as any).error)
         } else {
             setDeletingOrder(null)
         }
@@ -542,17 +542,20 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
 
                     const isCompletedStatus = order.status === "COMPLETADA"
                     const isGenerated = order.status === "GENERADA"
+                    const isCancelled = order.status === "CANCELADA"
                     const isLiveOrder = order.type === "GENLIVE" || order.postType === "LIVE"
 
                     return (
                         <Card
                             key={order.id}
                             className={`overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col h-full border
-                                ${isCompletedStatus && !isLiveOrder ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/40 dark:border-emerald-500/30' : ''} 
-                                ${isLiveOrder ? 'border-red-500/30 ring-1 ring-red-500/10 shadow-lg shadow-red-500/10 scale-[1.01] bg-card' : ''}`}
+                                ${isCancelled ? 'opacity-60 border-red-500/20 bg-red-500/5 dark:bg-red-950/20 dark:border-red-500/20' : ''}
+                                ${isCompletedStatus && !isLiveOrder && !isCancelled ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/40 dark:border-emerald-500/30' : ''} 
+                                ${isLiveOrder && !isCancelled ? 'border-red-500/30 ring-1 ring-red-500/10 shadow-lg shadow-red-500/10 scale-[1.01] bg-card' : ''}`}
                             {...({} as any)}
                         >
-                            {isLiveOrder && order.status !== 'LISTA' && (
+
+                            {isLiveOrder && !isCancelled && order.status !== 'LISTA' && (
                                 <div className={`text-white text-[10px] font-black uppercase tracking-widest py-1 px-3 flex items-center justify-center gap-2 shadow-sm ${isCompletedStatus ? 'bg-emerald-600' : 'bg-red-600 animate-pulse'}`}>
                                     {isCompletedStatus ? (
                                         <>
@@ -570,19 +573,21 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                     )}
                                 </div>
                             )}
-                            <CardHeader className={`flex flex-row items-center justify-between pb-2 min-h-[80px] ${isCompletedStatus && !isLiveOrder ? 'bg-green-50/40 dark:bg-emerald-950/30' : isLiveOrder ? 'bg-red-50/30 dark:bg-red-950/20' : 'bg-muted/20'}`} {...({} as any)}>
+                            <CardHeader className={`flex flex-row items-center justify-between pb-2 min-h-[80px] ${isCancelled ? 'bg-red-50/40 dark:bg-red-950/30' : (isCompletedStatus && !isLiveOrder ? 'bg-green-50/40 dark:bg-emerald-950/30' : isLiveOrder ? 'bg-red-50/30 dark:bg-red-950/20' : 'bg-muted/20')}`} {...({} as any)}>
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-1.5 rounded-md transition-all duration-500 ${isCompletedStatus && !isLiveOrder ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : isLiveOrder ? 'p-2 bg-red-500/20 text-red-600 dark:text-red-400 shadow-sm ring-1 ring-red-500/30 scale-105' : typeInfo.color}`}>
-                                            {isCompletedStatus && !isLiveOrder ? <CheckCircle2 className="h-4 w-4" /> : <typeInfo.icon className={`h-4 w-4 ${isLiveOrder && !isCompletedStatus ? 'h-5 w-5 animate-pulse' : 'h-5 w-5'}`} />}
+                                        <div className={`p-1.5 rounded-md transition-all duration-500 ${isCancelled ? 'bg-red-500/20 text-red-600 dark:text-red-400' : (isCompletedStatus && !isLiveOrder ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : isLiveOrder ? 'p-2 bg-red-500/20 text-red-600 dark:text-red-400 shadow-sm ring-1 ring-red-500/30 scale-105' : typeInfo.color)}`}>
+                                            {isCancelled ? <Ban className="h-4 w-4" /> : (isCompletedStatus && !isLiveOrder ? <CheckCircle2 className="h-4 w-4" /> : <typeInfo.icon className={`h-4 w-4 ${isLiveOrder && !isCompletedStatus ? 'h-5 w-5 animate-pulse' : 'h-5 w-5'}`} />)}
                                         </div>
                                         <div className="flex flex-col">
-                                            <CardTitle className={`text-md font-bold truncate max-w-[150px] transition-colors ${isCompletedStatus ? 'text-emerald-700 dark:text-emerald-300' : isLiveOrder ? 'text-red-700 dark:text-red-400 font-black' : ''}`}>
+                                            <CardTitle className={`text-md font-bold truncate max-w-[150px] transition-colors ${isCancelled ? 'text-red-700 dark:text-red-400' : (isCompletedStatus ? 'text-emerald-700 dark:text-emerald-300' : isLiveOrder ? 'text-red-700 dark:text-red-400 font-black' : '')}`}>
                                                 {order.orderName}
                                             </CardTitle>
                                             <span className="text-[10px] font-mono text-muted-foreground">ID: #{order.id}</span>
                                             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">{typeInfo.label}</span>
-                                            {isCompletedStatus && (
+                                            {isCancelled ? (
+                                                <span className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Orden Cancelada</span>
+                                            ) : isCompletedStatus && (
                                                 <span className="text-[10px] font-bold text-green-600 dark:text-emerald-400 uppercase tracking-wider">Orden Completada</span>
                                             )}
                                         </div>
@@ -648,8 +653,8 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                                 onClick={() => setDeletingOrder(order)}
                                                 {...({} as any)}
                                             >
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                Eliminar
+                                                <Ban className="mr-2 h-4 w-4" />
+                                                Cancelar orden
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
@@ -687,17 +692,23 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                     <div></div>
 
                                     <div className="flex gap-1.5 items-center">
-                                        {(isGenerated || isCompletedStatus || order.status === "PAUSADA") && (
+                                        {isCancelled && (
+                                            <Badge variant="secondary" className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20 text-[10px] font-bold h-6 px-2">
+                                                Cancelada
+                                            </Badge>
+                                        )}
+                                        {!isCancelled && (isGenerated || isCompletedStatus || order.status === "PAUSADA") && (
                                             <Badge variant="secondary" className={`${isCompletedStatus ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' : order.status === "PAUSADA" ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' : 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20'} text-[10px] font-bold h-6 px-2`}>
                                                 {isCompletedStatus ? "Finalizada" : order.status === "PAUSADA" ? "Pausada" :
                                                     (order.type === 'COMENTARIO' && publishedCount > 0) ? "Comentando" : "En Operación"}
                                             </Badge>
                                         )}
 
-                                        {!isGenerated && !isCompletedStatus && !isProcessing && order.status !== "PAUSADA" && (
+                                        {!isCancelled && !isGenerated && !isCompletedStatus && !isProcessing && order.status !== "PAUSADA" && (
                                             <EditOrderButton order={order as any} />
                                         )}
 
+                                        {!isCancelled && (
                                         <TooltipProvider>
                                             <div className="flex items-center gap-1">
                                                 {isGenerated && (
@@ -793,6 +804,7 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                                 )}
                                             </div>
                                         </TooltipProvider>
+                                        )}
                                     </div>
                                 </div>
                             </CardContent>
@@ -801,23 +813,23 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                 })}
             </div>
 
-            {/* Delete Confirmation */}
+            {/* Cancel Confirmation */}
             <AlertDialog open={!!deletingOrder} onOpenChange={() => setDeletingOrder(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>¿Eliminar orden?</AlertDialogTitle>
+                        <AlertDialogTitle>¿Cancelar orden?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Esta acción no se puede deshacer. Se eliminarán todos los registros asociados a esta orden.
+                            La orden <span className="font-bold text-foreground">"{deletingOrder?.orderName}"</span> será marcada como cancelada y detendrá cualquier proceso pendiente.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={loading}>Cancelar</AlertDialogCancel>
+                        <AlertDialogCancel disabled={loading}>Volver</AlertDialogCancel>
                         <AlertDialogAction
-                            onClick={handleDelete}
+                            onClick={handleCancel}
                             className="bg-red-600 hover:bg-red-700"
                             disabled={loading}
                         >
-                            {loading ? "Eliminando..." : "Eliminar"}
+                            {loading ? "Cancelando..." : "Cancelar orden"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

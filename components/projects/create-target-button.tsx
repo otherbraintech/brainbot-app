@@ -141,7 +141,7 @@ export function CreateTargetButton({
                     const data = project.target.content.target?.[0] || project.target.content
                     return (
                         <div className="py-4 space-y-6">
-                            <div className="bg-slate-50 p-4 rounded-lg border space-y-3">
+                            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border space-y-3">
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <h4 className="font-semibold text-lg">{project.target.name}</h4>
@@ -200,12 +200,12 @@ export function CreateTargetButton({
                     <div className="py-4 space-y-6">
                         {!hasTargets ? (
                             <div className="flex flex-col items-center text-center space-y-4 py-4">
-                                <div className="p-3 bg-amber-50 rounded-full">
-                                    <AlertCircle className="h-6 w-6 text-amber-600" />
+                                <div className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-full">
+                                    <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                                 </div>
                                 <div className="space-y-1">
-                                    <h4 className="font-semibold text-amber-900">No tienes objetivos</h4>
-                                    <p className="text-sm text-amber-700">Debes crear objetivos en tu biblioteca antes de asignarlos.</p>
+                                    <h4 className="font-semibold text-amber-900 dark:text-amber-300">No tienes objetivos</h4>
+                                    <p className="text-sm text-amber-700 dark:text-amber-400/80">Debes crear objetivos en tu biblioteca antes de asignarlos.</p>
                                 </div>
                                 <Button asChild variant="default" className="w-full">
                                     <Link href="/dashboard/targets" onClick={() => setOpen(false)}>
@@ -236,7 +236,7 @@ export function CreateTargetButton({
                                     </Select>
                                 </div>
 
-                                <div className="flex items-center justify-between bg-slate-50 p-4 rounded-lg border">
+                                <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border">
                                     <div className="space-y-0.5">
                                         <Label className="text-sm">Postura Estratégica</Label>
                                         <p className="text-xs text-muted-foreground">Comportamiento de los bots.</p>

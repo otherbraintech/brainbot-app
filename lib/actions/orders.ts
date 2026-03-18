@@ -812,6 +812,31 @@ export async function completeOrder(id: string) {
   return { success: true }
 }
 
+export async function cancelOrder(id: string) {
+  const session = await getSession()
+  
+  if (!session) {
+    return { error: "No autenticado" }
+  }
+  
+  const order = await prisma.botOrder.findFirst({
+    where: { id, userId: session },
+  })
+  
+  if (!order) {
+    return { error: "Orden no encontrada" }
+  }
+
+  await prisma.botOrder.update({
+    where: { id },
+    data: { status: OrderStatus.CANCELADA } as any,
+  })
+  
+  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  
+  return { success: true }
+}
+
 export async function updateGenComment(id: number, text: string) {
   const session = await getSession()
   
