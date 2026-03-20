@@ -12,6 +12,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
+import { formatDate } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import {
     DropdownMenu,
@@ -560,7 +561,7 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 flex items-center gap-1.5 truncate">
                                         <Calendar className="h-3 w-3 text-primary/60 flex-shrink-0" /> Fecha de Creación
                                     </span>
-                                    <span className="text-xs font-medium text-right truncate">{new Date(viewingProject.createdAt).toLocaleDateString("es-ES", { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+                                    <span className="text-xs font-medium text-right truncate">{formatDate(viewingProject.createdAt)}</span>
                                 </div>
 
                                 <div className="grid grid-cols-2 items-center gap-2 group min-w-0">

@@ -1,4 +1,5 @@
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { formatDateTime } from '@/lib/utils';
 
 // Standard fonts work out of the box, but we could Register custom ones if needed
 const styles = StyleSheet.create({
@@ -110,15 +111,8 @@ interface OrderPDFProps {
 }
 
 export const OrderPDFTemplate = ({ order, project, comments }: OrderPDFProps) => {
-  const orderDate = new (globalThis as any).Date(order.createdAt).toLocaleString("es-ES", {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit'
-  });
-
-  const reportDate = new (globalThis as any).Date().toLocaleString("es-ES", {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit'
-  });
+  const orderDate = formatDateTime(order.createdAt);
+  const reportDate = formatDateTime(new (globalThis as any).Date());
 
   return (
     <Document title={`Orden ${order.orderName || order.id}`}>

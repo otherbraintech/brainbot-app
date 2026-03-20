@@ -11,10 +11,12 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { ArrowLeft, MessageSquare, ExternalLink, Globe, Hash, Info, Target, CalendarDays, AlignLeft, BarChart3 } from "lucide-react"
+import { ArrowLeft, Activity, UserPlus, Heart, Share2, AlertTriangle, MessageSquare, ExternalLink, Globe, Hash, Info, Layers, Target, CalendarDays, AlignLeft, BarChart3, Plus } from "lucide-react"
+import { formatDate } from "@/lib/utils"
 import Link from "next/link"
 import { CopyUrlButton } from "@/components/orders/copy-url-button"
 import { EditableCommentRow } from "@/components/orders/editable-comment-row"
+import { InteractionTableClient } from "@/components/orders/interaction-table-client"
 
 export default async function OrderCommentsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
@@ -113,13 +115,7 @@ export default async function OrderCommentsPage({ params }: { params: Promise<{ 
                                     <CalendarDays className="h-3 w-3" /> Creado el
                                 </span>
                                 <p className="text-sm font-medium mt-0.5">
-                                    {new (globalThis as any).Date(order.createdAt).toLocaleDateString("es-ES", {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    })}
+                                    {formatDate(order.createdAt)}
                                 </p>
                             </div>
                         </div>
@@ -177,30 +173,7 @@ export default async function OrderCommentsPage({ params }: { params: Promise<{ 
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Comentario</TableHead>
-                                <TableHead className="w-[120px]">Dispositivo</TableHead>
-                                <TableHead className="w-[100px]">Estado</TableHead>
-                                <TableHead className="w-[150px] text-right">Fecha</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {order.genComments.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                                        <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                        No hay comentarios generados aún.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                order.genComments.map((comment: any) => (
-                                    <EditableCommentRow key={comment.id} comment={comment} />
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
+                    <InteractionTableClient interactions={order.genComments} type="COMENTARIO" />
                 </CardContent>
             </Card>
         </div>

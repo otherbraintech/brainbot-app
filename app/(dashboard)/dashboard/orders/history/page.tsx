@@ -13,6 +13,7 @@ import { History, ExternalLink, Activity, Video, Image as ImageIcon, Type, Radio
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { DownloadPDFButton } from "@/components/orders/download-pdf-button"
+import { formatDate } from "@/lib/utils"
 
 const STATUS_LABELS: any = {
     LISTA: { label: "Lista", variant: "outline" },
@@ -106,11 +107,7 @@ export default async function OrdersHistoryPage() {
                                     return (
                                         <TableRow key={order.id} className={isDeleted ? "opacity-60 bg-muted/30" : ""}>
                                             <TableCell className="text-xs text-muted-foreground font-mono">
-                                                {new (globalThis as any).Date(order.createdAt).toLocaleDateString("es", {
-                                                    day: "2-digit",
-                                                    month: "2-digit",
-                                                    year: "numeric"
-                                                })}
+                                                {formatDate(order.createdAt)}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col">

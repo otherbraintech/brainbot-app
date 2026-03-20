@@ -48,6 +48,7 @@ import { getDashboardStats } from "@/lib/actions/dashboard"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { formatDate, formatDateTime, formatTime } from "@/lib/utils"
 
 export default function DashboardPage() {
     const [stats, setStats] = React.useState<any>(null)
@@ -367,7 +368,7 @@ export default function DashboardPage() {
                                                 {log.project?.name || "Sistema"}
                                             </p>
                                             <p className="text-[10px] text-zinc-400">
-                                                {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(log.createdAt).toLocaleDateString()}
+                                                {formatTime(log.createdAt)} • {formatDate(log.createdAt)}
                                             </p>
                                         </div>
                                     </div>

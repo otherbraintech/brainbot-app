@@ -28,6 +28,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { formatDate, formatDateTime } from "@/lib/utils"
 
 type Device = {
     id: string
@@ -90,13 +91,13 @@ export function ViewDeviceButton({ device }: { device: Device }) {
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right font-bold">Bloqueado:</Label>
                         <span className="col-span-3">
-                            {device.blockedAt ? new Date(device.blockedAt).toLocaleString() : "No"}
+                            {device.blockedAt ? formatDateTime(device.blockedAt) : "No"}
                         </span>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right font-bold">Creado:</Label>
                         <span className="col-span-3">
-                            {device.createdAt ? new Date(device.createdAt).toLocaleDateString() : "-"}
+                            {device.createdAt ? formatDate(device.createdAt) : "-"}
                         </span>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">

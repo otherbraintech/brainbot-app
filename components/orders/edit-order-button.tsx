@@ -63,8 +63,8 @@ export function EditOrderButton({ order }: { order: Order }) {
     const [orderName, setOrderName] = useState(order.orderName || "")
     const [error, setError] = useState("")
 
-    // Can only edit if status is LISTA or REINTENTAR
-    const canEdit = order.status === "LISTA" || order.status === "REINTENTAR"
+    // Can only edit if status is LISTA, REINTENTAR, CANCELADA or COMPLETADA
+    const canEdit = order.status === "LISTA" || order.status === "REINTENTAR" || order.status === "CANCELADA" || order.status === "COMPLETADA"
 
     const handleSubmit = async () => {
         if (!link.trim()) return

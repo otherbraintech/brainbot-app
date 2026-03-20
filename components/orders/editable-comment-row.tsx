@@ -5,9 +5,21 @@ import { TableCell, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Pencil, Check, X, Loader2 } from "lucide-react"
-import { updateGenComment } from "@/lib/actions/orders"
+import { Pencil, Check, X, Loader2, Trash2, RefreshCw } from "lucide-react"
+import { updateGenComment, deleteGenComment, updateInteractionStatus } from "@/lib/actions/orders"
 import { toast } from "sonner"
+import { formatDate, formatDateTime } from "@/lib/utils"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export function EditableCommentRow({ 
     comment, 
@@ -34,6 +46,35 @@ export function EditableCommentRow({
 
         toast.success("Comentario actualizado")
         setIsEditing(false)
+    }
+
+    const handleDelete = async () => {
+        if (!confirm("¿Estás seguro de que deseas eliminar este comentario permanentemente?")) return
+
+        setIsLoading(true)
+        const result = await deleteGenComment(comment.id)
+        setIsLoading(false)
+
+        if (result.error) {
+            toast.error(result.error)
+            return
+        }
+
+        toast.success("Comentario eliminado")
+    }
+
+    const handleToggleStatus = async () => {
+        setIsLoading(true)
+        const newStatus = comment.status === "PUBLICADO" ? "SINPUBLICAR" : "PUBLICADO"
+        const result = await updateInteractionStatus(comment.id, "COMENTARIO", newStatus as any)
+        setIsLoading(false)
+
+        if (result.error) {
+            toast.error(result.error)
+            return
+        }
+
+        toast.success(`Estado actualizado a ${newStatus === "PUBLICADO" ? "EJECUTADO" : "SIN EJECUTAR"}`)
     }
 
     const statusMap: Record<string, string> = {
@@ -85,16 +126,28 @@ export function EditableCommentRow({
                             </div>
                         </div>
                     ) : (
-                        <div className="flex items-start gap-2 group italic text-muted-foreground">
+                        <div className="flex items-start gap-1 group italic text-muted-foreground">
                             <span className="whitespace-normal break-words min-w-[200px]">{comment.text}</span>
-                            <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5"
-                                onClick={() => setIsEditing(true)}
-                            >
-                                <Pencil className="h-3 w-3" />
-                            </Button>
+                            <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5">
+                                <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-6 w-6" 
+                                    onClick={() => setIsEditing(true)}
+                                    disabled={isLoading}
+                                >
+                                    <Pencil className="h-3 w-3" />
+                                </Button>
+                                <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50" 
+                                    onClick={handleDelete}
+                                    disabled={isLoading}
+                                >
+                                    <Trash2 className="h-3 w-3" />
+                                </Button>
+                            </div>
                         </div>
                     )}
                 </TableCell>
@@ -116,25 +169,38 @@ export function EditableCommentRow({
                     </div>
                 </TableCell>
                 <TableCell>
-                    <Badge
-                        variant={comment.status === "PUBLICADO" ? "default" : "secondary"}
-                        className={
-                            comment.status === "PUBLICADO"
-                                ? "bg-green-100 text-green-700 hover:bg-green-100 border-green-200"
-                                : ""
-                        }
-                    >
-                        {displayStatus}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Badge
+                                    variant={comment.status === "PUBLICADO" ? "default" : "secondary"}
+                                    className={`cursor-pointer hover:opacity-80 transition-opacity ${
+                                        comment.status === "PUBLICADO"
+                                            ? "bg-green-100 text-green-700 hover:bg-green-200 border-green-200"
+                                            : ""
+                                    }`}
+                                >
+                                    {displayStatus}
+                                </Badge>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent {...({} as any)}>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>¿Está seguro de cambiar el estado?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Deseas cambiar el estado de este registro a <strong>{comment.status === "PUBLICADO" ? "SIN EJECUTAR" : "EJECUTADO"}</strong>?
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleToggleStatus}>Confirmar Cambio</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                        {isLoading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+                    </div>
                 </TableCell>
                 <TableCell className="text-right text-xs text-muted-foreground">
-                    {new Date(comment.createdAt).toLocaleString("es", {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    })}
+                    {formatDateTime(comment.createdAt)}
                 </TableCell>
             </TableRow>
         )
@@ -178,16 +244,28 @@ export function EditableCommentRow({
                         </div>
                     </div>
                 ) : (
-                    <div className="flex items-start gap-2 group">
+                    <div className="flex items-start gap-1 group">
                         <span className="whitespace-normal break-words">{comment.text}</span>
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5"
-                            onClick={() => setIsEditing(true)}
-                        >
-                            <Pencil className="h-3 w-3" />
-                        </Button>
+                        <div className="flex shrink-0 gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5">
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6"
+                                onClick={() => setIsEditing(true)}
+                                disabled={isLoading}
+                            >
+                                <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                onClick={handleDelete}
+                                disabled={isLoading}
+                            >
+                                <Trash2 className="h-3 w-3" />
+                            </Button>
+                        </div>
                     </div>
                 )}
             </TableCell>
@@ -204,12 +282,34 @@ export function EditableCommentRow({
                 </div>
             </TableCell>
             <TableCell>
-                <Badge variant={comment.status === "PUBLICADO" ? "default" : "secondary"}>
-                    {displayStatus}
-                </Badge>
+                <div className="flex items-center gap-2">
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Badge 
+                                variant={comment.status === "PUBLICADO" ? "default" : "secondary"}
+                                className="cursor-pointer hover:opacity-80 transition-opacity"
+                            >
+                                {displayStatus}
+                            </Badge>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent {...({} as any)}>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>¿Está seguro de cambiar el estado?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Deseas cambiar el estado de este registro a <strong>{comment.status === "PUBLICADO" ? "SIN EJECUTAR" : "EJECUTADO"}</strong>?
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleToggleStatus}>Confirmar Cambio</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                    {isLoading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+                </div>
             </TableCell>
             <TableCell className="text-right text-muted-foreground">
-                {new Date(comment.createdAt).toLocaleDateString("es")}
+                {formatDate(comment.createdAt)}
             </TableCell>
         </TableRow>
     )

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Ban, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy, Facebook, Instagram, ListChecks, Hash, RefreshCw } from "lucide-react"
+import { MoreHorizontal, Ban, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy, Facebook, Instagram, ListChecks, Hash, RefreshCw, Undo } from "lucide-react"
 import { TikTokIcon } from "@/components/icons/tiktok-icon"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -13,6 +13,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
+import { formatDate, formatDateTime } from "@/lib/utils"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -40,7 +41,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { startOrder, pauseOrder, resumeOrder, duplicateOrder, completeOrder, retryOrder, pauseAllGlobalOrders, cancelOrder } from "@/lib/actions/orders"
+import { startOrder, pauseOrder, resumeOrder, duplicateOrder, completeOrder, retryOrder, pauseAllGlobalOrders, cancelOrder, reopenOrder } from "@/lib/actions/orders"
 import { EditOrderButton } from "@/components/orders/edit-order-button"
 import {
     Sheet,
@@ -129,7 +130,7 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
     const [startingId, setStartingId] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const [confirmAction, setConfirmAction] = useState<{ id: string, name: string, type: 'pausar' | 'reanudar' | 'finalizar' } | null>(null)
+    const [confirmAction, setConfirmAction] = useState<{ id: string, name: string, type: 'pausar' | 'reanudar' | 'finalizar' | 'reabrir' } | null>(null)
     const [activateWithPause, setActivateWithPause] = useState<{ id: string, name: string, action: 'reanudar' | 'enviar' } | null>(null)
 
     async function handleCancel() {
@@ -242,6 +243,7 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
         setLoading(true)
         if (confirmAction.type === 'pausar') await pauseOrder(confirmAction.id)
         else if (confirmAction.type === 'finalizar') await completeOrder(confirmAction.id)
+        else if (confirmAction.type === 'reabrir') await reopenOrder(confirmAction.id)
         setConfirmAction(null)
         setLoading(false)
     }
@@ -616,7 +618,7 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                             </>
                                         )}
                                         <span className="opacity-50">•</span>
-                                        <span>{new Date(order.createdAt).toLocaleDateString("es")}</span>
+                                        <span>{formatDate(order.createdAt)}</span>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1">
@@ -648,15 +650,47 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                                 <Copy className="mr-2 h-4 w-4" />
                                                 Duplicar orden
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                className="text-red-600"
-                                                onClick={() => setDeletingOrder(order)}
-                                                {...({} as any)}
-                                            >
-                                                <Ban className="mr-2 h-4 w-4" />
-                                                Cancelar orden
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
+                                             {!isCompletedStatus && order.status !== "CANCELADA" && (
+                                                <DropdownMenuItem
+                                                    className="text-red-600 cursor-pointer"
+                                                    onClick={() => setDeletingOrder(order)}
+                                                    {...({} as any)}
+                                                >
+                                                    <Ban className="mr-2 h-4 w-4" />
+                                                    Cancelar orden
+                                                </DropdownMenuItem>
+                                             )}
+                                             {order.status === "GENERADA" && (
+                                                <DropdownMenuItem className="cursor-pointer" onClick={() => setConfirmAction({ id: order.id, name: order.orderName, type: 'pausar' })} {...({} as any)}>
+                                                    <Pause className="mr-2 h-4 w-4" />
+                                                    Pausar orden
+                                                </DropdownMenuItem>
+                                             )}
+                                             {order.status === "PAUSADA" && (
+                                                <DropdownMenuItem className="cursor-pointer" onClick={() => handleResumeOrder(order.id)} {...({} as any)}>
+                                                    <Play className="mr-2 h-4 w-4" />
+                                                    Reanudar orden
+                                                </DropdownMenuItem>
+                                             )}
+                                             {(order.status === "GENERADA" || order.status === "PAUSADA") && (
+                                                <DropdownMenuItem className="cursor-pointer text-emerald-600" onClick={() => setConfirmAction({ id: order.id, name: order.orderName, type: 'finalizar' })} {...({} as any)}>
+                                                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                                                    Finalizar orden
+                                                </DropdownMenuItem>
+                                             )}
+                                             {isCompletedStatus && (
+                                                <DropdownMenuItem className="cursor-pointer text-orange-600" onClick={() => setConfirmAction({ id: order.id, name: order.orderName, type: 'reabrir' })} {...({} as any)}>
+                                                    <Undo className="mr-2 h-4 w-4" />
+                                                    Reabrir (Mover a Lista)
+                                                </DropdownMenuItem>
+                                             )}
+                                             {(order.status === "LISTA" || order.status === "REINTENTAR") && (
+                                                <DropdownMenuItem className="cursor-pointer text-emerald-600" onClick={() => handleStartOrder(order.id)} {...({} as any)}>
+                                                    <Play className="mr-2 h-4 w-4" />
+                                                    Enviar orden
+                                                </DropdownMenuItem>
+                                             )}
+                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </div>
                             </CardHeader>
@@ -759,6 +793,23 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                                             </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent>Finalizar orden</TooltipContent>
+                                                    </Tooltip>
+                                                )}
+
+                                                {isCompletedStatus && (
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="icon"
+                                                                className="h-8 w-8 border-orange-200 text-orange-600 hover:bg-orange-50"
+                                                                onClick={() => setConfirmAction({ id: order.id, name: order.orderName, type: 'reabrir' })}
+                                                                disabled={loading}
+                                                            >
+                                                                <Undo className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Desfinalizar orden</TooltipContent>
                                                     </Tooltip>
                                                 )}
 
@@ -950,11 +1001,7 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                     <div className="space-y-1 border-t pt-4">
                                         <span className="text-[10px] text-muted-foreground font-bold uppercase">Fecha de Creación</span>
                                         <p className="text-sm font-medium pt-1">
-                                            {new (globalThis as any).Date(viewingOrder.createdAt).toLocaleDateString("es", {
-                                                day: '2-digit',
-                                                month: 'long',
-                                                year: 'numeric'
-                                            })}
+                                            {formatDate(viewingOrder.createdAt)}
                                         </p>
                                     </div>
                                     

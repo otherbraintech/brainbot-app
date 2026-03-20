@@ -12,10 +12,12 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { ArrowLeft, Activity, UserPlus, Heart, Share2, AlertTriangle, MessageSquare, ExternalLink, Globe, Hash, Info, Layers, Target, CalendarDays, AlignLeft, BarChart3 } from "lucide-react"
+import { formatDateTime } from "@/lib/utils"
 import Link from "next/link"
 import { CopyUrlButton } from "@/components/orders/copy-url-button"
 import { DownloadPDFButton } from "@/components/orders/download-pdf-button"
 import { EditableCommentRow } from "@/components/orders/editable-comment-row"
+import { InteractionTableClient } from "@/components/orders/interaction-table-client"
 
 const TYPE_CONFIG: any = {
     COMENTARIO: { label: "Comentarios", icon: MessageSquare, color: "text-blue-600" },
@@ -143,13 +145,7 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                                     <CalendarDays className="h-3 w-3" /> Creado el
                                 </span>
                                 <p className="text-sm font-medium mt-0.5">
-                                    {new (globalThis as any).Date(order.createdAt).toLocaleDateString("es-ES", {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    })}
+                                    {formatDateTime(order.createdAt)}
                                 </p>
                             </div>
                         </div>
@@ -208,83 +204,7 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[100px]">ID</TableHead>
-                                {order.type === "COMENTARIO" && <TableHead>Contenido</TableHead>}
-                                <TableHead>Dispositivo Asignado</TableHead>
-                                <TableHead className="w-[120px]">Estado</TableHead>
-                                <TableHead className="w-[150px] text-right">Fecha</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {interactions.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={order.type === "COMENTARIO" ? 5 : 4} className="text-center py-12 text-muted-foreground">
-                                        <config.icon className="h-10 w-10 mx-auto mb-3 opacity-20" />
-                                        No hay registros de ejecución para esta orden aún.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                interactions.map((item: any) => {
-                                    if (order.type === "COMENTARIO") {
-                                        return <EditableCommentRow key={item.id} comment={item} variant="execution" />
-                                    }
-
-                                    return (
-                                        <TableRow key={item.id}>
-                                            <TableCell className="font-mono text-[10px] text-muted-foreground">
-                                                #{item.id}
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex flex-col gap-0.5">
-                                                    <span className="font-medium text-sm">
-                                                        {item.device?.deviceName || "Sin asignar"}
-                                                    </span>
-                                                    {item.device?.label && (
-                                                        <span className="text-[10px] text-blue-600 font-bold uppercase tracking-tight">
-                                                            {item.device.label}
-                                                        </span>
-                                                    )}
-                                                    {item.device?.personName && (
-                                                        <span className="text-[10px] text-muted-foreground italic">
-                                                            {item.device.personName}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge
-                                                    variant={
-                                                        item.status === "PUBLICADO" || item.status === "CONFIRMADO"
-                                                            ? "default"
-                                                            : "secondary"
-                                                    }
-                                                    className={
-                                                        item.status === "PUBLICADO" || item.status === "CONFIRMADO"
-                                                            ? "bg-green-100 text-green-700 hover:bg-green-100 border-green-200"
-                                                            : ""
-                                                    }
-                                                >
-                                                    {item.status === "PUBLICADO" ? "EJECUTADO" : item.status === "SINPUBLICAR" ? "SIN EJECUTAR" : item.status}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-right text-xs text-muted-foreground">
-                                                {new (globalThis as any).Date(item.createdAt).toLocaleString("es", {
-                                                    day: '2-digit',
-                                                    month: '2-digit',
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                            </TableCell>
-                                        </TableRow>
-                                    )
-                                })
-                            )}
-                        </TableBody>
-                    </Table>
+                    <InteractionTableClient interactions={interactions} type={order.type} />
                 </CardContent>
             </Card>
         </div>

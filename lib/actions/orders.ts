@@ -218,7 +218,7 @@ export async function updateOrder(input: UpdateOrderInput) {
     return { error: "Orden no encontrada" }
   }
   
-  if (order.status !== "LISTA") {
+  if (order.status !== "LISTA" && order.status !== "REINTENTAR" && order.status !== "CANCELADA" && order.status !== "COMPLETADA") {
     return { error: "No se puede editar una orden que ya fue iniciada" }
   }
   
@@ -405,8 +405,8 @@ export async function startOrder(id: string) {
     }
   }
   
-  if (order.status !== "LISTA" && order.status !== "REINTENTAR" && order.status !== "CANCELADA" && order.status !== "PAUSADA") {
-    return { error: "La orden ya fue iniciada o completada" }
+  if (order.status !== "LISTA" && order.status !== "REINTENTAR" && order.status !== "CANCELADA" && order.status !== "PAUSADA" && order.status !== "COMPLETADA") {
+    return { error: "La orden ya fue iniciada" }
   }
 
   // Actualizamos el estado a GENERANDO antes de disparar el webhook
@@ -861,3 +861,102 @@ export async function updateGenComment(id: number, text: string) {
   
   return { success: true }
 }
+
+export async function reopenOrder(id: string) {
+  const session = await getSession()
+  
+  if (!session) {
+    return { error: "No autenticado" }
+  }
+  
+  const order = await prisma.botOrder.findFirst({
+    where: { id, userId: session },
+  })
+  
+  if (!order) {
+    return { error: "Orden no encontrada" }
+  }
+  
+  await prisma.botOrder.update({
+    where: { id },
+    data: { status: OrderStatus.LISTA } as any,
+  })
+  
+  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  
+  return { success: true }
+}
+
+export async function deleteGenComment(id: number) {
+  const session = await getSession()
+  
+  if (!session) {
+    return { error: "No autenticado" }
+  }
+  
+  const comment = await prisma.genComment.findFirst({
+    where: { id, userId: session },
+  })
+  
+  if (!comment) {
+    return { error: "Comentario no encontrado" }
+  }
+  
+  await prisma.genComment.delete({
+    where: { id },
+  })
+  
+  revalidatePath(`/dashboard/orders/${comment.orderId}/comments`)
+  
+  return { success: true }
+}
+
+export async function updateInteractionStatus(id: number, type: OrderType, status: CommentStatus) {
+  const session = await getSession()
+  
+  if (!session) {
+    return { error: "No autenticado" }
+  }
+
+  let orderId: string | null = null
+
+  if (type === OrderType.COMENTARIO) {
+    const item = await prisma.genComment.findFirst({ where: { id, userId: session } })
+    if (!item) return { error: "Registro no encontrado" }
+    orderId = item.orderId
+    await prisma.genComment.update({ where: { id }, data: { status } as any })
+  } else if (type === OrderType.MEGUSTA) {
+    const item = await prisma.genLike.findFirst({ where: { id, userId: session } })
+    if (!item) return { error: "Registro no encontrado" }
+    orderId = item.orderId
+    await prisma.genLike.update({ where: { id }, data: { status } as any })
+  } else if (type === OrderType.COMPARTIR) {
+    const item = await prisma.genShare.findFirst({ where: { id, userId: session } })
+    if (!item) return { error: "Registro no encontrado" }
+    orderId = item.orderId
+    await prisma.genShare.update({ where: { id }, data: { status } as any })
+  } else if (type === OrderType.SEGUIMIENTO) {
+    const item = await prisma.genFollow.findFirst({ where: { id, userId: session } })
+    if (!item) return { error: "Registro no encontrado" }
+    orderId = item.orderId
+    await prisma.genFollow.update({ where: { id }, data: { status } as any })
+  } else if (type === OrderType.REPORTE) {
+    const item = await prisma.genReport.findFirst({ where: { id, userId: session } })
+    if (!item) return { error: "Registro no encontrado" }
+    orderId = item.orderId
+    await prisma.genReport.update({ where: { id }, data: { status } as any })
+  } else if (type === OrderType.GENLIVE) {
+    const item = await prisma.genLive.findFirst({ where: { id, userId: session } })
+    if (!item) return { error: "Registro no encontrado" }
+    orderId = item.orderId
+    await prisma.genLive.update({ where: { id }, data: { status } as any })
+  }
+
+  if (orderId) {
+    revalidatePath(`/dashboard/orders/${orderId}/executions`)
+    revalidatePath(`/dashboard/orders/${orderId}/comments`)
+  }
+
+  return { success: true }
+}
+
