@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+import { cookies } from "next/headers";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -17,13 +19,16 @@ export const metadata: Metadata = {
   description: "Aplicación web para gestionar órdenes para los bots de redes sociales",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const theme = cookieStore.get("theme")?.value || "light";
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={theme === "dark" ? "dark" : ""} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning

@@ -21,15 +21,18 @@ export function ChangelogDialog() {
   const currentVersion = packageJson.version
   
   useEffect(() => {
-    const lastSeenVersion = localStorage.getItem("last_seen_version")
+    const cookies = document.cookie.split('; ')
+    const lastSeenVersionCookie = cookies.find(row => row.startsWith('last_seen_version='))?.split('=')[1]
     
-    if (lastSeenVersion !== currentVersion) {
+    if (lastSeenVersionCookie !== currentVersion) {
       setIsOpen(true)
     }
   }, [currentVersion])
 
   const handleClose = () => {
-    localStorage.setItem("last_seen_version", currentVersion)
+    const date = new Date()
+    date.setFullYear(date.getFullYear() + 1)
+    document.cookie = `last_seen_version=${currentVersion}; expires=${date.toUTCString()}; path=/`
     setIsOpen(false)
   }
 

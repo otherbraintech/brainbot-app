@@ -23,10 +23,12 @@ import {
 
 export function EditableCommentRow({ 
     comment, 
-    variant = "default" 
+    variant = "default",
+    index
 }: { 
     comment: any, 
-    variant?: "default" | "execution" 
+    variant?: "default" | "execution",
+    index?: number
 }) {
     const [isEditing, setIsEditing] = useState(false)
     const [text, setText] = useState(comment.text)
@@ -86,24 +88,27 @@ export function EditableCommentRow({
 
     if (variant === "execution") {
         return (
-            <TableRow>
+            <TableRow className="group hover:bg-muted/30 transition-colors">
+                <TableCell className="text-xs font-bold text-muted-foreground/50">
+                    {index}
+                </TableCell>
                 <TableCell className="font-mono text-[10px] text-muted-foreground">
                     #{comment.id}
                 </TableCell>
                 <TableCell>
                     {isEditing ? (
-                        <div className="flex flex-col gap-2 w-full">
+                        <div className="flex flex-col gap-2 w-full min-w-[300px]">
                             <Textarea 
                                 value={text} 
                                 onChange={(e) => setText(e.target.value)} 
-                                className="min-h-[80px] w-full italic text-sm resize-none"
+                                className="min-h-[80px] w-full italic text-sm resize-none focus-visible:ring-primary shadow-sm"
                                 autoFocus
                             />
                             <div className="flex justify-end gap-2">
                                 <Button 
                                     variant="outline"
                                     size="sm" 
-                                    className="h-8 text-green-600 hover:text-green-700 hover:bg-green-50 gap-1"
+                                    className="h-8 text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 gap-1 shadow-sm"
                                     onClick={handleSave}
                                     disabled={isLoading}
                                 >
@@ -113,7 +118,7 @@ export function EditableCommentRow({
                                 <Button 
                                     variant="outline"
                                     size="sm" 
-                                    className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 gap-1"
+                                    className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 gap-1 shadow-sm"
                                     onClick={() => {
                                         setText(comment.text)
                                         setIsEditing(false)
@@ -126,58 +131,40 @@ export function EditableCommentRow({
                             </div>
                         </div>
                     ) : (
-                        <div className="flex items-start gap-1 group italic text-muted-foreground">
-                            <span className="whitespace-normal break-words min-w-[200px]">{comment.text}</span>
-                            <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5">
-                                <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-6 w-6" 
-                                    onClick={() => setIsEditing(true)}
-                                    disabled={isLoading}
-                                >
-                                    <Pencil className="h-3 w-3" />
-                                </Button>
-                                <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50" 
-                                    onClick={handleDelete}
-                                    disabled={isLoading}
-                                >
-                                    <Trash2 className="h-3 w-3" />
-                                </Button>
-                            </div>
+                        <div className="flex items-start gap-1 italic text-muted-foreground text-sm leading-relaxed max-w-[500px]">
+                            <span className="whitespace-normal break-words">{comment.text}</span>
                         </div>
                     )}
                 </TableCell>
                 <TableCell>
                     <div className="flex flex-col gap-0.5">
-                        <span className="font-medium text-sm">
-                            {comment.device?.deviceName || "Sin asignar"}
-                        </span>
-                        {comment.device?.label && (
-                            <span className="text-[10px] text-blue-600 font-bold uppercase tracking-tight">
-                                {comment.device.label}
+                        <div className="flex items-center gap-1.5">
+                            <span className="font-medium text-sm text-foreground/90">
+                                {comment.device?.deviceName || "Sin asignar"}
                             </span>
-                        )}
-                        {comment.device?.personName && (
-                            <span className="text-[10px] text-muted-foreground italic">
-                                {comment.device.personName}
+                            {comment.device?.personName && (
+                                <span className="text-[10px] text-muted-foreground italic">
+                                    ({comment.device.personName})
+                                </span>
+                            )}
+                        </div>
+                        {comment.device?.label && (
+                            <span className="text-[10px] text-primary/80 font-bold uppercase tracking-wider">
+                                {comment.device.label}
                             </span>
                         )}
                     </div>
                 </TableCell>
                 <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
                                 <Badge
                                     variant={comment.status === "PUBLICADO" ? "default" : "secondary"}
-                                    className={`cursor-pointer hover:opacity-80 transition-opacity ${
+                                    className={`cursor-pointer hover:opacity-80 transition-all shadow-sm ${
                                         comment.status === "PUBLICADO"
-                                            ? "bg-green-100 text-green-700 hover:bg-green-200 border-green-200"
-                                            : ""
+                                            ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200"
+                                            : "bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200"
                                     }`}
                                 >
                                     {displayStatus}
@@ -199,8 +186,32 @@ export function EditableCommentRow({
                         {isLoading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
                     </div>
                 </TableCell>
-                <TableCell className="text-right text-xs text-muted-foreground">
-                    {formatDateTime(comment.createdAt)}
+                <TableCell className="text-center text-[11px] text-muted-foreground font-bold">
+                    {formatDateTime(comment.updatedAt || comment.createdAt)}
+                </TableCell>
+                <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7 hover:bg-primary/10 hover:text-primary transition-colors" 
+                            onClick={() => setIsEditing(true)}
+                            disabled={isLoading}
+                            title="Editar comentario"
+                        >
+                            <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7 text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors" 
+                            onClick={handleDelete}
+                            disabled={isLoading}
+                            title="Eliminar registro"
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                    </div>
                 </TableCell>
             </TableRow>
         )

@@ -19,13 +19,7 @@ import { DownloadPDFButton } from "@/components/orders/download-pdf-button"
 import { EditableCommentRow } from "@/components/orders/editable-comment-row"
 import { InteractionTableClient } from "@/components/orders/interaction-table-client"
 
-const TYPE_CONFIG: any = {
-    COMENTARIO: { label: "Comentarios", icon: MessageSquare, color: "text-blue-600" },
-    MEGUSTA: { label: "Me gusta", icon: Heart, color: "text-rose-600" },
-    COMPARTIR: { label: "Compartidos", icon: Share2, color: "text-green-600" },
-    SEGUIMIENTO: { label: "Seguidores", icon: UserPlus, color: "text-indigo-600" },
-    REPORTE: { label: "Reportes", icon: AlertTriangle, color: "text-amber-600" },
-}
+import { OrderExecutionHeader } from "@/components/orders/order-execution-header"
 
 export default async function OrderExecutionsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
@@ -35,8 +29,6 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
         notFound()
     }
 
-    const config = TYPE_CONFIG[order.type] || { label: "Ejecución", icon: Activity, color: "text-primary" }
-
     // Unificar arrays de interacciones
     const interactions = (order.type === "COMENTARIO" ? order.genComments :
         order.type === "MEGUSTA" ? (order as any).genLikes :
@@ -44,169 +36,29 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
                 order.type === "SEGUIMIENTO" ? (order as any).genFollows :
                     (order as any).genReports) || []
 
-    const publishedCount = interactions.filter((i: any) => i.status === "PUBLICADO").length;
-    const generatedCount = interactions.filter((i: any) => i.status === "PUBLICADO" || i.status === "SINPUBLICAR").length;
+    const sortedInteractions = [...interactions].sort((a: any, b: any) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+
+    const publishedCount = sortedInteractions.filter((i: any) => i.status === "PUBLICADO" || i.status === "CONFIRMADO").length
+    const generatedCount = sortedInteractions.length
 
     return (
-        <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-4">
-                <Button variant="outline" size="icon" asChild>
-                    <Link href={`/dashboard/projects/${order.projectId}`}>
-                        <ArrowLeft className="h-4 w-4" />
-                    </Link>
-                </Button>
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-                        <config.icon className={`h-6 w-6 ${config.color}`} />
-                        {order.orderName || `Ejecución de ${config.label}`}
-                    </h1>
-                    <div className="flex items-center gap-2">
-                        <p className="text-muted-foreground text-sm">
-                            {order.project.name} · Verificando ejecución de la orden
-                        </p>
-                        <Badge variant="secondary" className="font-mono text-[10px] h-4 px-1.5 py-0">#{order.id}</Badge>
-                    </div>
-                </div>
+        <div className="flex flex-col gap-0 mt-[-16px]">
+            <OrderExecutionHeader 
+                order={order} 
+                generatedCount={generatedCount} 
+                publishedCount={publishedCount} 
+            />
+
+            <div className="bg-background">
+                <InteractionTableClient 
+                    interactions={sortedInteractions} 
+                    type={order.type} 
+                    generatedCount={generatedCount}
+                    publishedCount={publishedCount}
+                />
             </div>
-
-            <Card className="overflow-hidden border-border bg-card">
-                <CardHeader className="pb-3 border-b bg-muted/30">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex items-center gap-2">
-                            <Info className="h-5 w-5 text-primary" />
-                            <CardTitle className="text-lg">Información de la Orden</CardTitle>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <DownloadPDFButton orderId={order.id} orderName={order.orderName} />
-                            <Badge variant="outline" className="bg-background">
-                                {order.status === 'GENERADA' ? 'En Operación' : order.status === 'COMPLETADA' ? 'Finalizada' : order.status}
-                            </Badge>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent className="pt-4 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    <div className="space-y-6 lg:col-span-2">
-                        <div className="flex flex-col gap-1.5">
-                            <span className="text-[10px] uppercase font-bold text-muted-foreground/70 flex items-center gap-1">
-                                <Globe className="h-3 w-3" /> Enlace de la Publicación
-                            </span>
-                            <div className="flex items-center gap-2">
-                                <div className="flex-1 bg-muted/20 border rounded-md px-3 py-1.5 text-sm text-muted-foreground truncate" title={order.url}>
-                                    {order.url}
-                                </div>
-                                <div className="flex shrink-0 gap-1.5">
-                                    <CopyUrlButton url={order.url} />
-                                    <Button size="sm" variant="outline" className="h-8 w-8 p-0" asChild title="Abrir enlace">
-                                        <a href={order.url} target="_blank" rel="noopener noreferrer">
-                                            <ExternalLink className="h-4 w-4" />
-                                        </a>
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                             <div className="flex flex-col gap-1.5">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground/70 flex items-center gap-1">
-                                    <Target className="h-3 w-3" /> Postura del Proyecto
-                                </span>
-                                <div className="flex flex-col mt-0.5 items-start">
-                                    <Badge 
-                                        variant="outline" 
-                                        className={
-                                            order.project?.stance === 'AGAINST' 
-                                                ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-50' 
-                                                : order.project?.stance === 'FAVOR' 
-                                                ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-50' 
-                                                : ''
-                                        }
-                                    >
-                                        {order.project?.stance === 'AGAINST' ? 'En Contra' : order.project?.stance === 'FAVOR' ? 'A Favor' : order.project?.stance || 'N/A'}
-                                    </Badge>
-                                    {order.project?.target?.name && (
-                                        <span className="text-xs text-muted-foreground mt-0.5">
-                                            Objetivo: {order.project.target.name}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                            
-                            <div className="flex flex-col gap-1.5">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground/70 flex items-center gap-1">
-                                    <AlignLeft className="h-3 w-3" /> Intención (Prompt)
-                                </span>
-                                <p className="text-sm font-medium text-foreground line-clamp-3 mt-0.5" title={order.intent || "Sin intención específica"}>
-                                    {order.intent ? order.intent : <span className="text-muted-foreground font-normal italic">Sin intención específica</span>}
-                                </p>
-                            </div>
-
-                            <div className="flex flex-col gap-1.5">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground/70 flex items-center gap-1">
-                                    <CalendarDays className="h-3 w-3" /> Creado el
-                                </span>
-                                <p className="text-sm font-medium mt-0.5">
-                                    {formatDateTime(order.createdAt)}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col justify-between space-y-4 bg-muted/30 p-4 rounded-xl border border-border/50">
-                        <div className="flex flex-col gap-2">
-                            <span className="text-[10px] uppercase font-bold text-muted-foreground/70 flex items-center gap-1">
-                                <BarChart3 className="h-3 w-3" /> Progreso de la Orden
-                            </span>
-                            <div className="flex items-baseline gap-2 mt-1">
-                                <span className="text-4xl font-black text-primary tracking-tighter">{publishedCount}</span>
-                                <span className="text-sm font-medium text-muted-foreground">de {generatedCount} generados</span>
-                            </div>
-                            
-                            <div className="h-2.5 w-full bg-secondary rounded-full mt-2 overflow-hidden border border-border/50">
-                                <div 
-                                    className="h-full bg-primary rounded-full transition-all duration-500 ease-in-out" 
-                                    style={{ width: `${Math.min(100, Math.max(0, generatedCount > 0 ? (publishedCount / generatedCount) * 100 : 0))}%` }} 
-                                />
-                            </div>
-                            <span className="text-[10px] text-muted-foreground font-medium flex gap-1 mt-1">
-                                Meta Total de la Orden: <span className="font-bold text-foreground">{order.quantity}</span>
-                            </span>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50">
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground/70 mb-1">
-                                    Red Social
-                                </span>
-                                <div className="flex items-center gap-1">
-                                    <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                                    <span className="text-sm font-medium capitalize">{order.socialNetwork.toLowerCase()}</span>
-                                </div>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[10px] uppercase font-bold text-muted-foreground/70 mb-1">
-                                    Contenido
-                                </span>
-                                <div className="flex items-center gap-1">
-                                    <Layers className="h-3.5 w-3.5 text-muted-foreground" />
-                                    <span className="text-sm font-medium capitalize">{order.postType.toLowerCase()}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Detalles de Ejecución</CardTitle>
-                    <CardDescription>
-                        Mostrando {generatedCount} ejecuciones ({publishedCount} ejecutados)
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <InteractionTableClient interactions={interactions} type={order.type} />
-                </CardContent>
-            </Card>
         </div>
     )
 }

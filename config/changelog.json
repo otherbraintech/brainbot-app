@@ -1,6 +1,31 @@
 {
   "versions": [
     {
+      "version": "0.3.7",
+      "date": "2026-03-22",
+      "title": "Paginación y Densidad Extrema",
+      "changes": [
+        "Sistema de Paginación Avanzado: Control total sobre la cantidad de filas (10-200) y navegación fluida.",
+        "Layout 'Zero-Dead-Space': Unificación total del título de la tabla y los filtros para maximizar el espacio vertical.",
+        "Jerarquía Visual Reforzada: Títulos y controles escalados para una operatividad más clara en escritorio.",
+        "Métricas Optimizadas: Re-alineación a la izquierda y diseño de alta densidad para una lectura instantánea.",
+        "Encabezados Profesionales: Tipografía y tracking mejorados en las cabeceras de tabla tipo 'dashboard premium'."
+      ]
+    },
+    {
+      "version": "0.3.6",
+      "date": "2026-03-21",
+      "title": "Refinamiento de UI y Persistencia",
+      "changes": [
+        "Rediseño Premium del Dashboard: Cabecera optimizada con barra de estadísticas ultra-compacta.",
+        "Cola de Órdenes Agrupada: Visualización inteligente por proyectos con botones de navegación directa.",
+        "Mejoras en Marketplace: Ocultación de campos redundantes y etiquetas contextuales automáticas.",
+        "Navegación Fluida: Eliminación de botones de retroceso innecesarios para una interfaz más limpia.",
+        "Persistencia Avanzada: Migración de tema y notificaciones a cookies para evitar parpadeos y mejorar la consistencia.",
+        "Detalles de Ejecución: Nueva numeración de filas y columna de acciones dedicada para mejor gestión."
+      ]
+    },
+    {
       "version": "0.3.5",
       "date": "2026-03-20",
       "title": "Gestión de Estados y Filtros",

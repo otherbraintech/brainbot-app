@@ -37,6 +37,7 @@ export function NavUser({ user }: { user: User }) {
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
+    // Sincronizar estado local con la clase del DOM (aplicada por el servidor o manualmente)
     const isDarkMode = document.documentElement.classList.contains("dark")
     setIsDark(isDarkMode)
   }, [])
@@ -45,6 +46,13 @@ export function NavUser({ user }: { user: User }) {
     const newIsDark = !isDark
     setIsDark(newIsDark)
     document.documentElement.classList.toggle("dark", newIsDark)
+    
+    // Guardar en cookie para persistencia en el servidor (evita parpadeo)
+    const date = new Date()
+    date.setFullYear(date.getFullYear() + 1)
+    document.cookie = `theme=${newIsDark ? "dark" : "light"}; expires=${date.toUTCString()}; path=/`
+    
+    // Mantener localStorage por compatibilidad si es necesario, pero la cookie manda
     localStorage.setItem("theme", newIsDark ? "dark" : "light")
   }
 
