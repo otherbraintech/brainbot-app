@@ -23,7 +23,8 @@ import {
     Activity,
     Hash,
     Target,
-    Loader2
+    Loader2,
+    RefreshCw
 } from "lucide-react"
 import Link from "next/link"
 import { formatDateTime } from "@/lib/utils"
@@ -263,6 +264,19 @@ export function OrderExecutionHeader({ order, generatedCount, publishedCount }: 
                         >
                             <RotateCcw className="h-4 w-4" />
                             Reintentar
+                        </Button>
+                    )}
+
+                    {(order.status === 'GENERADA' || order.status === 'PAUSADA' || order.status === 'COMPLETADA') && (
+                        <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="h-9 gap-2 font-black text-[11px] border-indigo-200 text-indigo-700 hover:bg-indigo-50 shadow-sm uppercase tracking-wider"
+                            disabled={actionLoading !== null}
+                            onClick={() => handleAction(retryOrder, 're-enviar')}
+                        >
+                            {actionLoading === 're-enviar' ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                            Webhook
                         </Button>
                     )}
 
