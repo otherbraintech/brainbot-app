@@ -29,6 +29,7 @@ export async function getOrders(projectId: string) {
       genFollows: { select: { status: true } },
       genReports: { select: { status: true } },
       genLives: { select: { status: true } },
+      genMarketplaces: { select: { status: true } },
       _count: {
         select: {
           genComments: true,
@@ -37,6 +38,7 @@ export async function getOrders(projectId: string) {
           genFollows: true,
           genReports: true,
           genLives: true,
+          genMarketplaces: true,
         },
       },
     },
@@ -70,6 +72,7 @@ export async function getAllOrders() {
       genFollows: { select: { status: true } },
       genReports: { select: { status: true } },
       genLives: { select: { status: true } },
+      genMarketplaces: { select: { status: true } },
       _count: {
         select: {
           genComments: true,
@@ -78,6 +81,7 @@ export async function getAllOrders() {
           genFollows: true,
           genReports: true,
           genLives: true,
+          genMarketplaces: true,
         },
       },
     },
@@ -131,6 +135,7 @@ export async function getOrder(id: string) {
         include: { device: true },
         orderBy: { createdAt: "desc" }
       },
+      genMarketplaces: true,
     },
   })
   
@@ -146,6 +151,15 @@ type CreateOrderInput = {
   type: OrderType
   intent?: string
   quantity: number
+  marketplaceData?: {
+    title: string
+    price: number
+    category: string
+    condition?: string
+    location?: string
+    description: string
+    images: string[]
+  }
 }
 
 export async function createOrder(input: CreateOrderInput) {
@@ -184,6 +198,20 @@ export async function createOrder(input: CreateOrderInput) {
       intent: input.intent,
       quantity: input.quantity,
       status: OrderStatus.LISTA,
+      ...(input.type === OrderType.MARKETPLACE && input.marketplaceData && {
+        genMarketplaces: {
+          create: {
+            userId: session,
+            title: input.marketplaceData.title,
+            price: input.marketplaceData.price,
+            category: input.marketplaceData.category,
+            condition: input.marketplaceData.condition,
+            location: input.marketplaceData.location,
+            description: input.marketplaceData.description,
+            images: input.marketplaceData.images,
+          }
+        }
+      })
     } as any,
   })
   
@@ -246,8 +274,7 @@ export async function pauseAllOrders(projectId: string) {
   if (!session) {
     return { error: "No autenticado" }
   }
-
-  // Update all orders in GENERADA status for this project and user
+  
   const result = await prisma.botOrder.updateMany({
     where: {
       projectId,
@@ -270,8 +297,7 @@ export async function resumeAllOrders(projectId: string) {
   if (!session) {
     return { error: "No autenticado" }
   }
-
-  // Update all orders in PAUSADA status for this project and user
+  
   const result = await prisma.botOrder.updateMany({
     where: {
       projectId,
@@ -303,7 +329,6 @@ export async function deleteOrder(id: string) {
     return { error: "Orden no encontrada" }
   }
   
-  // Soft delete and mark as CANCELADA
   await prisma.botOrder.update({
     where: { id },
     data: { 
@@ -340,7 +365,7 @@ export async function getGlobalActiveOrders() {
     },
     orderBy: { createdAt: "desc" },
     include: {
-      project: { select: { name: true } }
+      project: { select: { name: true, id: true } }
     }
   })
   
@@ -365,7 +390,6 @@ export async function pauseAllGlobalOrders(excludeOrderId?: string) {
     } as any
   })
 
-  // Revalidate all project paths
   revalidatePath("/dashboard")
 
   return { success: true, count: result.count }
@@ -388,6 +412,7 @@ export async function startOrder(id: string) {
           target: true,
         },
       },
+      genMarketplaces: true,
     },
   })
   
@@ -409,7 +434,6 @@ export async function startOrder(id: string) {
     return { error: "La orden ya fue iniciada" }
   }
 
-  // Actualizamos el estado a GENERANDO antes de disparar el webhook
   await prisma.botOrder.update({
     where: { id },
     data: { status: OrderStatus.GENERANDO } as any
@@ -417,9 +441,7 @@ export async function startOrder(id: string) {
   
   try {
     const webhookPayload = {
-      // Backwards-compatible identifier
       orderId: order.id,
-      // Legacy top-level fields some n8n flows might rely on
       projectId: order.projectId,
       userId: order.userId,
       type: order.type,
@@ -428,9 +450,8 @@ export async function startOrder(id: string) {
       socialNetwork: order.socialNetwork,
       postType: order.postType,
       quantity: order.quantity,
-      intent: order.intent || null, // Explicitly include even if null
+      intent: order.intent || null,
       status: OrderStatus.GENERANDO,
-      // Full order snapshot
       order: {
         id: order.id,
         projectId: order.projectId,
@@ -448,8 +469,8 @@ export async function startOrder(id: string) {
         deletedAt: (order as any).deletedAt,
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,
+        marketplace: order.type === OrderType.MARKETPLACE ? (order as any).genMarketplaces[0] : null,
       },
-      // Project snapshot
       project: order.project
         ? {
             id: order.project.id,
@@ -480,7 +501,6 @@ export async function startOrder(id: string) {
     })
     
     if (!response.ok) {
-      // Si falla el webhook, volvemos a ponerlo en REINTENTAR para que el usuario sepa
       await prisma.botOrder.update({
         where: { id },
         data: { status: OrderStatus.REINTENTAR } as any
@@ -488,7 +508,6 @@ export async function startOrder(id: string) {
       return { error: "Error al enviar la orden. El servidor respondió con error." }
     }
   } catch (error) {
-    // Si hay error de red, volvemos a ponerlo en REINTENTAR
     await prisma.botOrder.update({
       where: { id },
       data: { status: OrderStatus.REINTENTAR } as any
@@ -501,10 +520,6 @@ export async function startOrder(id: string) {
   return { success: true }
 }
 
-/**
- * Re-envía una orden al webhook ignorando las restricciones de estado de startOrder.
- * Útil para completar órdenes que se quedaron cortas.
- */
 export async function retryOrder(id: string) {
   const session = await getSession()
   
@@ -520,6 +535,7 @@ export async function retryOrder(id: string) {
           target: true,
         },
       },
+      genMarketplaces: true,
     },
   })
   
@@ -527,7 +543,6 @@ export async function retryOrder(id: string) {
     return { error: "Orden no encontrada" }
   }
 
-  // Actualizamos el estado a GENERANDO antes de disparar el webhook
   await prisma.botOrder.update({
     where: { id },
     data: { status: OrderStatus.GENERANDO } as any
@@ -562,6 +577,7 @@ export async function retryOrder(id: string) {
         generatedAt: order.generatedAt,
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,
+        marketplace: order.type === OrderType.MARKETPLACE ? (order as any).genMarketplaces[0] : null,
       },
       project: order.project ? {
         id: order.project.id,
@@ -787,6 +803,7 @@ export async function duplicateOrder(id: string) {
   
   return { success: true }
 }
+
 export async function completeOrder(id: string) {
   const session = await getSession()
   
@@ -959,4 +976,3 @@ export async function updateInteractionStatus(id: number, type: OrderType, statu
 
   return { success: true }
 }
-

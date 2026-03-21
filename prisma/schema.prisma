@@ -25,6 +25,7 @@ model User {
   genLives      GenLive[]
   genReports    GenReport[]
   genShares     GenShare[]
+  genMarketplaces GenMarketplace[]
   integrations  IntegrationLog[]
   projects      Project[]
 }
@@ -89,6 +90,7 @@ model BotOrder {
   genLives      GenLive[]
   genReports    GenReport[]
   genShares     GenShare[]
+  genMarketplaces GenMarketplace[]
   integrations  IntegrationLog[]
 
   @@index([projectId, createdAt])
@@ -200,7 +202,28 @@ model GenLive {
   @@index([deviceId, createdAt])
 }
 
+model GenMarketplace {
+  id          Int           @id @default(autoincrement())
+  orderId     String
+  userId      String
+  title       String
+  price       Float
+  category    String
+  condition   String?
+  location    String?
+  description String
+  images      String[]
+  status      CommentStatus @default(PENDIENTE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  botOrder    BotOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id])
+
+  @@index([orderId, createdAt])
+}
+
 model Device {
+
   id           String       @id @default(cuid())
   deviceName   String       @unique
   personName   String?
@@ -308,6 +331,7 @@ enum OrderType {
   SEGUIMIENTO
   REPORTE
   GENLIVE
+  MARKETPLACE
 }
 
 enum DeviceStatus {

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { MoreHorizontal, Ban, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy, Facebook, Instagram, ListChecks, Hash, RefreshCw, Undo } from "lucide-react"
+import { useState, useMemo } from "react"
+import { MoreHorizontal, Ban, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy, Facebook, Instagram, ListChecks, Hash, RefreshCw, Undo, ShoppingBag } from "lucide-react"
 import { TikTokIcon } from "@/components/icons/tiktok-icon"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -78,6 +78,16 @@ type Order = {
     genFollows?: { status: string }[]
     genLives?: { status: string }[]
     genReports?: { status: string }[]
+    genMarketplaces?: { 
+        status: string; 
+        title: string; 
+        price: number; 
+        category: string; 
+        condition?: string; 
+        location?: string; 
+        description: string; 
+        images: string[] 
+    }[]
 }
 
 const ORDER_TYPE_LABELS: Record<string, { label: string; icon: any; color: string }> = {
@@ -87,6 +97,7 @@ const ORDER_TYPE_LABELS: Record<string, { label: string; icon: any; color: strin
     SEGUIMIENTO: { label: "Seguidores", icon: UserPlus, color: "text-muted-foreground bg-muted" },
     REPORTE: { label: "Reportes", icon: FileText, color: "text-muted-foreground bg-muted" },
     GENLIVE: { label: "En Vivo", icon: Activity, color: "text-muted-foreground bg-muted" },
+    MARKETPLACE: { label: "Marketplace", icon: ShoppingBag, color: "text-muted-foreground bg-muted" },
 }
 
 const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -252,13 +263,32 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
     const queueOrders = globalQueue || (orders as any).filter((o: any) => o.status === "GENERADA")
     const pausedOrders = (orders as any).filter((o: any) => o.status === "PAUSADA")
 
+    const groupedQueueOrders = useMemo(() => {
+        const groups: Record<string, { name: string, id: string, orders: any[] }> = {}
+        queueOrders.forEach((order: any) => {
+            const projectId = order.project?.id || 'unknown'
+            if (!groups[projectId]) {
+                groups[projectId] = {
+                    name: order.project?.name || 'Sin Proyecto',
+                    id: projectId,
+                    orders: []
+                }
+            }
+            groups[projectId].orders.push(order)
+        })
+        return Object.values(groups)
+    }, [queueOrders])
+
+
     const stats = activeOrders.reduce((acc: any, order: any) => {
         const subItems = order.type === "COMENTARIO" ? order.genComments :
             order.type === "MEGUSTA" ? order.genLikes :
                 order.type === "COMPARTIR" ? order.genShares :
                     order.type === "SEGUIMIENTO" ? order.genFollows :
                         order.type === "GENLIVE" ? order.genLives :
-                            order.genReports;
+                            order.type === "MARKETPLACE" ? order.genMarketplaces :
+                                order.genReports;
+
 
         const published = subItems?.filter((i: any) => i.status === "PUBLICADO").length || 0;
         const generated = subItems?.filter((i: any) => i.status === "PUBLICADO" || i.status === "SINPUBLICAR").length || 0;
@@ -289,236 +319,174 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
     return (
         <>
             <div className="flex flex-col gap-6 mb-8">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card className="bg-indigo-500/5 border-indigo-500/10 dark:border-indigo-500/20 shadow-sm border overflow-hidden relative">
-                        <div className="absolute top-0 right-0 p-2 opacity-10">
-                            <ListChecks className="h-12 w-12 text-indigo-600" />
-                        </div>
-                        <CardContent className="p-4 flex flex-col items-start justify-center relative">
-                            <span className="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 mb-1 tracking-wider">Total Órdenes</span>
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-2xl font-black text-indigo-700 dark:text-indigo-300">{activeOrders.length}</span>
-                                <span className="text-[10px] text-indigo-600/60 font-medium">activas</span>
-                            </div>
-                        </CardContent>
-                    </Card>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-1.5 flex-1">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-xl font-bold tracking-tight text-foreground/80">
+                                Órdenes del Proyecto
+                            </h2>
+                            <div className="flex items-center gap-4 text-muted-foreground/50 text-[10px] font-bold uppercase tracking-wider">
+                                <div className="flex items-center gap-1.5 bg-muted/50 px-2 py-0.5 rounded-full border border-border/50">
+                                    <Hash className="h-3 w-3 text-indigo-500" />
+                                    <span>{stats.totalRequested} SOLICITADAS</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 bg-muted/50 px-2 py-0.5 rounded-full border border-border/50">
+                                    <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                                    <span>{stats.totalCompleted}/{stats.totalGenerated} COMPLETADAS</span>
+                                </div>
 
-                    <Card className="bg-blue-500/5 border-blue-500/10 dark:border-blue-500/20 shadow-sm border overflow-hidden relative">
-                        <div className="absolute top-0 right-0 p-2 opacity-10">
-                            <Facebook className="h-12 w-12 text-blue-600" />
-                        </div>
-                        <CardContent className="p-4 flex flex-col items-start justify-center relative">
-                            <div className="flex items-center gap-1.5 mb-1">
-                                <Facebook className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                                <span className="text-[10px] uppercase font-bold text-blue-700 dark:text-blue-300 tracking-wider">Facebook</span>
-                            </div>
-                            <span className="text-2xl font-black text-blue-600 dark:text-blue-400">{stats.FACEBOOK}</span>
-                        </CardContent>
-                    </Card>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-indigo-500 transition-all duration-500" 
+                                            style={{ width: `${stats.totalRequested > 0 ? Math.min(100, (stats.totalCompleted / stats.totalRequested) * 100) : 0}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-[10px] font-black text-indigo-600/70">
+                                        {stats.totalRequested > 0 ? Math.round((stats.totalCompleted / stats.totalRequested) * 100) : 0}%
+                                    </span>
+                                </div>
+                                
+                                <div className="ml-2">
+                                    <Sheet>
+                                        <SheetTrigger {...({ asChild: true } as any)}>
+                                            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-2 border-indigo-200/50 bg-indigo-50/30 hover:bg-indigo-50 text-indigo-700">
+                                                <ListChecks className="h-3 w-3" />
+                                                Ver Cola
+                                                {queueOrders.length > 0 && (
+                                                    <span className="bg-indigo-600 text-white px-1 rounded-sm text-[8px]">{queueOrders.length}</span>
+                                                )}
+                                            </Button>
+                                        </SheetTrigger>
+                                        <SheetContent className="sm:max-w-md p-0 flex flex-col" {...({ side: "right" } as any)}>
+                                            <div className="p-6 pb-4 border-b bg-muted/10">
+                                                <SheetHeader className="space-y-1 text-left">
+                                                    <SheetTitle className="flex items-center gap-2 text-xl font-bold" {...({} as any)}>
+                                                        <ListChecks className="h-6 w-6 text-indigo-600" />
+                                                        Cola de Órdenes
+                                                    </SheetTitle>
+                                                    <SheetDescription className="text-xs uppercase font-bold tracking-widest text-muted-foreground/70" {...({} as any)}>
+                                                        Listo para Procesar (GENERADAS)
+                                                    </SheetDescription>
+                                                </SheetHeader>
+                                            </div>
 
-                    <Card className="bg-pink-500/5 border-pink-500/10 dark:border-pink-500/20 shadow-sm border overflow-hidden relative">
-                        <div className="absolute top-0 right-0 p-2 opacity-10">
-                            <Instagram className="h-12 w-12 text-pink-600" />
-                        </div>
-                        <CardContent className="p-4 flex flex-col items-start justify-center relative">
-                            <div className="flex items-center gap-1.5 mb-1">
-                                <Instagram className="h-3.5 w-3.5 text-pink-600 dark:text-pink-400" />
-                                <span className="text-[10px] uppercase font-bold text-pink-700 dark:text-pink-300 tracking-wider">Instagram</span>
-                            </div>
-                            <span className="text-2xl font-black text-pink-600 dark:text-pink-400">{stats.INSTAGRAM}</span>
-                        </CardContent>
-                    </Card>
+                                            <ScrollArea className="flex-1 min-h-0 p-6" {...({} as any)}>
+                                                <div className="space-y-4 pr-1">
+                                                    {groupedQueueOrders.length === 0 ? (
+                                                        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground/40">
+                                                            <Activity className="h-12 w-12 mb-3 opacity-20" />
+                                                            <p className="text-sm font-medium">No hay órdenes en cola actualmente.</p>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="space-y-6">
+                                                            {groupedQueueOrders.map((group) => (
+                                                                <div key={group.id} className="space-y-3">
+                                                                    <div className="flex items-center justify-between px-1">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className="w-1 h-4 bg-indigo-500 rounded-full" />
+                                                                            <h3 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
+                                                                                {group.name}
+                                                                            </h3>
+                                                                            <Badge variant="secondary" className="text-[9px] h-4 px-1.5 py-0 bg-muted/50">
+                                                                                {group.orders.length}
+                                                                            </Badge>
+                                                                        </div>
+                                                                        {group.id !== 'unknown' && (
+                                                                            <Button 
+                                                                                variant="ghost" 
+                                                                                size="sm" 
+                                                                                className="h-6 text-[9px] gap-1.5 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-2"
+                                                                                onClick={() => router.push(`/dashboard/projects/${group.id}`)}
+                                                                            >
+                                                                                <ExternalLink className="h-3 w-3" />
+                                                                                Ir al Proyecto
+                                                                            </Button>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="space-y-3 pl-3 border-l-2 border-muted/30 ml-1.5">
+                                                                        {group.orders.map((order: any) => {
+                                                                            const typeCfg = ORDER_TYPE_LABELS[order.type] || { icon: Activity, label: order.type }
+                                                                            return (
+                                                                                <div key={order.id} className="group relative overflow-hidden p-3 border rounded-xl bg-card hover:border-indigo-200 hover:bg-indigo-50/20 transition-all duration-200">
+                                                                                    <div className="flex items-start justify-between gap-4 mb-2">
+                                                                                        <div className="flex items-center gap-2">
+                                                                                            <div className="p-1.5 rounded-lg bg-muted/50 group-hover:bg-indigo-100 transition-colors">
+                                                                                                <typeCfg.icon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-indigo-600" />
+                                                                                            </div>
+                                                                                            <div className="flex flex-col">
+                                                                                                <span className="font-bold text-xs leading-tight truncate max-w-[150px]">
+                                                                                                    {order.orderName}
+                                                                                                </span>
+                                                                                                <span className="text-[9px] uppercase font-bold text-muted-foreground/70 mt-0.5">
+                                                                                                    {typeCfg.label}
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <Badge variant="outline" className="h-4 px-1 rounded-sm border-none bg-muted/30 text-[9px]">
+                                                                                            {order.quantity} un.
+                                                                                        </Badge>
+                                                                                    </div>
+                                                                                    <div className="flex items-center gap-1.5 text-[8px] font-bold text-muted-foreground/40 pt-2 border-t border-dashed">
+                                                                                        <Hash className="h-2 w-2" />
+                                                                                        <span>ID: {order.id.slice(0, 8)}...</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
 
-                    <Card className="bg-zinc-500/5 border-zinc-500/10 dark:border-zinc-500/20 shadow-sm border overflow-hidden relative">
-                        <div className="absolute top-0 right-0 p-2 opacity-10">
-                            <TikTokIcon className="h-12 w-12 text-zinc-600" />
-                        </div>
-                        <CardContent className="p-4 flex flex-col items-start justify-center relative">
-                            <div className="flex items-center gap-1.5 mb-1">
-                                <TikTokIcon className="h-3.5 w-3.5 text-zinc-900 dark:text-white" />
-                                <span className="text-[10px] uppercase font-bold text-zinc-900 dark:text-zinc-100 tracking-wider">TikTok</span>
-                            </div>
-                            <span className="text-2xl font-black text-zinc-900 dark:text-zinc-100">{stats.TIKTOK}</span>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-4 bg-muted/30 p-4 rounded-xl border border-dashed border-muted-foreground/30">
-                    <div className="flex flex-wrap items-center gap-6">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
-                                <Hash className="h-3 w-3" /> Total Solicitados
-                            </span>
-                            <span className="text-lg font-bold">{stats.totalRequested}</span>
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
-                                <CheckCircle2 className="h-3 w-3" /> Total Ejecutados
-                            </span>
-                            <span className="text-lg font-bold text-primary">{stats.totalCompleted} <span className="text-xs font-normal text-muted-foreground">de {stats.totalGenerated}</span></span>
-                        </div>
-                        <div className="hidden sm:flex h-8 w-[1px] bg-muted-foreground/20" />
-                        <div className="flex flex-col">
-                            <span className="text-[10px] uppercase font-bold text-muted-foreground">Progreso Global</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm font-black text-primary">
-                                    {stats.totalRequested > 0 ? Math.round((stats.totalCompleted / stats.totalRequested) * 100) : 0}%
-                                </span>
-                                <div className="w-24 h-1.5 bg-background rounded-full overflow-hidden ring-1 ring-border">
-                                    <div 
-                                        className="h-full bg-primary transition-all duration-500" 
-                                        style={{ width: `${stats.totalRequested > 0 ? Math.min(100, (stats.totalCompleted / stats.totalRequested) * 100) : 0}%` }}
-                                    />
+                                                </div>
+                                            </ScrollArea>
+                                        </SheetContent>
+                                    </Sheet>
                                 </div>
                             </div>
                         </div>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 px-0.5">
+                            Gestión y Monitoreo en Tiempo Real
+                        </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
-
-                <Sheet>
-                    <SheetTrigger {...({ asChild: true } as any)}>
-                        <Button variant="outline" className="gap-2 relative border-indigo-200 hover:border-indigo-300 hover:bg-indigo-50/50">
-                            <ListChecks className="h-4 w-4 text-indigo-600" />
-                            <span className="font-bold text-xs uppercase tracking-tight">Ver Cola</span>
-                            {queueOrders.length > 0 && (
-                                <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-indigo-600 ring-2 ring-white">
-                                    {queueOrders.length}
-                                </Badge>
-                            )}
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent className="sm:max-w-md p-0 flex flex-col" {...({ side: "right" } as any)}>
-                        <div className="p-6 pb-4 border-b bg-muted/10">
-                            <SheetHeader className="space-y-1 text-left">
-                                <SheetTitle className="flex items-center gap-2 text-xl font-bold" {...({} as any)}>
-                                    <ListChecks className="h-6 w-6 text-indigo-600" />
-                                    Cola de Órdenes
-                                </SheetTitle>
-                                <SheetDescription className="text-xs uppercase font-bold tracking-widest text-muted-foreground/70" {...({} as any)}>
-                                    {globalQueue ? "Órdenes Activas Globales" : "Listo para Procesar (GENERADAS)"}
-                                </SheetDescription>
-                            </SheetHeader>
-                        </div>
-
-                        <ScrollArea className="flex-1 min-h-0 p-6" {...({} as any)}>
-                            <div className="space-y-4 pr-1">
-                                {queueOrders.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground/40">
-                                        <Activity className="h-12 w-12 mb-3 opacity-20" />
-                                        <p className="text-sm font-medium">No hay órdenes en cola actualmente.</p>
-                                    </div>
-                                ) : (
-                                    queueOrders.map((order: any) => {
-                                        const typeCfg = ORDER_TYPE_LABELS[order.type] || { icon: Activity, label: order.type }
-                                        return (
-                                            <div key={order.id} className="group relative overflow-hidden p-4 border rounded-xl bg-card hover:border-indigo-200 hover:bg-indigo-50/20 transition-all duration-200">
-                                                <div className="flex items-start justify-between gap-4 mb-3">
-                                                    <div className="flex items-center gap-2.5">
-                                                        <div className="p-2 rounded-lg bg-muted/50 group-hover:bg-indigo-100 transition-colors">
-                                                            <typeCfg.icon className="h-4 w-4 text-muted-foreground group-hover:text-indigo-600" />
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="font-bold text-sm leading-tight truncate max-w-[180px]">
-                                                                {order.orderName}
-                                                            </span>
-                                                            <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                                                                <span className="text-[10px] uppercase font-bold text-muted-foreground/70">
-                                                                    {typeCfg.label}
-                                                                </span>
-                                                                {order.project?.name && (
-                                                                    <>
-                                                                    <span className="text-[10px] text-muted-foreground/40">•</span>
-                                                                    <span className="text-[10px] uppercase font-bold text-indigo-600/80 truncate max-w-[120px]">
-                                                                        {order.project.name}
-                                                                    </span>
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex flex-col items-end gap-1.5 shrink-0">
-                                                        <Badge variant="outline" className={`text-[10px] h-5 border-none px-2 flex items-center gap-1.5 ${NETWORK_COLORS[order.socialNetwork]}`}>
-                                                            {order.socialNetwork === "FACEBOOK" && <Facebook className="h-3 w-3" />}
-                                                            {order.socialNetwork === "INSTAGRAM" && <Instagram className="h-3 w-3" />}
-                                                            {order.socialNetwork === "TIKTOK" && <TikTokIcon className="h-3 w-3" />}
-                                                            {NETWORK_LABELS[order.socialNetwork] || order.socialNetwork}
-                                                        </Badge>
-                                                        <Badge variant="secondary" className={`text-[8px] h-3.5 px-1.5 py-0 uppercase ${
-                                                            order.status === 'GENERADA' ? 'bg-blue-500/10 text-blue-700 border-blue-200' :
-                                                            order.status === 'PAUSADA' ? 'bg-amber-500/10 text-amber-700 border-amber-200' :
-                                                            order.status === 'GENERANDO' ? 'bg-violet-500/10 text-violet-700 border-violet-200' :
-                                                            order.status === 'LISTA' ? 'bg-slate-500/10 text-slate-700 border-slate-200' :
-                                                            order.status === 'REINTENTAR' ? 'bg-red-500/10 text-red-700 border-red-200' : ''
-                                                        }`}>
-                                                            {order.status === 'GENERADA' ? 'Activa' :
-                                                             order.status === 'PAUSADA' ? 'Pausada' :
-                                                             order.status === 'GENERANDO' ? 'Generando...' :
-                                                             order.status === 'LISTA' ? 'Lista' :
-                                                             order.status === 'REINTENTAR' ? 'Error' : order.status}
-                                                        </Badge>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center justify-between text-[11px] font-medium pt-3 border-t border-dashed">
-                                                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                                                        <span className="font-bold text-foreground">{order.quantity}</span>
-                                                        <span>solicitados</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        {order.status === 'GENERADA' && (
-                                                            <Button variant="outline" size="sm" className="h-6 px-2 text-[9px] font-bold uppercase border-amber-200 text-amber-600 hover:bg-amber-50 gap-1"
-                                                                onClick={() => setConfirmAction({ id: order.id, name: order.orderName, type: 'pausar' })}
-                                                                disabled={loading}
-                                                            >
-                                                                <Pause className="h-3 w-3" /> Pausar
-                                                            </Button>
-                                                        )}
-                                                        {order.status === 'PAUSADA' && (
-                                                            <Button variant="outline" size="sm" className="h-6 px-2 text-[9px] font-bold uppercase border-indigo-200 text-indigo-600 hover:bg-indigo-50 gap-1"
-                                                                onClick={() => handleResumeOrder(order.id)}
-                                                                disabled={loading}
-                                                            >
-                                                                <Play className="h-3 w-3" /> Reanudar
-                                                            </Button>
-                                                        )}
-                                                        {order.status === 'LISTA' && (
-                                                            <Button variant="outline" size="sm" className="h-6 px-2 text-[9px] font-bold uppercase border-emerald-200 text-emerald-600 hover:bg-emerald-50 gap-1"
-                                                                onClick={() => handleStartOrder(order.id)}
-                                                                disabled={loading || startingId === order.id}
-                                                            >
-                                                                <Play className="h-3 w-3" /> Enviar
-                                                            </Button>
-                                                        )}
-                                                        {(order.status === 'GENERADA' || order.status === 'PAUSADA') && (
-                                                            <Button variant="outline" size="sm" className="h-6 px-2 text-[9px] font-bold uppercase border-emerald-200 text-emerald-600 hover:bg-emerald-50 gap-1"
-                                                                onClick={() => setConfirmAction({ id: order.id, name: order.orderName, type: 'finalizar' })}
-                                                                disabled={loading}
-                                                            >
-                                                                <CheckCircle2 className="h-3 w-3" />
-                                                            </Button>
-                                                        )}
-                                                        <Button variant="ghost" size="sm" className="h-6 px-1.5 text-[9px] font-bold uppercase tracking-tight hover:bg-indigo-100/50 hover:text-indigo-700" asChild>
-                                                            <Link href={`/dashboard/orders/${order.id}/executions`}>
-                                                                <ExternalLink className="h-3 w-3" />
-                                                            </Link>
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )
-                                    })
-                                )}
+                    <div className="flex flex-wrap items-center gap-2">
+                        {/* Total Active Counter */}
+                        <div className="flex items-center gap-3 bg-indigo-500/5 border border-indigo-500/10 dark:border-indigo-500/20 px-3 py-1.5 rounded-lg">
+                            <span className="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Total</span>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-lg font-black text-indigo-700 dark:text-indigo-300">{activeOrders.length}</span>
+                                <span className="text-[9px] text-indigo-600/60 font-medium">activas</span>
                             </div>
-                        </ScrollArea>
-
-                        <div className="p-4 border-t bg-muted/5 text-center">
-                            <Link href="/dashboard/orders/history" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
-                                Ver todo el historial completo →
-                            </Link>
                         </div>
-                    </SheetContent>
-                </Sheet>
+
+                        {/* Social Network Pills */}
+                        <div className="flex items-center gap-1.5 bg-muted/30 p-1 rounded-lg border border-border/50">
+                            {stats.FACEBOOK > 0 && (
+                                <div className="flex items-center gap-1.5 bg-blue-500/10 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-md border border-blue-500/10">
+                                    <Facebook className="h-3 w-3" />
+                                    <span className="text-xs font-black">{stats.FACEBOOK}</span>
+                                </div>
+                            )}
+                            {stats.INSTAGRAM > 0 && (
+                                <div className="flex items-center gap-1.5 bg-pink-500/10 text-pink-700 dark:text-pink-400 px-2 py-1 rounded-md border border-pink-500/10">
+                                    <Instagram className="h-3 w-3" />
+                                    <span className="text-xs font-black">{stats.INSTAGRAM}</span>
+                                </div>
+                            )}
+                            {stats.TIKTOK > 0 && (
+                                <div className="flex items-center gap-1.5 bg-zinc-900 dark:bg-zinc-950 text-white px-2 py-1 rounded-md border border-zinc-800">
+                                    <TikTokIcon className="h-3 w-3 fill-current" />
+                                    <span className="text-xs font-black">{stats.TIKTOK}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="h-8 w-[1px] bg-border mx-1 hidden sm:block" />
+
+
                     </div>
                 </div>
             </div>
@@ -528,7 +496,6 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                     const statusInfo = STATUS_LABELS[order.status] || { label: order.status, variant: "secondary" as const }
                     const typeInfo = ORDER_TYPE_LABELS[order.type] || { label: order.type, icon: Play, color: "text-muted-foreground bg-muted" }
                     const isStarting = startingId === order.id
-                    const isProcessing = order.status === "GENERANDO"
                     const isCompleted = order.status === "GENERADA"
 
                     const subItems = order.type === "COMENTARIO" ? order.genComments :
@@ -536,11 +503,13 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                             order.type === "COMPARTIR" ? order.genShares :
                                 order.type === "SEGUIMIENTO" ? order.genFollows :
                                     order.type === "GENLIVE" ? order.genLives :
-                                        order.genReports
+                                        order.type === "MARKETPLACE" ? order.genMarketplaces :
+                                            order.genReports
 
                     const publishedCount = subItems?.filter((i: any) => i.status === "PUBLICADO").length || 0;
                     const generatedCount = subItems?.filter((i: any) => i.status === "PUBLICADO" || i.status === "SINPUBLICAR").length || 0;
                     const publishedLabel = 'EJECUTADOS';
+                    const isProcessing = order.status === "GENERANDO" || (order.status === "GENERADA" && publishedCount > 0)
 
                     const isCompletedStatus = order.status === "COMPLETADA"
                     const isGenerated = order.status === "GENERADA"
@@ -551,9 +520,15 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                         <Card
                             key={order.id}
                             className={`overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col h-full border
-                                ${isCancelled ? 'opacity-60 border-red-500/20 bg-red-500/5 dark:bg-red-950/20 dark:border-red-500/20' : ''}
-                                ${isCompletedStatus && !isLiveOrder && !isCancelled ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/40 dark:border-emerald-500/30' : ''} 
-                                ${isLiveOrder && !isCancelled ? 'border-red-500/30 ring-1 ring-red-500/10 shadow-lg shadow-red-500/10 scale-[1.01] bg-card' : ''}`}
+                                ${isCancelled 
+                                    ? 'opacity-60 border-red-500/20 bg-red-500/5 dark:bg-red-950/20 dark:border-red-500/20' 
+                                    : isLiveOrder 
+                                        ? 'border-red-500/30 ring-1 ring-red-500/10 shadow-lg shadow-red-500/10 scale-[1.01] bg-card'
+                                        : isCompletedStatus
+                                            ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/40 dark:border-emerald-500/30'
+                                        : isProcessing
+                                                ? 'border-violet-500/30 bg-violet-500/5 dark:bg-violet-950/30 dark:border-violet-500/40 shadow-md shadow-violet-500/10'
+                                                : ''}`}
                             {...({} as any)}
                         >
 
@@ -575,7 +550,7 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                     )}
                                 </div>
                             )}
-                            <CardHeader className={`flex flex-row items-center justify-between pb-2 min-h-[80px] ${isCancelled ? 'bg-red-50/40 dark:bg-red-950/30' : (isCompletedStatus && !isLiveOrder ? 'bg-green-50/40 dark:bg-emerald-950/30' : isLiveOrder ? 'bg-red-50/30 dark:bg-red-950/20' : 'bg-muted/20')}`} {...({} as any)}>
+                            <CardHeader className={`flex flex-row items-center justify-between pb-2 min-h-[80px] ${isCancelled ? 'bg-red-50/40 dark:bg-red-950/30' : (isCompletedStatus && !isLiveOrder ? 'bg-green-50/40 dark:bg-emerald-950/30' : isLiveOrder ? 'bg-red-50/30 dark:bg-red-950/20' : isProcessing ? 'bg-violet-50/40 dark:bg-violet-950/30' : 'bg-muted/20')}`} {...({} as any)}>
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3">
                                         <div className={`p-1.5 rounded-md transition-all duration-500 ${isCancelled ? 'bg-red-500/20 text-red-600 dark:text-red-400' : (isCompletedStatus && !isLiveOrder ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : isLiveOrder ? 'p-2 bg-red-500/20 text-red-600 dark:text-red-400 shadow-sm ring-1 ring-red-500/30 scale-105' : typeInfo.color)}`}>
@@ -622,29 +597,49 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 text-muted-foreground hover:text-indigo-500 hover:bg-indigo-50"
-                                        onClick={() => setViewingOrder(order)}
-                                    >
-                                        <Eye className="h-4 w-4" />
-                                    </Button>
-                                    <DownloadPDFButton orderId={order.id} orderName={order.orderName} />
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" {...({} as any)}>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800/30"
+                                                    onClick={() => setViewingOrder(order)}
+                                                >
+                                                    <Eye className="h-4 w-4" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Ver detalles</TooltipContent>
+                                        </Tooltip>
+
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div className="flex">
+                                                    <DownloadPDFButton orderId={order.id} orderName={order.orderName} />
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Descargar PDF</TooltipContent>
+                                        </Tooltip>
+
+                                        <DropdownMenu>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Más opciones</TooltipContent>
+                                            </Tooltip>
+                                            <DropdownMenuContent align="end" {...({} as any)}>
                                             <DropdownMenuItem className="cursor-pointer" onClick={() => setViewingOrder(order)} {...({} as any)}>
                                                 <Eye className="mr-2 h-4 w-4" />
                                                 Ver detalles
                                             </DropdownMenuItem>
                                             <DropdownMenuItem className="cursor-pointer" onClick={() => window.open(order.url, '_blank', 'noopener,noreferrer')} {...({} as any)}>
                                                 <ExternalLink className="mr-2 h-4 w-4" />
-                                                Ver publicación
+                                                {order.type === 'MARKETPLACE' ? 'Ver Marketplace' : 'Ver publicación'}
                                             </DropdownMenuItem>
                                             <DropdownMenuItem className="cursor-pointer" onClick={() => handleDuplicate(order)} {...({} as any)}>
                                                 <Copy className="mr-2 h-4 w-4" />
@@ -692,6 +687,7 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                              )}
                                          </DropdownMenuContent>
                                     </DropdownMenu>
+                                    </TooltipProvider>
                                 </div>
                             </CardHeader>
                             {order.intent && (order.type === "COMENTARIO" || isLiveOrder) && (
@@ -732,9 +728,15 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                             </Badge>
                                         )}
                                         {!isCancelled && (isGenerated || isCompletedStatus || order.status === "PAUSADA") && (
-                                            <Badge variant="secondary" className={`${isCompletedStatus ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' : order.status === "PAUSADA" ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' : 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20'} text-[10px] font-bold h-6 px-2`}>
+                                            <Badge variant="secondary" className={`${isCompletedStatus ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' : order.status === "PAUSADA" ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' : isProcessing ? 'bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-500/30 animate-pulse' : 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20'} text-[10px] font-bold h-6 px-2`}>
                                                 {isCompletedStatus ? "Finalizada" : order.status === "PAUSADA" ? "Pausada" :
-                                                    (order.type === 'COMENTARIO' && publishedCount > 0) ? "Comentando" : "En Operación"}
+                                                    order.status === "GENERANDO" ? "Generando..." :
+                                                    (isGenerated && publishedCount > 0) ? (
+                                                        <span className="flex items-center gap-1">
+                                                            <Activity className="h-3 w-3" />
+                                                            {order.type === 'COMENTARIO' ? "Comentando..." : "En Operación"}
+                                                        </span>
+                                                    ) : "En Operación"}
                                             </Badge>
                                         )}
 
@@ -1006,7 +1008,9 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                     </div>
                                     
                                     <div className="col-span-1 md:col-span-2 space-y-2 border-t pt-4">
-                                        <span className="text-[10px] text-muted-foreground font-bold uppercase">URL del Contenido</span>
+                                         <span className="text-[10px] text-muted-foreground font-bold uppercase">
+                                            {viewingOrder.type === 'MARKETPLACE' ? 'Enlace de Marketplace' : 'URL del Contenido'}
+                                        </span>
                                         <div className="flex items-start gap-2 bg-blue-50/50 dark:bg-blue-900/10 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
                                             <ExternalLink className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
                                             <a
@@ -1031,9 +1035,37 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                         </div>
                                     )}
                                 </div>
-                            </div>
-                        )}
-                    </ScrollArea>
+ 
+                                 {viewingOrder.type === 'MARKETPLACE' && viewingOrder.genMarketplaces && viewingOrder.genMarketplaces[0] && (
+                                     <div className="col-span-1 md:col-span-2 space-y-4 border-t pt-4">
+                                         <span className="text-[10px] text-muted-foreground font-bold uppercase">Detalles del Producto (Marketplace)</span>
+                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/20 p-4 rounded-xl border border-dashed">
+                                             <div className="space-y-1">
+                                                 <span className="text-[10px] text-muted-foreground uppercase font-medium">Título</span>
+                                                 <p className="text-sm font-bold">{viewingOrder.genMarketplaces[0].title}</p>
+                                             </div>
+                                             <div className="space-y-1">
+                                                 <span className="text-[10px] text-muted-foreground uppercase font-medium">Precio</span>
+                                                 <p className="text-sm font-bold text-primary">${viewingOrder.genMarketplaces[0].price}</p>
+                                             </div>
+                                             <div className="space-y-1">
+                                                 <span className="text-[10px] text-muted-foreground uppercase font-medium">Categoría</span>
+                                                 <p className="text-sm font-medium">{viewingOrder.genMarketplaces[0].category}</p>
+                                             </div>
+                                             <div className="space-y-1">
+                                                 <span className="text-[10px] text-muted-foreground uppercase font-medium">Condición / Ubicación</span>
+                                                 <p className="text-sm font-medium">{viewingOrder.genMarketplaces[0].condition || 'N/A'} • {viewingOrder.genMarketplaces[0].location || 'N/A'}</p>
+                                             </div>
+                                             <div className="col-span-1 md:col-span-2 space-y-1">
+                                                 <span className="text-[10px] text-muted-foreground uppercase font-medium">Descripción</span>
+                                                 <p className="text-xs text-muted-foreground leading-relaxed">{viewingOrder.genMarketplaces[0].description}</p>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 )}
+                             </div>
+                         )}
+                     </ScrollArea>
                     <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
                         <Button variant="ghost" onClick={() => setViewingOrder(null)} className="font-medium">
                             Cerrar
@@ -1043,7 +1075,7 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                 onClick={() => window.open(viewingOrder.url, '_blank')}
                                 className="bg-blue-600 hover:bg-blue-700 font-bold px-6 shadow-md shadow-blue-200 dark:shadow-none"
                             >
-                                <ExternalLink className="mr-2 h-4 w-4" /> Ir a la Publicación
+                                <ExternalLink className="mr-2 h-4 w-4" /> {viewingOrder.type === 'MARKETPLACE' ? 'Ir al Marketplace' : 'Ir a la Publicación'}
                             </Button>
                         )}
                     </DialogFooter>

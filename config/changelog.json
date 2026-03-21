@@ -1,0 +1,18 @@
+{
+  "versions": [
+    {
+      "version": "0.3.5",
+      "date": "2026-03-20",
+      "title": "Gestión de Estados y Filtros",
+      "changes": [
+        "Añadido toggle de estado (Ejecutado/Sin Ejecutar) con confirmación en comentarios e interacciones.",
+        "Implementado sistema de búsqueda y filtrado avanzado en las tablas de ejecución.",
+        "Expandidas las opciones de cambio de estado en el menú de las tarjetas de órdenes.",
+        "Visualización de la versión de la aplicación en la barra lateral.",
+        "Nuevo sistema de notificaciones de actualización (Changelog).",
+        "Integración de órdenes para Facebook Marketplace con soporte para múltiples imágenes y detalles de producto.",
+        "Añadidos tooltips informativos en las acciones de las tarjetas de órdenes (Ver detalles, PDF, Opciones)."
+      ]
+    }
+  ]
+}

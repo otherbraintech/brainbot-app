@@ -33,7 +33,8 @@ type User = {
   username: string
 } | null
 
-import { usePathname } from "next/navigation"
+import { usePathname, useParams } from "next/navigation"
+import packageJson from "@/package.json"
 
 export function AppSidebar({
   user,
@@ -44,6 +45,7 @@ export function AppSidebar({
   projects?: Project[]
 }) {
   const pathname = usePathname()
+  const params = useParams()
   const [activeProjectId, setActiveProjectId] = React.useState<string | null>(null)
 
   // Track active project from localStorage
@@ -74,6 +76,26 @@ export function AppSidebar({
     window.addEventListener("project-changed", handleProjectChange)
     return () => window.removeEventListener("project-changed", handleProjectChange)
   }, [])
+
+  // Sync with URL params
+  React.useEffect(() => {
+    if (pathname.startsWith('/dashboard/projects/') && params.id) {
+      const id = params.id as string
+      if (id !== activeProjectId) {
+        // Find the project name for storage
+        const project = projects.find(p => p.id === id)
+        const projectName = project?.name || "Proyecto"
+        
+        setActiveProjectId(id)
+        try {
+          localStorage.setItem("active_project", JSON.stringify({ id, name: projectName }))
+          window.dispatchEvent(new Event("project-changed"))
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+  }, [pathname, params.id, activeProjectId, projects])
 
 
   // Default to first project if still null after effect (client-side) or handle server-side default
@@ -185,7 +207,12 @@ export function AppSidebar({
         <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        <div className="px-4 py-2 flex flex-col gap-1">
+          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider opacity-50 group-data-[collapsible=icon]:hidden">
+            Versión {packageJson.version}
+          </span>
+          <NavUser user={user} />
+        </div>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

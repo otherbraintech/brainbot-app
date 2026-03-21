@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus } from "lucide-react"
+import { Plus, X, Image as ImageIcon, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -55,6 +55,7 @@ const ORDER_TYPES = [
     { value: "COMPARTIR", label: "Compartidos" },
     { value: "SEGUIMIENTO", label: "Seguimiento" },
     { value: "REPORTE", label: "Reporte" },
+    { value: "MARKETPLACE", label: "Marketplace" },
 ] as const
 
 type SocialNetwork = typeof SOCIAL_NETWORKS[number]["value"]
@@ -77,8 +78,18 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
     const [orderName, setOrderName] = useState("")
     const [maxDevices, setMaxDevices] = useState(500)
 
+    // Marketplace states
+    const [mTitle, setMTitle] = useState("")
+    const [mPrice, setMPrice] = useState(0)
+    const [mCategory, setMCategory] = useState("Varios")
+    const [mCondition, setMCondition] = useState("Nuevo")
+    const [mLocation, setMLocation] = useState("")
+    const [mDescription, setMDescription] = useState("")
+    const [mImages, setMImages] = useState<string[]>([""])
+
     const isPostAction = orderType === "COMENTARIO" || orderType === "MEGUSTA" || orderType === "COMPARTIR"
     const isReportAction = orderType === "REPORTE"
+    const isMarketplaceAction = orderType === "MARKETPLACE"
 
     const handleOpenChange = async (newOpen: boolean) => {
         setOpen(newOpen)
@@ -98,7 +109,8 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
 
-        if (!link.trim() || !orderName.trim()) return
+        if ((!isMarketplaceAction && !link.trim()) || !orderName.trim()) return
+
 
         setLoading(true)
         setError(null)
@@ -117,6 +129,15 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
             type: orderType,
             intent: orderType === "COMENTARIO" ? (intent || undefined) : undefined,
             quantity,
+            marketplaceData: isMarketplaceAction ? {
+                title: mTitle,
+                price: Number(mPrice),
+                category: mCategory,
+                condition: mCondition,
+                location: mLocation,
+                description: mDescription,
+                images: mImages.filter(img => img.trim() !== ""),
+            } : undefined,
         })
 
         if (result?.error) {
@@ -138,6 +159,13 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
         setIntent("")
         setQuantity(5)
         setOrderName("")
+        setMTitle("")
+        setMPrice(0)
+        setMCategory("Varios")
+        setMCondition("Nuevo")
+        setMLocation("")
+        setMDescription("")
+        setMImages([""])
         setError(null)
     }
 
@@ -186,10 +214,13 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                                         const newType = v as OrderType
                                         setOrderType(newType)
                                         // Auto-switch from Instagram to Facebook if COMPARTIR is selected
-                                        if (newType === "COMPARTIR" && socialNetwork === "INSTAGRAM") {
-                                            setSocialNetwork("FACEBOOK")
-                                        }
-                                    }}
+                                         if (newType === "COMPARTIR" && socialNetwork === "INSTAGRAM") {
+                                             setSocialNetwork("FACEBOOK")
+                                         }
+                                         if (newType === "MARKETPLACE" && socialNetwork !== "FACEBOOK") {
+                                             setSocialNetwork("FACEBOOK")
+                                         }
+                                     }}
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
@@ -204,16 +235,19 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                                 </Select>
                             </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="link">Enlace de la publicación</Label>
-                                <Input
-                                    id="link"
-                                    placeholder="https://facebook.com/..."
-                                    value={link}
-                                    onChange={(e) => setLink(e.target.value)}
-                                    required
-                                />
-                            </div>
+                            {!isMarketplaceAction && (
+                                <div className="grid gap-2">
+                                    <Label htmlFor="link">Enlace de la publicación</Label>
+                                    <Input
+                                        id="link"
+                                        placeholder="https://facebook.com/..."
+                                        value={link}
+                                        onChange={(e) => setLink(e.target.value)}
+                                        required={!isMarketplaceAction}
+                                    />
+                                </div>
+                            )}
+
 
                             {isPostAction && (
                                 <div className="grid grid-cols-2 gap-4">
@@ -261,6 +295,132 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                    </div>
+                                </div>
+                            )}
+
+                            {isMarketplaceAction && (
+                                <div className="space-y-4 border-l-2 border-primary/20 pl-4 my-2">
+                                    <h4 className="text-sm font-bold uppercase tracking-wider text-primary">Detalles del Producto</h4>
+                                    
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="mTitle">Título del Producto</Label>
+                                        <Input
+                                            id="mTitle"
+                                            value={mTitle}
+                                            onChange={(e) => setMTitle(e.target.value)}
+                                            placeholder="Ej: iPhone 15 Pro Max 256GB"
+                                            required={isMarketplaceAction}
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="mPrice">Precio</Label>
+                                            <Input
+                                                id="mPrice"
+                                                type="number"
+                                                value={mPrice}
+                                                onChange={(e) => setMPrice(Number(e.target.value))}
+                                                required={isMarketplaceAction}
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Condición</Label>
+                                            <Select value={mCondition} onValueChange={setMCondition}>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Nuevo">Nuevo</SelectItem>
+                                                    <SelectItem value="Usado - Como nuevo">Usado - Como nuevo</SelectItem>
+                                                    <SelectItem value="Usado - Buen estado">Usado - Buen estado</SelectItem>
+                                                    <SelectItem value="Usado - Aceptable">Usado - Aceptable</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid gap-2">
+                                            <Label>Categoría</Label>
+                                            <Select value={mCategory} onValueChange={setMCategory}>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Electrónica">Electrónica</SelectItem>
+                                                    <SelectItem value="Hogar">Hogar</SelectItem>
+                                                    <SelectItem value="Ropa">Ropa</SelectItem>
+                                                    <SelectItem value="Vehículos">Vehículos</SelectItem>
+                                                    <SelectItem value="Inmuebles">Inmuebles</SelectItem>
+                                                    <SelectItem value="Varios">Varios</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="mLocation">Ubicación (Opcional)</Label>
+                                            <Input
+                                                id="mLocation"
+                                                value={mLocation}
+                                                onChange={(e) => setMLocation(e.target.value)}
+                                                placeholder="Ej: Madrid, España"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="mDescription">Descripción</Label>
+                                        <Textarea
+                                            id="mDescription"
+                                            value={mDescription}
+                                            onChange={(e) => setMDescription(e.target.value)}
+                                            placeholder="Describe tu producto detalladamente..."
+                                            rows={4}
+                                            required={isMarketplaceAction}
+                                        />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label className="flex justify-between items-center">
+                                            Imágenes (URLs)
+                                            <Button 
+                                                type="button" 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                className="h-7 text-[10px] uppercase font-bold"
+                                                onClick={() => setMImages([...mImages, ""])}
+                                            >
+                                                <Plus className="h-3 w-3 mr-1" /> Añadir Imagen
+                                            </Button>
+                                        </Label>
+                                        <div className="space-y-2">
+                                            {mImages.map((img, idx) => (
+                                                <div key={idx} className="flex gap-2">
+                                                    <Input
+                                                        value={img}
+                                                        onChange={(e) => {
+                                                            const newImages = [...mImages]
+                                                            newImages[idx] = e.target.value
+                                                            setMImages(newImages)
+                                                        }}
+                                                        placeholder="https://..."
+                                                        className="flex-1"
+                                                    />
+                                                    {mImages.length > 1 && (
+                                                        <Button 
+                                                            type="button" 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className="h-10 w-10 text-red-500"
+                                                            onClick={() => setMImages(mImages.filter((_, i) => i !== idx))}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             )}

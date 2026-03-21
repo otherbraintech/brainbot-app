@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { DynamicBreadcrumb } from "@/components/dynamic-breadcrumb"
+import { ChangelogDialog } from "@/components/changelog-dialog"
 import { getCurrentUser } from "@/lib/actions/user"
 import { getProjects } from "@/lib/actions/projects"
 
@@ -22,6 +23,7 @@ export default async function DashboardLayout({
     return (
         <SidebarProvider>
             <AuthErrorModal user={user} />
+            <ChangelogDialog />
             <AppSidebar user={user} projects={projects} />
             <SidebarInset>
                 <header className="flex h-14 shrink-0 items-center gap-2 px-4">
