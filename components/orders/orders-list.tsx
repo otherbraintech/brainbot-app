@@ -318,179 +318,6 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
 
     return (
         <>
-            <div className="flex flex-col gap-6 mb-8">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-1.5 flex-1">
-                        <div className="flex items-center gap-3">
-                            <h2 className="text-xl font-bold tracking-tight text-foreground/80">
-                                Órdenes del Proyecto
-                            </h2>
-                            <div className="flex items-center gap-4 text-muted-foreground/50 text-[10px] font-bold uppercase tracking-wider">
-                                <div className="flex items-center gap-1.5 bg-muted/50 px-2 py-0.5 rounded-full border border-border/50">
-                                    <Hash className="h-3 w-3 text-indigo-500" />
-                                    <span>{stats.totalRequested} SOLICITADAS</span>
-                                </div>
-                                <div className="flex items-center gap-1.5 bg-muted/50 px-2 py-0.5 rounded-full border border-border/50">
-                                    <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                                    <span>{stats.totalCompleted}/{stats.totalGenerated} COMPLETADAS</span>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                    <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
-                                        <div 
-                                            className="h-full bg-indigo-500 transition-all duration-500" 
-                                            style={{ width: `${stats.totalRequested > 0 ? Math.min(100, (stats.totalCompleted / stats.totalRequested) * 100) : 0}%` }}
-                                        />
-                                    </div>
-                                    <span className="text-[10px] font-black text-indigo-600/70">
-                                        {stats.totalRequested > 0 ? Math.round((stats.totalCompleted / stats.totalRequested) * 100) : 0}%
-                                    </span>
-                                </div>
-                                
-                                <div className="ml-2">
-                                    <Sheet>
-                                        <SheetTrigger {...({ asChild: true } as any)}>
-                                            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-2 border-indigo-200/50 bg-indigo-50/30 hover:bg-indigo-50 text-indigo-700">
-                                                <ListChecks className="h-3 w-3" />
-                                                Ver Cola
-                                                {queueOrders.length > 0 && (
-                                                    <span className="bg-indigo-600 text-white px-1 rounded-sm text-[8px]">{queueOrders.length}</span>
-                                                )}
-                                            </Button>
-                                        </SheetTrigger>
-                                        <SheetContent className="sm:max-w-md p-0 flex flex-col" {...({ side: "right" } as any)}>
-                                            <div className="p-6 pb-4 border-b bg-muted/10">
-                                                <SheetHeader className="space-y-1 text-left">
-                                                    <SheetTitle className="flex items-center gap-2 text-xl font-bold" {...({} as any)}>
-                                                        <ListChecks className="h-6 w-6 text-indigo-600" />
-                                                        Cola de Órdenes
-                                                    </SheetTitle>
-                                                    <SheetDescription className="text-xs uppercase font-bold tracking-widest text-muted-foreground/70" {...({} as any)}>
-                                                        Listo para Procesar (GENERADAS)
-                                                    </SheetDescription>
-                                                </SheetHeader>
-                                            </div>
-
-                                            <ScrollArea className="flex-1 min-h-0 p-6" {...({} as any)}>
-                                                <div className="space-y-4 pr-1">
-                                                    {groupedQueueOrders.length === 0 ? (
-                                                        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground/40">
-                                                            <Activity className="h-12 w-12 mb-3 opacity-20" />
-                                                            <p className="text-sm font-medium">No hay órdenes en cola actualmente.</p>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="space-y-6">
-                                                            {groupedQueueOrders.map((group) => (
-                                                                <div key={group.id} className="space-y-3">
-                                                                    <div className="flex items-center justify-between px-1">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <div className="w-1 h-4 bg-indigo-500 rounded-full" />
-                                                                            <h3 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
-                                                                                {group.name}
-                                                                            </h3>
-                                                                            <Badge variant="secondary" className="text-[9px] h-4 px-1.5 py-0 bg-muted/50">
-                                                                                {group.orders.length}
-                                                                            </Badge>
-                                                                        </div>
-                                                                        {group.id !== 'unknown' && (
-                                                                            <Button 
-                                                                                variant="ghost" 
-                                                                                size="sm" 
-                                                                                className="h-6 text-[9px] gap-1.5 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-2"
-                                                                                onClick={() => router.push(`/dashboard/projects/${group.id}`)}
-                                                                            >
-                                                                                <ExternalLink className="h-3 w-3" />
-                                                                                Ir al Proyecto
-                                                                            </Button>
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="space-y-3 pl-3 border-l-2 border-muted/30 ml-1.5">
-                                                                        {group.orders.map((order: any) => {
-                                                                            const typeCfg = ORDER_TYPE_LABELS[order.type] || { icon: Activity, label: order.type }
-                                                                            return (
-                                                                                <div key={order.id} className="group relative overflow-hidden p-3 border rounded-xl bg-card hover:border-indigo-200 hover:bg-indigo-50/20 transition-all duration-200">
-                                                                                    <div className="flex items-start justify-between gap-4 mb-2">
-                                                                                        <div className="flex items-center gap-2">
-                                                                                            <div className="p-1.5 rounded-lg bg-muted/50 group-hover:bg-indigo-100 transition-colors">
-                                                                                                <typeCfg.icon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-indigo-600" />
-                                                                                            </div>
-                                                                                            <div className="flex flex-col">
-                                                                                                <span className="font-bold text-xs leading-tight truncate max-w-[150px]">
-                                                                                                    {order.orderName}
-                                                                                                </span>
-                                                                                                <span className="text-[9px] uppercase font-bold text-muted-foreground/70 mt-0.5">
-                                                                                                    {typeCfg.label}
-                                                                                                </span>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                        <Badge variant="outline" className="h-4 px-1 rounded-sm border-none bg-muted/30 text-[9px]">
-                                                                                            {order.quantity} un.
-                                                                                        </Badge>
-                                                                                    </div>
-                                                                                    <div className="flex items-center gap-1.5 text-[8px] font-bold text-muted-foreground/40 pt-2 border-t border-dashed">
-                                                                                        <Hash className="h-2 w-2" />
-                                                                                        <span>ID: {order.id.slice(0, 8)}...</span>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )
-                                                                        })}
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-
-                                                </div>
-                                            </ScrollArea>
-                                        </SheetContent>
-                                    </Sheet>
-                                </div>
-                            </div>
-                        </div>
-                        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 px-0.5">
-                            Gestión y Monitoreo en Tiempo Real
-                        </p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                        {/* Total Active Counter */}
-                        <div className="flex items-center gap-3 bg-indigo-500/5 border border-indigo-500/10 dark:border-indigo-500/20 px-3 py-1.5 rounded-lg">
-                            <span className="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">Total</span>
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-lg font-black text-indigo-700 dark:text-indigo-300">{activeOrders.length}</span>
-                                <span className="text-[9px] text-indigo-600/60 font-medium">activas</span>
-                            </div>
-                        </div>
-
-                        {/* Social Network Pills */}
-                        <div className="flex items-center gap-1.5 bg-muted/30 p-1 rounded-lg border border-border/50">
-                            {stats.FACEBOOK > 0 && (
-                                <div className="flex items-center gap-1.5 bg-blue-500/10 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-md border border-blue-500/10">
-                                    <Facebook className="h-3 w-3" />
-                                    <span className="text-xs font-black">{stats.FACEBOOK}</span>
-                                </div>
-                            )}
-                            {stats.INSTAGRAM > 0 && (
-                                <div className="flex items-center gap-1.5 bg-pink-500/10 text-pink-700 dark:text-pink-400 px-2 py-1 rounded-md border border-pink-500/10">
-                                    <Instagram className="h-3 w-3" />
-                                    <span className="text-xs font-black">{stats.INSTAGRAM}</span>
-                                </div>
-                            )}
-                            {stats.TIKTOK > 0 && (
-                                <div className="flex items-center gap-1.5 bg-zinc-900 dark:bg-zinc-950 text-white px-2 py-1 rounded-md border border-zinc-800">
-                                    <TikTokIcon className="h-3 w-3 fill-current" />
-                                    <span className="text-xs font-black">{stats.TIKTOK}</span>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="h-8 w-[1px] bg-border mx-1 hidden sm:block" />
-
-
-                    </div>
-                </div>
-            </div>
-
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {activeOrders.map((order: any) => {
                     const statusInfo = STATUS_LABELS[order.status] || { label: order.status, variant: "secondary" as const }
@@ -519,49 +346,47 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                     return (
                         <Card
                             key={order.id}
-                            className={`overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col h-full border
+                            className={`overflow-hidden transition-all duration-300 hover:shadow-xl flex flex-col h-full border relative
                                 ${isCancelled 
-                                    ? 'opacity-60 border-red-500/20 bg-red-500/5 dark:bg-red-950/20 dark:border-red-500/20' 
+                                    ? 'opacity-60 border-red-500/10 bg-red-500/5 dark:bg-red-950/10 dark:border-red-500/20' 
                                     : isLiveOrder 
-                                        ? 'border-red-500/30 ring-1 ring-red-500/10 shadow-lg shadow-red-500/10 scale-[1.01] bg-card'
+                                        ? 'animate-glow-pulse-red scale-[1.01] bg-card border-red-500/50 shadow-lg shadow-red-500/20'
                                         : isCompletedStatus
-                                            ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/40 dark:border-emerald-500/30'
+                                            ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/30 dark:border-emerald-500/20'
                                         : isProcessing
-                                                ? 'border-violet-500/30 bg-violet-500/5 dark:bg-violet-950/30 dark:border-violet-500/40 shadow-md shadow-violet-500/10'
+                                                ? 'animate-glow-pulse border-indigo-500/50 bg-indigo-50/20 dark:bg-indigo-950/20 shadow-md shadow-indigo-500/10'
                                                 : ''}`}
                             {...({} as any)}
                         >
-
-                            {isLiveOrder && !isCancelled && order.status !== 'LISTA' && (
-                                <div className={`text-white text-[10px] font-black uppercase tracking-widest py-1 px-3 flex items-center justify-center gap-2 shadow-sm ${isCompletedStatus ? 'bg-emerald-600' : 'bg-red-600 animate-pulse'}`}>
-                                    {isCompletedStatus ? (
-                                        <>
-                                            <CheckCircle2 className="h-3 w-3" />
-                                            Live Finalizado
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span className="relative flex h-2 w-2">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                                            </span>
-                                            Prioridad: Live Activo
-                                        </>
-                                    )}
+                            {(isProcessing || isLiveOrder) && !isCancelled && (
+                                <div className="absolute inset-x-0 top-0 h-[2px] pointer-events-none overflow-hidden z-20">
+                                    <div 
+                                        className={`absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-${isLiveOrder ? 'red' : 'indigo'}-500 to-transparent -translate-x-full animate-shimmer-flash opacity-80`} 
+                                    />
                                 </div>
                             )}
-                            <CardHeader className={`flex flex-row items-center justify-between pb-2 min-h-[80px] ${isCancelled ? 'bg-red-50/40 dark:bg-red-950/30' : (isCompletedStatus && !isLiveOrder ? 'bg-green-50/40 dark:bg-emerald-950/30' : isLiveOrder ? 'bg-red-50/30 dark:bg-red-950/20' : isProcessing ? 'bg-violet-50/40 dark:bg-violet-950/30' : 'bg-muted/20')}`} {...({} as any)}>
+                            
+                            {(isProcessing || isLiveOrder) && !isCancelled && (
+                                <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl z-10">
+                                    <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-${isLiveOrder ? 'red-500/20' : 'white/30 dark:white/5'} to-transparent w-[30%] -skew-x-[30deg] animate-shimmer-flash`} />
+                                </div>
+                            )}
+
+                             
+                            <CardHeader className={`flex flex-row items-center justify-between pb-2 min-h-[80px] ${isCancelled ? 'bg-red-50/20 dark:bg-red-950/20' : (isCompletedStatus && !isLiveOrder ? 'bg-green-50/20 dark:bg-emerald-950/20' : isLiveOrder ? 'bg-red-50/20 dark:bg-red-950/20' : isProcessing ? 'bg-indigo-50/40 dark:bg-indigo-950/30' : 'bg-muted/10')}`} {...({} as any)}>
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3">
                                         <div className={`p-1.5 rounded-md transition-all duration-500 ${isCancelled ? 'bg-red-500/20 text-red-600 dark:text-red-400' : (isCompletedStatus && !isLiveOrder ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : isLiveOrder ? 'p-2 bg-red-500/20 text-red-600 dark:text-red-400 shadow-sm ring-1 ring-red-500/30 scale-105' : typeInfo.color)}`}>
                                             {isCancelled ? <Ban className="h-4 w-4" /> : (isCompletedStatus && !isLiveOrder ? <CheckCircle2 className="h-4 w-4" /> : <typeInfo.icon className={`h-4 w-4 ${isLiveOrder && !isCompletedStatus ? 'h-5 w-5 animate-pulse' : 'h-5 w-5'}`} />)}
                                         </div>
                                         <div className="flex flex-col">
-                                            <CardTitle className={`text-md font-bold truncate max-w-[150px] transition-colors ${isCancelled ? 'text-red-700 dark:text-red-400' : (isCompletedStatus ? 'text-emerald-700 dark:text-emerald-300' : isLiveOrder ? 'text-red-700 dark:text-red-400 font-black' : '')}`}>
-                                                {order.orderName}
-                                            </CardTitle>
-                                            <span className="text-[10px] font-mono text-muted-foreground">ID: #{order.id}</span>
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">{typeInfo.label}</span>
+                                             <div className="flex items-center gap-2">
+                                                 <CardTitle className={`text-md font-bold truncate max-w-[150px] transition-colors ${isCancelled ? 'text-red-700/60' : (isCompletedStatus ? 'text-emerald-700' : isLiveOrder ? 'text-red-700' : isProcessing ? 'text-indigo-700' : '')}`}>
+                                                     {order.orderName}
+                                                 </CardTitle>
+                                             </div>
+                                             <span className="text-[10px] font-mono text-muted-foreground/60">ID: #{order.id}</span>
+                                             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">{typeInfo.label}</span>
                                             {isCancelled ? (
                                                 <span className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Orden Cancelada</span>
                                             ) : isCompletedStatus && (

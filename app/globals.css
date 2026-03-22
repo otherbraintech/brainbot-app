@@ -45,6 +45,39 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
   --animate-spin-slow: spin 3s linear infinite;
+  --animate-glow-pulse: glow-pulse 3s ease-in-out infinite;
+
+  @keyframes glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 8px oklch(0.585 0.233 277.117 / 0.1);
+      border-color: oklch(0.585 0.233 277.117 / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 25px oklch(0.585 0.233 277.117 / 0.4);
+      border-color: oklch(0.585 0.233 277.117 / 0.8);
+    }
+  }
+
+  @keyframes glow-pulse-red {
+    0%, 100% {
+      box-shadow: 0 0 8px oklch(0.577 0.245 27.325 / 0.1);
+      border-color: oklch(0.577 0.245 27.325 / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 25px oklch(0.577 0.245 27.325 / 0.4);
+      border-color: oklch(0.577 0.245 27.325 / 0.8);
+    }
+  }
+
+  --animate-glow-pulse-red: glow-pulse-red 3s ease-in-out infinite;
+  --animate-shimmer-flash: shimmer-flash 4s ease-in-out infinite;
+
+  @keyframes shimmer-flash {
+    0% { transform: translateX(-150%) skewX(-45deg); opacity: 0; }
+    20% { opacity: 0.5; }
+    40% { transform: translateX(150%) skewX(-45deg); opacity: 0; }
+    100% { transform: translateX(150%) skewX(-45deg); opacity: 0; }
+  }
 }
 
 :root {

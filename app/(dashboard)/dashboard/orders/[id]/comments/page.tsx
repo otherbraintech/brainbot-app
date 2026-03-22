@@ -17,6 +17,7 @@ import Link from "next/link"
 import { CopyUrlButton } from "@/components/orders/copy-url-button"
 import { EditableCommentRow } from "@/components/orders/editable-comment-row"
 import { InteractionTableClient } from "@/components/orders/interaction-table-client"
+import { ProjectSync } from "@/components/project-sync"
 
 export default async function OrderCommentsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
@@ -28,6 +29,10 @@ export default async function OrderCommentsPage({ params }: { params: Promise<{ 
 
     return (
         <div className="flex flex-col gap-6">
+            <ProjectSync 
+                projectId={order.projectId} 
+                projectName={order.project.name} 
+            />
             <div className="flex items-center gap-4">
                 <Button variant="outline" size="icon" asChild>
                     <Link href={`/dashboard/projects/${order.projectId}`}>

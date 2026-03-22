@@ -82,7 +82,10 @@ export function InteractionTableClient({
                 
                 const matchesStatus = 
                     statusFilter === "all" || 
-                    item.status === statusFilter
+                    (statusFilter === "EJECUTADOS" && (item.status === "PUBLICADO" || item.status === "CONFIRMADO")) ||
+                    (statusFilter === "PENDIENTES" && (item.status === "SINPUBLICAR" || item.status === "PENDIENTE")) ||
+                    (statusFilter === "CANCELADOS" && item.status === "CANCELADO") ||
+                    (item.status === statusFilter)
                 
                 return matchesSearch && matchesStatus
             })
@@ -146,9 +149,9 @@ export function InteractionTableClient({
                                 </SelectTrigger>
                                 <SelectContent {...({} as any)}>
                                     <SelectItem value="all">Todos los registros</SelectItem>
-                                    <SelectItem value="PUBLICADO">Solo Ejecutados</SelectItem>
-                                    <SelectItem value="SINPUBLICAR">Solo Pendientes</SelectItem>
-                                    <SelectItem value="CANCELADO">Solo Cancelados</SelectItem>
+                                    <SelectItem value="EJECUTADOS">Solo Ejecutados</SelectItem>
+                                    <SelectItem value="PENDIENTES">No Ejecutados</SelectItem>
+                                    <SelectItem value="CANCELADOS">Solo Cancelados</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

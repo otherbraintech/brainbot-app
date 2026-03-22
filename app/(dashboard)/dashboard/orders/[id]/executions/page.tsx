@@ -20,6 +20,7 @@ import { EditableCommentRow } from "@/components/orders/editable-comment-row"
 import { InteractionTableClient } from "@/components/orders/interaction-table-client"
 
 import { OrderExecutionHeader } from "@/components/orders/order-execution-header"
+import { ProjectSync } from "@/components/project-sync"
 
 export default async function OrderExecutionsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
@@ -44,14 +45,18 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
     const generatedCount = sortedInteractions.length
 
     return (
-        <div className="flex flex-col gap-0 mt-[-16px]">
+        <div className="flex flex-col gap-4 mt-[-8px]">
+            <ProjectSync 
+                projectId={order.projectId} 
+                projectName={order.project?.name} 
+            />
             <OrderExecutionHeader 
                 order={order} 
                 generatedCount={generatedCount} 
                 publishedCount={publishedCount} 
             />
 
-            <div className="bg-background">
+            <div className="bg-background shadow-sm rounded-lg">
                 <InteractionTableClient 
                     interactions={sortedInteractions} 
                     type={order.type} 

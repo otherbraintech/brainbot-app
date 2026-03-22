@@ -130,29 +130,29 @@ export function EditableCommentRow({
                                 </Button>
                             </div>
                         </div>
-                    ) : (
-                        <div className="flex items-start gap-1 italic text-muted-foreground text-sm leading-relaxed max-w-[500px]">
+                     ) : (
+                        <div className="flex items-start gap-1 py-1 text-foreground/90 text-[13px] leading-relaxed max-w-[500px] font-medium">
                             <span className="whitespace-normal break-words">{comment.text}</span>
                         </div>
                     )}
                 </TableCell>
                 <TableCell>
-                    <div className="flex flex-col gap-0.5">
-                        <div className="flex items-center gap-1.5">
-                            <span className="font-medium text-sm text-foreground/90">
-                                {comment.device?.deviceName || "Sin asignar"}
+                    <div className="flex flex-col gap-1 py-0.5">
+                        <div className="flex items-baseline gap-2">
+                            <span className="font-bold text-sm text-foreground">
+                                {comment.device?.personName || "Usuario Desconocido"}
                             </span>
-                            {comment.device?.personName && (
-                                <span className="text-[10px] text-muted-foreground italic">
-                                    ({comment.device.personName})
+                            {comment.device?.label && (
+                                <span className="text-[9px] font-black text-primary/70 uppercase tracking-tighter px-1.5 py-0.5 bg-primary/5 rounded border border-primary/10">
+                                    {comment.device.label}
                                 </span>
                             )}
                         </div>
-                        {comment.device?.label && (
-                            <span className="text-[10px] text-primary/80 font-bold uppercase tracking-wider">
-                                {comment.device.label}
+                        <div className="flex items-center gap-1.5 opacity-60">
+                            <span className="font-mono text-[10px] tabular-nums uppercase tracking-tight">
+                                {comment.device?.deviceName || "Sin dispositivo"}
                             </span>
-                        )}
+                        </div>
                     </div>
                 </TableCell>
                 <TableCell>
@@ -161,7 +161,7 @@ export function EditableCommentRow({
                             <AlertDialogTrigger asChild>
                                 <Badge
                                     variant={comment.status === "PUBLICADO" ? "default" : "secondary"}
-                                    className={`cursor-pointer hover:opacity-80 transition-all shadow-sm ${
+                                    className={`cursor-pointer hover:opacity-80 transition-all shadow-sm font-black text-[10px] uppercase tracking-wider h-6 px-3 ${
                                         comment.status === "PUBLICADO"
                                             ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200"
                                             : "bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200"

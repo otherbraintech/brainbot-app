@@ -83,7 +83,16 @@ export function OrderExecutionHeader({ order, generatedCount, publishedCount }: 
         })
     }
 
-    const progress = Math.round(generatedCount > 0 ? (publishedCount / (generatedCount || 1)) * 100 : 0)
+    const progress = Math.round((publishedCount / (order.quantity || 1)) * 100)
+    
+    // Color de progreso dinámico
+    const getProgressColor = (p: number) => {
+        if (p >= 100) return 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+        if (p >= 70) return 'bg-indigo-600'
+        if (p >= 30) return 'bg-blue-600'
+        if (p > 0) return 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.2)]'
+        return 'bg-muted-foreground/30'
+    }
 
     return (
         <div className="flex flex-col gap-2 pt-1 pb-0 px-1">
@@ -91,23 +100,25 @@ export function OrderExecutionHeader({ order, generatedCount, publishedCount }: 
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                     <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                            <h1 className="text-lg font-black tracking-tight flex items-center gap-2">
-                                <config.icon className={`h-5 w-5 ${config.color}`} />
+                        <div className="flex items-center gap-2.5">
+                            <h1 className="text-2xl font-black tracking-tight flex items-center gap-2.5">
+                                <config.icon className={`h-6 w-6 ${config.color}`} />
                                 {order.orderName || `Orden #${order.id}`}
                             </h1>
-                            <Badge variant="outline" className="text-[10px] font-mono h-4 px-1.5 opacity-40">#{order.id}</Badge>
+                            <Badge variant="outline" className="text-xs font-mono h-5 px-2 opacity-50">#{order.id}</Badge>
                         </div>
-                        <div className="flex items-center gap-4 mt-1">
-                            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-black uppercase tracking-widest">
-                                <Globe className="h-3 w-3" />
+                        <div className="flex flex-wrap items-center gap-3 mt-2">
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-black uppercase tracking-widest">
+                                <Globe className="h-3.5 w-3.5" />
                                 {order.socialNetwork} · {order.postType}
                             </div>
-                            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-black uppercase tracking-widest">
-                                <CalendarDays className="h-3 w-3" />
+                            <div className="h-3 w-[1px] bg-border mix-blend-multiply dark:mix-blend-screen hidden sm:block" />
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-black uppercase tracking-widest">
+                                <CalendarDays className="h-3.5 w-3.5" />
                                 {formatDateTime(order.createdAt)}
                             </div>
-                            <Badge className="text-[10px] font-black h-5 px-2 uppercase tracking-tighter">
+                            <div className="h-3 w-[1px] bg-border mix-blend-multiply dark:mix-blend-screen hidden sm:block" />
+                            <Badge className="text-[11px] font-black h-6 px-3 uppercase tracking-wider">
                                 {order.status === 'GENERADA' ? 'EN OPERACIÓN' : order.status}
                             </Badge>
                         </div>
@@ -160,7 +171,14 @@ export function OrderExecutionHeader({ order, generatedCount, publishedCount }: 
                             </div>
                         </DialogContent>
                     </Dialog>
-                    <DownloadPDFButton orderId={order.id} orderName={order.orderName ?? undefined} />
+                    <DownloadPDFButton 
+                        orderId={order.id} 
+                        orderName={order.orderName ?? undefined} 
+                        showText
+                        variant="outline"
+                        size="sm"
+                        className="h-9 gap-2 font-black text-[11px] shadow-sm uppercase tracking-wider"
+                    />
                 </div>
             </div>
 
@@ -195,9 +213,9 @@ export function OrderExecutionHeader({ order, generatedCount, publishedCount }: 
                             </span>
                             <span className="text-[10px] font-black">{progress}%</span>
                         </div>
-                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                        <div className="h-1.5 w-full bg-muted/50 rounded-full overflow-hidden border border-muted/20">
                             <div 
-                                className="h-full bg-primary rounded-full transition-all duration-700" 
+                                className={`h-full ${getProgressColor(progress)} rounded-full transition-all duration-1000 ease-in-out`} 
                                 style={{ width: `${Math.min(100, progress)}%` }}
                             />
                         </div>
@@ -267,16 +285,16 @@ export function OrderExecutionHeader({ order, generatedCount, publishedCount }: 
                         </Button>
                     )}
 
-                    {(order.status === 'GENERADA' || order.status === 'PAUSADA' || order.status === 'COMPLETADA') && (
+                    {(order.status === 'GENERADA' || order.status === 'PAUSADA' || order.status === 'COMPLETADA') && generatedCount < order.quantity && (
                         <Button 
                             size="sm" 
                             variant="outline"
                             className="h-9 gap-2 font-black text-[11px] border-indigo-200 text-indigo-700 hover:bg-indigo-50 shadow-sm uppercase tracking-wider"
                             disabled={actionLoading !== null}
-                            onClick={() => handleAction(retryOrder, 're-enviar')}
+                            onClick={() => handleAction(retryOrder, 'generar')}
                         >
-                            {actionLoading === 're-enviar' ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                            Webhook
+                            {actionLoading === 'generar' ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                            Generar {config.label.toLowerCase()} faltantes
                         </Button>
                     )}
 

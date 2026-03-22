@@ -12,9 +12,20 @@ import { useEffect } from 'react'
 interface DownloadPDFButtonProps {
   orderId: string
   orderName: string
+  showText?: boolean
+  className?: string
+  variant?: "ghost" | "outline" | "default" | "secondary" | "link" | "destructive"
+  size?: "default" | "sm" | "lg" | "icon"
 }
 
-export function DownloadPDFButton({ orderId, orderName }: DownloadPDFButtonProps) {
+export function DownloadPDFButton({ 
+  orderId, 
+  orderName,
+  showText = false,
+  className = "h-7 w-7",
+  variant = "ghost",
+  size = "icon"
+}: DownloadPDFButtonProps) {
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -24,7 +35,7 @@ export function DownloadPDFButton({ orderId, orderName }: DownloadPDFButtonProps
 
   if (!mounted) {
     return (
-      <div className="h-7 w-7 flex items-center justify-center">
+      <div className={`${className} flex items-center justify-center`}>
         <div className="h-3.5 w-3.5" />
       </div>
     )
@@ -78,18 +89,19 @@ export function DownloadPDFButton({ orderId, orderName }: DownloadPDFButtonProps
 
   return (
     <Button 
-      variant="ghost" 
-      size="icon" 
-      className="h-7 w-7" 
+      variant={variant} 
+      size={size} 
+      className={className} 
       onClick={handleDownload}
       disabled={loading}
       title="Descargar PDF"
     >
       {loading ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+        <Loader2 className={`${showText ? 'h-4 w-4' : 'h-3.5 w-3.5'} animate-spin text-muted-foreground`} />
       ) : (
-        <FileDown className="h-3.5 w-3.5 text-blue-500" />
+        <FileDown className={`${showText ? 'h-4 w-4' : 'h-3.5 w-3.5'} text-blue-500`} />
       )}
+      {showText && <span>Descargar PDF</span>}
     </Button>
   )
 }
