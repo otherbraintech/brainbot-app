@@ -47,7 +47,7 @@ export function OrderQueueSheet({ queueOrders }: { queueOrders: any[] }) {
     return (
         <Sheet>
             <SheetTrigger {...({ asChild: true } as any)}>
-                <Button variant="outline" size="sm" className="h-9 text-[10px] gap-2 border-indigo-200/50 bg-indigo-50/50 hover:bg-indigo-50 text-indigo-700 font-bold uppercase tracking-widest shadow-sm">
+                <Button variant="outline" size="sm" className="h-9 w-full sm:w-auto text-[10px] gap-2 border-indigo-200/60 bg-indigo-50/50 hover:bg-indigo-50 text-indigo-700 font-bold uppercase tracking-widest shadow-sm transition-all hover:shadow-md hover:scale-[1.02]">
                     <ListChecks className="h-3.5 w-3.5" />
                     Ver Cola
                     {queueOrders.length > 0 && (

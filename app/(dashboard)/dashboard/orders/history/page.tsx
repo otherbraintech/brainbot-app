@@ -16,12 +16,12 @@ import { DownloadPDFButton } from "@/components/orders/download-pdf-button"
 import { formatDate } from "@/lib/utils"
 
 const STATUS_LABELS: any = {
-    LISTA: { label: "Lista", variant: "outline" },
-    GENERANDO: { label: "Generando", variant: "secondary" },
-    GENERADA: { label: "En Operación", variant: "default" },
-    CANCELADA: { label: "Cancelada", variant: "destructive" },
-    REINTENTAR: { label: "Reintentar", variant: "warning" },
-    COMPLETADA: { label: "Completada", variant: "default", className: "bg-green-100 text-green-700 hover:bg-green-100 border-green-200" },
+    LISTA: { label: "Lista", variant: "outline", className: "bg-blue-50 text-blue-700 border-blue-200" },
+    GENERANDO: { label: "Generando", variant: "secondary", className: "bg-indigo-50 text-indigo-700 border-indigo-200 animate-pulse" },
+    GENERADA: { label: "En Operación", variant: "default", className: "bg-cyan-50 text-cyan-700 border-cyan-200" },
+    CANCELADA: { label: "Cancelada", variant: "destructive", className: "bg-red-50 text-red-700 border-red-200" },
+    REINTENTAR: { label: "Reintentar", variant: "outline", className: "bg-orange-50 text-orange-700 border-orange-200" },
+    COMPLETADA: { label: "Completada", variant: "default", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
     PAUSADA: { label: "Pausada", variant: "outline", className: "bg-amber-50 text-amber-700 border-amber-200" },
 }
 
