@@ -28,20 +28,43 @@ export async function getDashboardStats() {
         totalDevices,
         totalComments,
         totalLikes,
-        totalFollows
+        totalFollows,
+        totalShares,
+        totalReports,
+        totalLives,
+        totalMarketplaces,
+        aggregateActiveOrders
     ] = await Promise.all([
         prisma.user.count(),
         prisma.project.count({ where: { ...baseFilter, deletedAt: null } }),
         prisma.botOrder.count({ where: orderFilter }),
         prisma.device.count(), // Devices are global
         prisma.genComment.count({ where: baseFilter }),
-        prisma.genLike.count({ where: { userId: session } }), // GenLike has userId but GenLike table might be mostly for the order's user
-        prisma.genFollow.count({ where: { userId: session } })
+        prisma.genLike.count({ where: { userId: session } }),
+        prisma.genFollow.count({ where: { userId: session } }),
+        prisma.genShare.count({ where: { userId: session } }),
+        prisma.genReport.count({ where: { userId: session } }),
+        prisma.genLive.count({ where: baseFilter }),
+        prisma.genMarketplace.count({ where: { userId: session } }),
+        prisma.botOrder.aggregate({
+            where: { ...orderFilter, status: { in: ["LISTA", "GENERANDO", "GENERADA", "REINTENTAR", "PAUSADA"] } },
+            _sum: { quantity: true }
+        })
     ])
+    
+    const totalRequestedGoal = aggregateActiveOrders._sum.quantity || 0;
+    const totalEngagement = totalComments + totalLikes + totalFollows + totalShares + totalReports + totalLives + totalMarketplaces;
 
     // 2. Orders by Status
     const ordersByStatus = await prisma.botOrder.groupBy({
         by: ['status'],
+        where: orderFilter,
+        _count: true
+    })
+
+    // 2.5 Orders by Type
+    const ordersByType = await prisma.botOrder.groupBy({
+        by: ['type'],
         where: orderFilter,
         _count: true
     })
@@ -148,9 +171,15 @@ export async function getDashboardStats() {
             comments: totalComments,
             likes: totalLikes,
             follows: totalFollows,
-            engagement: totalComments + totalLikes + totalFollows
+            shares: totalShares,
+            reports: totalReports,
+            lives: totalLives,
+            marketplaces: totalMarketplaces,
+            engagement: totalEngagement,
+            requestedGoal: totalRequestedGoal
         },
         ordersByStatus,
+        ordersByType,
         socialDistribution,
         deviceStatus,
         dailyActivity,

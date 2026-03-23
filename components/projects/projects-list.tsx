@@ -332,10 +332,10 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                         </CardContent>
 
                         <div className="px-4 py-3 border-t bg-muted/10 mt-auto flex items-center justify-between">
-                            <div className="flex -space-x-1.5 opacity-60">
-                                {project.urlFacebook && <Facebook className="h-4 w-4 text-blue-600" />}
-                                {project.urlInstagram && <Instagram className="h-4 w-4 text-pink-600" />}
-                                {project.urlTiktok && <TikTokIcon className="h-4 w-4" />}
+                            <div className="flex items-center gap-2.5 opacity-80">
+                                {project.urlFacebook && <Facebook className="h-4 w-4 text-blue-600 dark:text-blue-500" />}
+                                {project.urlInstagram && <Instagram className="h-4 w-4 text-pink-600 dark:text-pink-500" />}
+                                {project.urlTiktok && <TikTokIcon className="h-4 w-4 text-zinc-900 dark:text-zinc-200" />}
                             </div>
 
                             <Button

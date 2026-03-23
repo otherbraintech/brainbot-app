@@ -8,7 +8,7 @@ export default async function ProjectsPage() {
     const projects = await getProjects()
 
     return (
-        <div className="space-y-4 relative pb-10 px-4 md:px-0 max-w-[1400px] -mt-2">
+        <div className="space-y-4 relative pb-10 px-4 md:px-0 w-full -mt-2">
             <RedirectToActiveProject />
             
             <div className="flex items-center justify-between">

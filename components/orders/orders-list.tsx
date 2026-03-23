@@ -349,8 +349,8 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                             className={`overflow-hidden transition-all duration-300 hover:shadow-xl flex flex-col h-full border relative
                                 ${isCancelled 
                                     ? 'opacity-60 border-red-500/10 bg-red-500/5 dark:bg-red-950/10 dark:border-red-500/20' 
-                                    : isLiveOrder 
-                                        ? 'animate-glow-pulse-red scale-[1.01] bg-card border-red-500/50 shadow-lg shadow-red-500/20'
+                                    : isLiveOrder && !isCompletedStatus
+                                        ? 'animate-glow-pulse border-indigo-600/50 bg-indigo-50/10 dark:bg-indigo-950/20 shadow-lg shadow-indigo-600/20 border-l-4 border-l-red-500'
                                         : isCompletedStatus
                                             ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/30 dark:border-emerald-500/20'
                                         : isProcessing
@@ -358,22 +358,22 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                                 : ''}`}
                             {...({} as any)}
                         >
-                            {(isProcessing || isLiveOrder) && !isCancelled && (
+                            {(isProcessing || isLiveOrder) && !isCancelled && !isCompletedStatus && (
                                 <div className="absolute inset-x-0 top-0 h-[2px] pointer-events-none overflow-hidden z-20">
                                     <div 
-                                        className={`absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-${isLiveOrder ? 'red' : 'indigo'}-500 to-transparent -translate-x-full animate-shimmer-flash opacity-80`} 
+                                        className={`absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-${isLiveOrder ? 'red-500' : 'indigo-500'} to-transparent -translate-x-full animate-shimmer-flash opacity-80`} 
                                     />
                                 </div>
                             )}
                             
-                            {(isProcessing || isLiveOrder) && !isCancelled && (
+                            {(isProcessing || isLiveOrder) && !isCancelled && !isCompletedStatus && (
                                 <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl z-10">
-                                    <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-${isLiveOrder ? 'red-500/20' : 'white/30 dark:white/5'} to-transparent w-[30%] -skew-x-[30deg] animate-shimmer-flash`} />
+                                    <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-${isLiveOrder ? 'red-500/10' : 'white/30 dark:white/5'} to-transparent w-[30%] -skew-x-[30deg] animate-shimmer-flash`} />
                                 </div>
                             )}
 
                              
-                            <CardHeader className={`flex flex-row items-center justify-between pb-2 min-h-[80px] ${isCancelled ? 'bg-red-50/20 dark:bg-red-950/20' : (isCompletedStatus && !isLiveOrder ? 'bg-green-50/20 dark:bg-emerald-950/20' : isLiveOrder ? 'bg-red-50/20 dark:bg-red-950/20' : isProcessing ? 'bg-indigo-50/40 dark:bg-indigo-950/30' : 'bg-muted/10')}`} {...({} as any)}>
+                            <CardHeader className={`flex flex-row items-center justify-between pb-2 min-h-[80px] ${isCancelled ? 'bg-red-50/20 dark:bg-red-950/20' : (isCompletedStatus && !isLiveOrder ? 'bg-green-50/20 dark:bg-emerald-950/20' : isLiveOrder ? 'bg-indigo-50/40 dark:bg-indigo-950/30' : isProcessing ? 'bg-indigo-50/40 dark:bg-indigo-950/30' : 'bg-muted/10')}`} {...({} as any)}>
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3">
                                         <div className={`p-1.5 rounded-md transition-all duration-500 ${isCancelled ? 'bg-red-500/20 text-red-600 dark:text-red-400' : (isCompletedStatus && !isLiveOrder ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : isLiveOrder ? 'p-2 bg-red-500/20 text-red-600 dark:text-red-400 shadow-sm ring-1 ring-red-500/30 scale-105' : typeInfo.color)}`}>
@@ -381,9 +381,18 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                         </div>
                                         <div className="flex flex-col">
                                              <div className="flex items-center gap-2">
-                                                 <CardTitle className={`text-md font-bold truncate max-w-[150px] transition-colors ${isCancelled ? 'text-red-700/60' : (isCompletedStatus ? 'text-emerald-700' : isLiveOrder ? 'text-red-700' : isProcessing ? 'text-indigo-700' : '')}`}>
+                                                 <CardTitle className={`text-md font-bold truncate transition-colors ${isCancelled ? 'text-red-700/60' : (isCompletedStatus ? 'text-emerald-700' : isLiveOrder ? 'text-indigo-700' : isProcessing ? 'text-indigo-700' : '')}`}>
                                                      {order.orderName}
                                                  </CardTitle>
+                                                 {isLiveOrder && !isCancelled && !isCompletedStatus && (
+                                                     <div className="flex items-center gap-1 bg-red-500/10 px-2 py-0.5 rounded-full ring-1 ring-red-500/30 animate-pulse ml-0.5">
+                                                         <span className="relative flex h-2 w-2">
+                                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                             <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
+                                                         </span>
+                                                         <span className="text-[10px] font-black text-red-600 uppercase tracking-tight">Live</span>
+                                                     </div>
+                                                 )}
                                              </div>
                                              <span className="text-[10px] font-mono text-muted-foreground/60">ID: #{order.id}</span>
                                              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">{typeInfo.label}</span>
@@ -525,7 +534,7 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                     </div>
                                 </div>
                             )}
-                            <CardContent className={`pt-2.5 space-y-4 flex-1 flex flex-col justify-between ${isLiveOrder ? 'bg-red-50/5' : ''}`} {...({} as any)}>
+                            <CardContent className={`pt-2.5 space-y-4 flex-1 flex flex-col justify-between ${isLiveOrder && !isCompletedStatus ? 'bg-red-500/[0.02]' : ''}`} {...({} as any)}>
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1 text-sm">
                                         <span className="text-[10px] text-muted-foreground font-bold uppercase block">Meta</span>

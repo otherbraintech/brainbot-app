@@ -43,6 +43,12 @@ export default async function ProjectDetailPage({
 
     const completionRate = stats.totalRequested > 0 ? Math.round((stats.totalCompleted / stats.totalRequested) * 100) : 0;
 
+    const activeOrdersCount = orders.filter((o: any) => o.status === "GENERADA").length;
+    const pausedOrdersCount = orders.filter((o: any) => o.status === "PAUSADA").length;
+    const completedOrdersCount = orders.filter((o: any) => o.status === "COMPLETADA").length;
+    const cancelledOrdersCount = orders.filter((o: any) => o.status === "CANCELADA").length;
+    const pendingOrdersCount = orders.filter((o: any) => o.status === "LISTA" || o.status === "GENERANDO" || o.status === "REINTENTAR").length;
+
     return (
         <div className="flex flex-col relative pb-20 -mt-2">
             {/* Meta Info Line (Pulled Up) */}
@@ -121,14 +127,49 @@ export default async function ProjectDetailPage({
             </div>
 
             {/* Flat Actions Bar (Tighter) */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 border-b border-border/40">
-                <div className="flex flex-col">
-                    <h2 className="text-lg font-black tracking-tight text-foreground uppercase leading-none">
-                         Órdenes del Proyecto
-                    </h2>
-                    <p className="text-[8px] font-medium text-muted-foreground/40 uppercase tracking-[0.2em] mt-1">
-                         GESTIÓN Y MONITOREO
-                    </p>
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 py-4 border-b border-border/40">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                    <div className="flex flex-col">
+                        <h2 className="text-lg font-black tracking-tight text-foreground uppercase leading-none">
+                            Órdenes del Proyecto
+                        </h2>
+                        <p className="text-[8px] font-medium text-muted-foreground/40 uppercase tracking-[0.2em] mt-1">
+                            GESTIÓN Y MONITOREO
+                        </p>
+                    </div>
+
+                    {/* Order Status Counters */}
+                    <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
+                        {activeOrdersCount > 0 && (
+                            <Badge variant="outline" className="bg-indigo-50/50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 border-indigo-200/50 dark:border-indigo-900/50 flex items-center gap-1.5 rounded-full px-2.5 py-0.5">
+                                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                                <span className="text-[10px] uppercase font-bold">{activeOrdersCount} Activas</span>
+                            </Badge>
+                        )}
+                        {pausedOrdersCount > 0 && (
+                            <Badge variant="outline" className="bg-amber-50/50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200/50 dark:border-amber-900/50 flex items-center gap-1.5 rounded-full px-2.5 py-0.5">
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                <span className="text-[10px] uppercase font-bold">{pausedOrdersCount} Pausadas</span>
+                            </Badge>
+                        )}
+                        {pendingOrdersCount > 0 && (
+                            <Badge variant="outline" className="bg-slate-50 text-slate-700 dark:bg-slate-900/50 dark:text-slate-400 border-slate-200/50 dark:border-slate-800/50 flex items-center gap-1.5 rounded-full px-2.5 py-0.5">
+                                <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                                <span className="text-[10px] uppercase font-bold">{pendingOrdersCount} En Cola</span>
+                            </Badge>
+                        )}
+                        {completedOrdersCount > 0 && (
+                            <Badge variant="outline" className="bg-emerald-50/50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-900/50 flex items-center gap-1.5 rounded-full px-2.5 py-0.5">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                <span className="text-[10px] uppercase font-bold">{completedOrdersCount} Completadas</span>
+                            </Badge>
+                        )}
+                        {cancelledOrdersCount > 0 && (
+                            <Badge variant="outline" className="bg-red-50/50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border-red-200/50 dark:border-red-900/50 flex items-center gap-1.5 rounded-full px-2.5 py-0.5">
+                                <span className="text-[10px] uppercase font-bold">{cancelledOrdersCount} Canceladas</span>
+                            </Badge>
+                        )}
+                    </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <OrderQueueSheet queueOrders={globalQueue} />
