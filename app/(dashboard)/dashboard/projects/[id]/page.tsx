@@ -65,7 +65,7 @@ export default async function ProjectDetailPage({
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end justify-between border-b border-border/40 pb-5">
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
-                        <h1 className="text-2xl font-black tracking-tighter text-foreground leading-none">
+                        <h1 className="text-2xl font-bold tracking-tighter text-foreground leading-none">
                             <span className="opacity-30">PROYECTO: </span> {project.name}
                         </h1>
                         {project.stance && (
@@ -85,19 +85,19 @@ export default async function ProjectDetailPage({
                 <div className="flex flex-wrap items-center gap-8 lg:gap-10">
                     <div className="flex items-center gap-6">
                          <div className="flex flex-col">
-                            <span className="text-[8px] font-black text-muted-foreground uppercase mb-0.5 opacity-30">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase mb-0.5 opacity-30">
                                 <Hash className="inline h-2 w-2 mr-1" /> Solicitadas
                             </span>
-                            <span className="text-lg font-black tabular-nums tracking-tighter">
+                            <span className="text-xl font-bold tabular-nums tracking-tighter text-foreground/80">
                                 {stats.totalRequested}
                             </span>
                         </div>
                         <div className="flex flex-col border-l pl-6 border-border/40">
-                            <span className="text-[8px] font-black text-muted-foreground uppercase mb-0.5 opacity-30">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase mb-0.5 opacity-30">
                                 <CheckCircle2 className="inline h-2 w-2 mr-1 text-emerald-500" /> Completadas
                             </span>
                             <div className="flex items-baseline gap-1">
-                                <span className="text-lg font-black tabular-nums tracking-tighter text-emerald-600">
+                                <span className="text-xl font-bold tabular-nums tracking-tighter text-emerald-600">
                                     {stats.totalCompleted}
                                 </span>
                                 <span className="text-[9px] text-muted-foreground font-bold opacity-20">
@@ -109,10 +109,10 @@ export default async function ProjectDetailPage({
 
                     <div className="flex flex-col min-w-[120px]">
                          <div className="flex items-center justify-between mb-0.5">
-                            <span className="text-[8px] font-black text-muted-foreground uppercase opacity-30">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase opacity-30">
                                 Eficiencia
                             </span>
-                            <span className="text-[9px] font-black tabular-nums text-indigo-600">
+                            <span className="text-xs font-bold tabular-nums text-indigo-600">
                                 {completionRate}%
                             </span>
                         </div>
@@ -171,7 +171,7 @@ export default async function ProjectDetailPage({
                         )}
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                     <OrderQueueSheet queueOrders={globalQueue} />
                     <CreateOrderButton projectId={id} />
                     <CreateTargetButton project={project as any} fullWidth={false} />

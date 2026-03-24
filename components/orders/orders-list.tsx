@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useState, useMemo } from "react"
 import { MoreHorizontal, Ban, ExternalLink, MessageSquare, Play, Eye, Heart, Share2, UserPlus, FileText, CheckCircle2, Video, Image as ImageIcon, Type, Activity, Radio, Pause, Copy, Facebook, Instagram, ListChecks, Hash, RefreshCw, Undo, ShoppingBag } from "lucide-react"
 import { TikTokIcon } from "@/components/icons/tiktok-icon"
@@ -348,9 +349,9 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                             key={order.id}
                             className={`overflow-hidden transition-all duration-300 hover:shadow-xl flex flex-col h-full border relative
                                 ${isCancelled 
-                                    ? 'opacity-60 border-red-500/10 bg-red-500/5 dark:bg-red-950/10 dark:border-red-500/20' 
+                                    ? 'opacity-60 hover:opacity-100 border-red-500/10 hover:border-red-500/30 bg-red-500/5 hover:bg-red-500/10 dark:bg-red-950/10 dark:border-red-500/20 transition-all duration-300' 
                                     : isLiveOrder && !isCompletedStatus
-                                        ? 'animate-glow-pulse border-indigo-600/50 bg-indigo-50/10 dark:bg-indigo-950/20 shadow-lg shadow-indigo-600/20 border-l-4 border-l-red-500'
+                                        ? 'animate-glow-pulse border-red-500/50 bg-red-50/10 dark:bg-red-950/20 shadow-lg shadow-red-500/20 border-l-4 border-l-red-500'
                                         : isCompletedStatus
                                             ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/30 dark:border-emerald-500/20'
                                         : isProcessing
@@ -373,15 +374,15 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                             )}
 
                              
-                            <CardHeader className={`flex flex-row items-center justify-between pb-2 min-h-[80px] ${isCancelled ? 'bg-red-50/20 dark:bg-red-950/20' : (isCompletedStatus && !isLiveOrder ? 'bg-green-50/20 dark:bg-emerald-950/20' : isLiveOrder ? 'bg-indigo-50/40 dark:bg-indigo-950/30' : isProcessing ? 'bg-indigo-50/40 dark:bg-indigo-950/30' : 'bg-muted/10')}`} {...({} as any)}>
-                                <div className="space-y-4">
+                            <CardHeader className={`flex flex-col sm:flex-row items-center justify-between gap-4 pb-3 min-h-[80px] px-5 ${isCancelled ? 'bg-red-50/20 dark:bg-red-950/20' : (isCompletedStatus && !isLiveOrder ? 'bg-emerald-50/20 dark:bg-emerald-950/20' : isLiveOrder ? 'bg-red-50/20 dark:bg-red-950/20' : isProcessing ? 'bg-indigo-50/40 dark:bg-indigo-950/30' : 'bg-muted/10')}`}>
+                                <div className="flex-1 w-full sm:w-auto">
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-1.5 rounded-md transition-all duration-500 ${isCancelled ? 'bg-red-500/20 text-red-600 dark:text-red-400' : (isCompletedStatus && !isLiveOrder ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : isLiveOrder ? 'p-2 bg-red-500/20 text-red-600 dark:text-red-400 shadow-sm ring-1 ring-red-500/30 scale-105' : typeInfo.color)}`}>
-                                            {isCancelled ? <Ban className="h-4 w-4" /> : (isCompletedStatus && !isLiveOrder ? <CheckCircle2 className="h-4 w-4" /> : <typeInfo.icon className={`h-4 w-4 ${isLiveOrder && !isCompletedStatus ? 'h-5 w-5 animate-pulse' : 'h-5 w-5'}`} />)}
+                                        <div className={`p-1.5 rounded-lg transition-all duration-500 shadow-sm border ${isCancelled ? 'bg-red-500/10 text-red-600 border-red-500/20' : (isCompletedStatus && !isLiveOrder ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : isLiveOrder ? 'bg-red-500/20 text-red-600 border-red-500/30 animate-pulse' : typeInfo.color + ' border-current/10')}`}>
+                                            {isCancelled ? <Ban className="h-4 w-4" /> : (isCompletedStatus && !isLiveOrder ? <CheckCircle2 className="h-4 w-4" /> : <typeInfo.icon className="h-4 w-4" />)}
                                         </div>
-                                        <div className="flex flex-col">
+                                        <div className="flex flex-col min-w-0">
                                              <div className="flex items-center gap-2">
-                                                 <CardTitle className={`text-md font-bold truncate transition-colors ${isCancelled ? 'text-red-700/60' : (isCompletedStatus ? 'text-emerald-700' : isLiveOrder ? 'text-indigo-700' : isProcessing ? 'text-indigo-700' : '')}`}>
+                                                 <CardTitle className={`text-md font-bold truncate transition-colors ${isCancelled ? 'text-red-700/60' : (isCompletedStatus ? 'text-emerald-700' : isLiveOrder ? 'text-red-700' : isProcessing ? 'text-indigo-700' : '')}`}>
                                                      {order.orderName}
                                                  </CardTitle>
                                                  {isLiveOrder && !isCancelled && !isCompletedStatus && (
@@ -394,53 +395,24 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                                      </div>
                                                  )}
                                              </div>
-                                             <span className="text-[10px] font-mono text-muted-foreground/60">ID: #{order.id}</span>
-                                             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">{typeInfo.label}</span>
-                                            {isCancelled ? (
-                                                <span className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Orden Cancelada</span>
-                                            ) : isCompletedStatus && (
-                                                <span className="text-[10px] font-bold text-green-600 dark:text-emerald-400 uppercase tracking-wider">Orden Completada</span>
-                                            )}
+                                             <div className="flex items-center gap-2">
+                                                  <span className="text-[10px] font-mono text-muted-foreground/40 font-medium tracking-tight uppercase">ID: {order.id.slice(-8)}</span>
+                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-                                        <Badge variant="outline" className={`text-[11px] h-5 py-0 border-none px-2 flex items-center gap-1.5 ${NETWORK_COLORS[order.socialNetwork]}`}>
-                                            {order.socialNetwork === "FACEBOOK" && <Facebook className="h-3 w-3" />}
-                                            {order.socialNetwork === "INSTAGRAM" && <Instagram className="h-3 w-3" />}
-                                            {order.socialNetwork === "TIKTOK" && <TikTokIcon className="h-3 w-3" />}
-                                            {NETWORK_LABELS[order.socialNetwork] || order.socialNetwork}
-                                        </Badge>
-                                        {order.postType !== "OTRO" && (
-                                            <>
-                                                <span className="opacity-50">•</span>
-                                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-secondary/50 border border-secondary">
-                                                    {(() => {
-                                                        const pType = POST_TYPE_LABELS[order.postType as PostType] || POST_TYPE_LABELS.OTRO
-                                                        return (
-                                                            <>
-                                                                <pType.icon className="h-3 w-3" />
-                                                                <span className="text-[10px] font-medium uppercase tracking-wider">{pType.label}</span>
-                                                            </>
-                                                        )
-                                                    })()}
-                                                </div>
-                                            </>
-                                        )}
-                                        <span className="opacity-50">•</span>
-                                        <span>{formatDate(order.createdAt)}</span>
-                                    </div>
                                 </div>
-                                <div className="flex items-center gap-1">
+
+                                <div className="flex items-center gap-1 shrink-0 self-end sm:self-auto">
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-8 w-8 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800/30"
+                                                    className="h-8 w-8 text-muted-foreground/30 hover:text-indigo-600 bg-transparent hover:bg-indigo-50 border border-transparent hover:border-indigo-100/50 transition-all duration-300 hover:scale-110 hover:shadow-sm hover:shadow-indigo-500/20 group/eye"
                                                     onClick={() => setViewingOrder(order)}
                                                 >
-                                                    <Eye className="h-4 w-4" />
+                                                    <Eye className="h-3.5 w-3.5 transition-transform duration-300 group-hover/eye:scale-110" />
                                                 </Button>
                                             </TooltipTrigger>
                                             <TooltipContent>Ver detalles</TooltipContent>
@@ -524,16 +496,74 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                     </TooltipProvider>
                                 </div>
                             </CardHeader>
-                            {order.intent && (order.type === "COMENTARIO" || isLiveOrder) && (
-                                <div className="px-5 py-3 bg-muted/10 border-b border-muted/10">
-                                    <div className="flex gap-2">
-                                        <div className="min-w-[3px] rounded-full bg-muted-foreground/30" />
-                                        <p className="text-xs text-muted-foreground italic line-clamp-3 leading-relaxed">
-                                            {order.intent}
-                                        </p>
+                            {/* Balanced Metadata Grid (2x2) */}
+                            <div className="grid grid-cols-2 gap-4 px-6 py-4 bg-secondary/5 border-y border-muted/10">
+                                {/* Row 1, Col 1: Action Type */}
+                                <div className="flex flex-col gap-1.5 pr-2">
+                                    <span className="text-[7px] text-muted-foreground/30 font-black uppercase tracking-tighter leading-none">Tipo Acción</span>
+                                    <div className="flex items-center gap-2 text-foreground/70 font-bold uppercase text-[10px] tracking-tight leading-none">
+                                        {(() => {
+                                            const typeKey = order.type as string;
+                                            const config = ORDER_TYPE_LABELS[typeKey] || { icon: MoreHorizontal, label: typeKey };
+                                            const icon = config.icon;
+                                            return (
+                                                <>
+                                                    {React.createElement(icon, { className: "h-3 w-3 opacity-50 text-indigo-500" })}
+                                                    <span>{config.label}</span>
+                                                </>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
-                            )}
+                                {/* Row 1, Col 2: Origin (Network + Type) */}
+                                <div className="flex flex-col gap-1.5 pl-2 border-l border-muted/10">
+                                    <span className="text-[7px] text-muted-foreground/30 font-black uppercase tracking-tighter leading-none text-right">Origen</span>
+                                    <div className="flex items-center justify-end gap-2">
+                                        <Badge variant="secondary" className={`text-[9px] font-black h-5 rounded-md px-2 border-none ring-1 ring-inset shadow-sm w-fit ${NETWORK_COLORS[order.socialNetwork].replace('text-', 'text-').replace('border-', 'ring-')}`}>
+                                            {order.socialNetwork === "FACEBOOK" && <Facebook className="h-3 w-3 mr-1" />}
+                                            {order.socialNetwork === "INSTAGRAM" && <Instagram className="h-3 w-3 mr-1" />}
+                                            {order.socialNetwork === "TIKTOK" && <TikTokIcon className="h-3 w-3 mr-1" />}
+                                            <span className="uppercase">{NETWORK_LABELS[order.socialNetwork] || order.socialNetwork}</span>
+                                        </Badge>
+                                        {order.postType !== "OTRO" && (
+                                            <div className="flex items-center gap-1.5 text-muted-foreground/60 font-bold uppercase text-[9px] tracking-tight leading-none bg-muted/30 px-1.5 py-0.5 rounded leading-none">
+                                                {(() => {
+                                                    const pType = POST_TYPE_LABELS[order.postType as PostType] || POST_TYPE_LABELS.OTRO
+                                                    return (
+                                                        <>
+                                                            <pType.icon className="h-2.5 w-2.5 opacity-40" />
+                                                            <span>{pType.label}</span>
+                                                        </>
+                                                    )
+                                                })()}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Row 2, Col 1: Creation */}
+                                <div className="flex flex-col gap-1.5 pr-2 pt-1">
+                                    <span className="text-[7px] text-muted-foreground/30 font-black uppercase tracking-tighter leading-none">Creación</span>
+                                    <div className="flex items-center gap-1.5 text-foreground/60 font-bold text-[10px] tabular-nums">
+                                        <Hash className="h-2.5 w-2.5 opacity-30" />
+                                        <span>{new Date(order.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                                    </div>
+                                </div>
+
+                                {/* Row 2, Col 2: Access */}
+                                <div className="flex flex-col items-end gap-1.5 pl-2 pt-1 border-l border-muted/10">
+                                    <span className="text-[7px] text-muted-foreground/30 font-black uppercase tracking-tighter leading-none">Acceso</span>
+                                    <a 
+                                        href={order.url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1.5 leading-none group transition-colors"
+                                    >
+                                        VER PUBLICACIÓN
+                                        <ExternalLink className="h-3 w-3 opacity-40 group-hover:opacity-100 transition-opacity" />
+                                    </a>
+                                </div>
+                            </div>
                             <CardContent className={`pt-2.5 space-y-4 flex-1 flex flex-col justify-between ${isLiveOrder && !isCompletedStatus ? 'bg-red-500/[0.02]' : ''}`} {...({} as any)}>
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1 text-sm">

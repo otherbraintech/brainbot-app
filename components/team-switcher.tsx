@@ -36,6 +36,11 @@ export function TeamSwitcher({
   const { isMobile } = useSidebar()
   const router = useRouter()
   const [activeTeam, setActiveTeam] = React.useState(teams[0])
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   React.useEffect(() => {
     try {
@@ -118,7 +123,7 @@ export function TeamSwitcher({
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             align="start"
-            side={isMobile ? "bottom" : "right"}
+            side={mounted && isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-muted-foreground text-xs" {...({} as any)}>

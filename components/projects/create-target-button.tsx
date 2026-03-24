@@ -107,21 +107,19 @@ export function CreateTargetButton({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
-                    variant={project.targetId ? "outline" : "secondary"}
-                    className={fullWidth ? "w-full mt-2 border-slate-200 shadow-sm justify-between group" : "h-10 border-slate-200 shadow-sm"}
+                    variant="outline"
+                    size="sm"
+                    className={fullWidth 
+                        ? "w-full mt-2 border-indigo-200/60 bg-indigo-50/50 text-indigo-700 shadow-sm justify-between group transition-all hover:bg-indigo-50" 
+                        : "h-9 w-full sm:w-auto text-[10px] gap-2 border-indigo-200/60 bg-indigo-50/50 hover:bg-indigo-50 text-indigo-700 font-bold uppercase tracking-widest shadow-sm transition-all hover:shadow-md hover:scale-[1.02]"}
                 >
                     <div className="flex items-center">
-                        <Target className={`h-4 w-4 mr-2 ${project.targetId ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <Target className={`h-3.5 w-3.5 mr-2 ${project.targetId ? 'text-indigo-600' : 'text-indigo-400'}`} />
                         {project.targetId
                             ? "Ver Objetivo"
                             : "Definir Objetivo"
                         }
                     </div>
-                    {project.targetId && (
-                        <Badge variant={project.stance === 'AGAINST' ? "destructive" : "default"} className="ml-2 text-[10px] h-5 px-1.5">
-                            {project.stance === 'AGAINST' ? 'En Contra' : 'A Favor'}
-                        </Badge>
-                    )}
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">

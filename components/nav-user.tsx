@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useEffect, useState } from "react"
 import {
   ChevronsUpDown,
@@ -35,6 +36,11 @@ type User = {
 export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar()
   const [isDark, setIsDark] = useState(false)
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     // Sincronizar estado local con la clase del DOM (aplicada por el servidor o manualmente)
@@ -113,7 +119,7 @@ export function NavUser({ user }: { user: User }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
+            side={mounted && isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
             {...({} as any)}
