@@ -84,9 +84,9 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
     const [mPrice, setMPrice] = useState(0)
     const [mCategory, setMCategory] = useState("Varios")
     const [mCondition, setMCondition] = useState("Nuevo")
-    const [mLocation, setMLocation] = useState("")
     const [mDescription, setMDescription] = useState("")
-    const [mImages, setMImages] = useState<string[]>([""])
+    const [mImages, setMImages] = useState<string[]>([])
+    const [uploading, setUploading] = useState(false)
 
     const isPostAction = orderType === "COMENTARIO" || orderType === "MEGUSTA" || orderType === "COMPARTIR"
     const isReportAction = orderType === "REPORTE"
@@ -135,9 +135,8 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                 price: Number(mPrice),
                 category: mCategory,
                 condition: mCondition,
-                location: mLocation,
                 description: mDescription,
-                images: mImages.filter(img => img.trim() !== ""),
+                images: mImages,
             } : undefined,
         })
 
@@ -164,9 +163,8 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
         setMPrice(0)
         setMCategory("Varios")
         setMCondition("Nuevo")
-        setMLocation("")
         setMDescription("")
-        setMImages([""])
+        setMImages([])
         setError(null)
     }
 
@@ -348,33 +346,21 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="grid gap-1.5">
-                                            <Label className="text-[11px] font-bold opacity-70">Categoría</Label>
-                                            <Select value={mCategory} onValueChange={setMCategory}>
-                                                <SelectTrigger className="h-9 focus:ring-indigo-500 text-xs">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Electrónica">Electrónica</SelectItem>
-                                                    <SelectItem value="Hogar">Hogar</SelectItem>
-                                                    <SelectItem value="Ropa">Ropa</SelectItem>
-                                                    <SelectItem value="Vehículos">Vehículos</SelectItem>
-                                                    <SelectItem value="Inmuebles">Inmuebles</SelectItem>
-                                                    <SelectItem value="Varios">Varios</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="grid gap-1.5">
-                                            <Label htmlFor="mLocation" className="text-[11px] font-bold opacity-70">Ubicación (Opcional)</Label>
-                                            <Input
-                                                id="mLocation"
-                                                value={mLocation}
-                                                onChange={(e) => setMLocation(e.target.value)}
-                                                placeholder="Ej: Madrid, España"
-                                                className="h-9 focus-visible:ring-indigo-500"
-                                            />
-                                        </div>
+                                    <div className="grid gap-1.5">
+                                        <Label className="text-[11px] font-bold opacity-70">Categoría</Label>
+                                        <Select value={mCategory} onValueChange={setMCategory}>
+                                            <SelectTrigger className="h-9 focus:ring-indigo-500 text-xs">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Electrónica">Electrónica</SelectItem>
+                                                <SelectItem value="Hogar">Hogar</SelectItem>
+                                                <SelectItem value="Ropa">Ropa</SelectItem>
+                                                <SelectItem value="Vehículos">Vehículos</SelectItem>
+                                                <SelectItem value="Inmuebles">Inmuebles</SelectItem>
+                                                <SelectItem value="Varios">Varios</SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                     </div>
 
                                     <div className="grid gap-1.5">
@@ -392,43 +378,66 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
 
                                     <div className="grid gap-2">
                                         <Label className="flex justify-between items-center text-[10px] uppercase font-black opacity-50 tracking-widest">
-                                            Imágenes (URLs)
-                                            <Button 
-                                                type="button" 
-                                                variant="ghost" 
-                                                size="sm" 
-                                                className="h-6 text-[9px] uppercase font-black text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-2"
-                                                onClick={() => setMImages([...mImages, ""])}
-                                            >
-                                                <Plus className="h-3 w-3 mr-1" /> Añadir
-                                            </Button>
+                                            Fotos del Producto
+                                            {uploading && <span className="text-[9px] lowercase animate-pulse text-indigo-500">Subiendo...</span>}
                                         </Label>
-                                        <div className="space-y-1.5 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                                        
+                                        <div className="grid grid-cols-4 gap-2">
                                             {mImages.map((img, idx) => (
-                                                <div key={idx} className="flex gap-2 group items-center">
-                                                    <Input
-                                                        value={img}
-                                                        onChange={(e) => {
-                                                            const newImages = [...mImages]
-                                                            newImages[idx] = e.target.value
-                                                            setMImages(newImages)
-                                                        }}
-                                                        placeholder="https://image-url.com/..."
-                                                        className="flex-1 h-8 text-[11px] focus-visible:ring-indigo-500 bg-muted/20"
-                                                    />
-                                                    {mImages.length > 1 && (
-                                                        <Button 
-                                                            type="button" 
-                                                            variant="ghost" 
-                                                            size="icon" 
-                                                            className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50 flex-shrink-0"
-                                                            onClick={() => setMImages(mImages.filter((_, i) => i !== idx))}
-                                                        >
-                                                            <Trash2 className="h-3.5 w-3.5" />
-                                                        </Button>
-                                                    )}
+                                                <div key={idx} className="relative aspect-square rounded-md overflow-hidden bg-muted group border border-indigo-50 shadow-sm">
+                                                    <img src={img} alt={`Preview ${idx}`} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setMImages(mImages.filter((_, i) => i !== idx))}
+                                                        className="absolute top-1 right-1 p-1 bg-white/90 rounded-full text-red-500 hover:text-red-700 hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </button>
                                                 </div>
                                             ))}
+                                            
+                                            {mImages.length < 10 && (
+                                                <label className="flex flex-col items-center justify-center border-2 border-dashed border-indigo-200/50 rounded-md aspect-square bg-indigo-50/20 hover:bg-indigo-50/50 hover:border-indigo-400 cursor-pointer transition-all">
+                                                    <ImageIcon className="h-5 w-5 text-indigo-400 mb-1" />
+                                                    <span className="text-[8px] font-bold uppercase text-indigo-500">Añadir</span>
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*" 
+                                                        multiple 
+                                                        className="hidden" 
+                                                        onChange={async (e) => {
+                                                            const files = Array.from(e.target.files || [])
+                                                            if (files.length === 0) return
+                                                            
+                                                            setUploading(true)
+                                                            try {
+                                                                // Simulación de subida al VPS gestor de imágenes
+                                                                // Usaría process.env.NEXT_PUBLIC_IMAGE_MANAGER_URL
+                                                                const uploadUrl = process.env.NEXT_PUBLIC_IMAGE_MANAGER_URL || "https://images-vps.su-vps.com/upload"
+                                                                
+                                                                const newUrls = await Promise.all(
+                                                                    files.map(async (file) => {
+                                                                        const formData = new FormData()
+                                                                        formData.append('file', file)
+                                                                        
+                                                                        // Simulación de fetch al VPS
+                                                                        // const res = await fetch(uploadUrl, { method: "POST", body: formData })
+                                                                        // return (await res.json()).url
+                                                                        
+                                                                        // Por ahora, usamos base64 local para demostración o URLs falsas
+                                                                        return URL.createObjectURL(file) 
+                                                                    })
+                                                                )
+                                                                setMImages([...mImages, ...newUrls])
+                                                            } catch (err) {
+                                                                console.error("Error uploading images:", err)
+                                                            } finally {
+                                                                setUploading(false)
+                                                            }
+                                                        }}
+                                                    />
+                                                </label>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
