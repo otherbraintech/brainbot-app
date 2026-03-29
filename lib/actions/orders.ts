@@ -130,7 +130,10 @@ export async function getOrder(id: string) {
         include: { device: true },
         orderBy: { createdAt: "desc" }
       },
-      genMarketplaces: true,
+      genMarketplaces: {
+        include: { device: true },
+        orderBy: { createdAt: "desc" }
+      },
     },
   })
   
@@ -961,6 +964,11 @@ export async function updateInteractionStatus(id: number, type: OrderType, statu
     if (!item) return { error: "Registro no encontrado" }
     orderId = item.orderId
     await prisma.genLive.update({ where: { id }, data: { status } as any })
+  } else if (type === OrderType.MARKETPLACE) {
+    const item = await prisma.genMarketplace.findFirst({ where: { id, userId: session } })
+    if (!item) return { error: "Registro no encontrado" }
+    orderId = item.orderId
+    await prisma.genMarketplace.update({ where: { id }, data: { status } as any })
   }
 
   if (orderId) {

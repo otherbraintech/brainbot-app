@@ -31,11 +31,15 @@ export default async function OrderExecutionsPage({ params }: { params: Promise<
     }
 
     // Unificar arrays de interacciones
-    const interactions = (order.type === "COMENTARIO" ? order.genComments :
+    const interactions = (
+        order.type === "COMENTARIO" ? order.genComments :
         order.type === "MEGUSTA" ? (order as any).genLikes :
-            order.type === "COMPARTIR" ? (order as any).genShares :
-                order.type === "SEGUIMIENTO" ? (order as any).genFollows :
-                    (order as any).genReports) || []
+        order.type === "COMPARTIR" ? (order as any).genShares :
+        order.type === "SEGUIMIENTO" ? (order as any).genFollows :
+        order.type === "REPORTE" ? (order as any).genReports :
+        order.type === "MARKETPLACE" ? order.genMarketplaces :
+        []
+    ) || []
 
     const sortedInteractions = [...interactions].sort((a: any, b: any) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
