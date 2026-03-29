@@ -11,6 +11,8 @@ import { DynamicBreadcrumb } from "@/components/dynamic-breadcrumb"
 import { ChangelogDialog } from "@/components/changelog-dialog"
 import { getCurrentUser } from "@/lib/actions/user"
 import { getProjects } from "@/lib/actions/projects"
+import { getActiveOrders } from "@/lib/actions/orders"
+import { ActiveOrderIndicator } from "@/components/orders/active-order-indicator"
 
 export default async function DashboardLayout({
     children,
@@ -19,6 +21,7 @@ export default async function DashboardLayout({
 }) {
     const user = await getCurrentUser()
     const projects = (await getProjects()) as any[]
+    const activeOrders = await getActiveOrders()
 
     return (
         <SidebarProvider>
@@ -30,6 +33,7 @@ export default async function DashboardLayout({
                     <SidebarTrigger className="-ml-1" />
                     <Separator orientation="vertical" className="mr-2 h-4" />
                     <DynamicBreadcrumb />
+                    <ActiveOrderIndicator orders={activeOrders} />
                 </header>
                 <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
                     {children}

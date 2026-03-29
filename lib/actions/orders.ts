@@ -3,10 +3,35 @@
 
 import { getSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, unstable_noStore as noStore } from "next/cache"
 import { OrderStatus, SocialNetwork, PostType, CommentStatus, OrderType } from "@prisma/client"
 
 type ExtendedPostType = PostType | "PAGINA" | "PUBLICACION"
+
+export async function getActiveOrders() {
+  noStore()
+  const session = await getSession()
+  
+  if (!session) {
+    return []
+  }
+  
+  const orders = await prisma.botOrder.findMany({
+    where: { 
+      userId: session,
+      status: {
+        in: [OrderStatus.GENERADA, OrderStatus.GENERANDO]
+      },
+      deletedAt: null,
+    },
+    orderBy: { createdAt: "desc" },
+    include: {
+        project: { select: { name: true } }
+    }
+  })
+  
+  return orders
+}
 
 export async function getOrders(projectId: string) {
   const session = await getSession()
@@ -260,7 +285,7 @@ export async function updateOrder(input: UpdateOrderInput) {
     } as any,
   })
   
-  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  revalidatePath("/", "layout")
   
   return { success: true }
 }
@@ -334,7 +359,7 @@ export async function deleteOrder(id: string) {
     } as any,
   })
   
-  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  revalidatePath("/", "layout")
   
   return { success: true }
 }
@@ -512,7 +537,7 @@ export async function startOrder(id: string) {
     return { error: "Error al enviar la orden. Intenta de nuevo." }
   }
   
-  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  revalidatePath("/", "layout")
   
   return { success: true }
 }
@@ -610,7 +635,7 @@ export async function retryOrder(id: string) {
     return { error: "Error de red al re-enviar la orden." }
   }
   
-  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  revalidatePath("/", "layout")
   
   return { success: true }
 }
@@ -732,7 +757,7 @@ export async function pauseOrder(id: string) {
     data: { status: OrderStatus.PAUSADA } as any,
   })
   
-  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  revalidatePath("/", "layout")
   
   return { success: true }
 }
@@ -761,7 +786,7 @@ export async function resumeOrder(id: string) {
     data: { status: OrderStatus.GENERADA } as any,
   })
   
-  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  revalidatePath("/", "layout")
   
   return { success: true }
 }
@@ -796,7 +821,7 @@ export async function duplicateOrder(id: string) {
     } as any,
   })
   
-  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  revalidatePath("/", "layout")
   
   return { success: true }
 }
@@ -821,7 +846,7 @@ export async function completeOrder(id: string) {
     data: { status: OrderStatus.COMPLETADA } as any,
   })
   
-  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  revalidatePath("/", "layout")
   
   return { success: true }
 }
@@ -846,7 +871,7 @@ export async function cancelOrder(id: string) {
     data: { status: OrderStatus.CANCELADA } as any,
   })
   
-  revalidatePath(`/dashboard/projects/${order.projectId}`)
+  revalidatePath("/", "layout")
   
   return { success: true }
 }
