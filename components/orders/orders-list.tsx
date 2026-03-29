@@ -380,12 +380,21 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                         <div className={`p-1.5 rounded-lg transition-all duration-500 shadow-sm border ${isCancelled ? 'bg-red-500/10 text-red-600 border-red-500/20' : (isCompletedStatus && !isLiveOrder ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : isLiveOrder ? 'bg-red-500/20 text-red-600 border-red-500/30 animate-pulse' : typeInfo.color + ' border-current/10')}`}>
                                             {isCancelled ? <Ban className="h-4 w-4" /> : (isCompletedStatus && !isLiveOrder ? <CheckCircle2 className="h-4 w-4" /> : <typeInfo.icon className="h-4 w-4" />)}
                                         </div>
-                                        <div className="flex flex-col min-w-0">
-                                             <div className="flex items-center gap-2">
-                                                 <CardTitle className={`text-md font-bold truncate transition-colors ${isCancelled ? 'text-red-700/60' : (isCompletedStatus ? 'text-emerald-700' : isLiveOrder ? 'text-red-700' : isProcessing ? 'text-indigo-700' : '')}`}>
-                                                     {order.orderName}
-                                                 </CardTitle>
-                                                 {isLiveOrder && !isCancelled && !isCompletedStatus && (
+                                         <div className="flex flex-col min-w-0">
+                                              <div className="flex items-center gap-2">
+                                                  <CardTitle className={`text-md font-bold truncate transition-colors ${isCancelled ? 'text-red-700/60' : (isCompletedStatus ? 'text-emerald-700' : isLiveOrder ? 'text-red-700' : isProcessing ? 'text-indigo-700' : '')}`}>
+                                                      {order.orderName}
+                                                  </CardTitle>
+                                                  {order.type === 'MARKETPLACE' && order.genMarketplaces?.[0]?.images?.[0] && (
+                                                      <div className="relative h-6 w-10 shrink-0 border rounded overflow-hidden shadow-sm bg-muted ring-1 ring-black/5">
+                                                          <img 
+                                                             src={order.genMarketplaces[0].images[0]} 
+                                                             alt="Product" 
+                                                             className="h-full w-full object-cover"
+                                                          />
+                                                      </div>
+                                                  )}
+                                                  {isLiveOrder && !isCancelled && !isCompletedStatus && (
                                                      <div className="flex items-center gap-1 bg-red-500/10 px-2 py-0.5 rounded-full ring-1 ring-red-500/30 animate-pulse ml-0.5">
                                                          <span className="relative flex h-2 w-2">
                                                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -871,62 +880,107 @@ export function OrdersList({ orders, projectId, globalQueue }: { orders: Order[]
                                         </p>
                                     </div>
                                     
-                                    <div className="col-span-1 md:col-span-2 space-y-2 border-t pt-4">
-                                         <span className="text-[10px] text-muted-foreground font-bold uppercase">
-                                            {viewingOrder.type === 'MARKETPLACE' ? 'Enlace de Marketplace' : 'URL del Contenido'}
-                                        </span>
-                                        <div className="flex items-start gap-2 bg-blue-50/50 dark:bg-blue-900/10 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                                            <ExternalLink className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-                                            <a
-                                                href={viewingOrder.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-blue-600 hover:underline break-all text-sm font-medium"
-                                            >
-                                                {viewingOrder.url}
-                                            </a>
+                                    {viewingOrder.type !== 'MARKETPLACE' && (
+                                        <div className="col-span-1 md:col-span-2 space-y-2 border-t pt-4">
+                                             <span className="text-[10px] text-muted-foreground font-bold uppercase">
+                                                URL del Contenido
+                                            </span>
+                                            <div className="flex items-start gap-2 bg-blue-50/50 dark:bg-blue-900/10 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                                                <ExternalLink className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                                                <a
+                                                    href={viewingOrder.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-blue-600 hover:underline break-all text-sm font-medium"
+                                                >
+                                                    {viewingOrder.url}
+                                                </a>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
 
-                                    {viewingOrder.intent && (
+                                    {viewingOrder.intent && viewingOrder.type !== 'MARKETPLACE' && (
                                         <div className="col-span-1 md:col-span-2 space-y-2 border-t pt-4">
                                             <span className="text-[10px] text-muted-foreground font-bold uppercase">Intención / Contexto</span>
-                                            <div className="bg-muted/30 p-4 rounded-xl border border-dashed border-muted-foreground/30">
-                                                <p className="text-sm italic leading-relaxed whitespace-pre-wrap text-muted-foreground font-medium">
-                                                    "{viewingOrder.intent}"
-                                                </p>
+                                            <div className="bg-muted/30 p-4 rounded-xl border border-dashed border-muted-foreground/30 overflow-hidden">
+                                                {viewingOrder.intent.startsWith('https://') && viewingOrder.intent.match(/\.(jpg|jpeg|png|webp|gif|svg)/) ? (
+                                                    <div className="relative w-full max-h-40 rounded-lg overflow-hidden border bg-white mb-2">
+                                                        <img 
+                                                           src={viewingOrder.intent} 
+                                                           alt="Intent visual" 
+                                                           className="h-full w-full object-contain max-h-40 cursor-zoom-in"
+                                                           onClick={() => window.open(viewingOrder.intent!, '_blank')}
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-sm italic leading-relaxed whitespace-pre-wrap text-muted-foreground font-medium">
+                                                        "{viewingOrder.intent}"
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     )}
                                 </div>
  
-                                 {viewingOrder.type === 'MARKETPLACE' && viewingOrder.genMarketplaces && viewingOrder.genMarketplaces[0] && (
-                                     <div className="col-span-1 md:col-span-2 space-y-4 border-t pt-4">
-                                         <span className="text-[10px] text-muted-foreground font-bold uppercase">Detalles del Producto (Marketplace)</span>
-                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/20 p-4 rounded-xl border border-dashed">
-                                             <div className="space-y-1">
-                                                 <span className="text-[10px] text-muted-foreground uppercase font-medium">Título</span>
-                                                 <p className="text-sm font-bold">{viewingOrder.genMarketplaces[0].title}</p>
-                                             </div>
-                                             <div className="space-y-1">
-                                                 <span className="text-[10px] text-muted-foreground uppercase font-medium">Precio</span>
-                                                 <p className="text-sm font-bold text-primary">${viewingOrder.genMarketplaces[0].price}</p>
-                                             </div>
-                                             <div className="space-y-1">
-                                                 <span className="text-[10px] text-muted-foreground uppercase font-medium">Categoría</span>
-                                                 <p className="text-sm font-medium">{viewingOrder.genMarketplaces[0].category}</p>
-                                             </div>
-                                             <div className="space-y-1">
-                                                 <span className="text-[10px] text-muted-foreground uppercase font-medium">Condición / Ubicación</span>
-                                                 <p className="text-sm font-medium">{viewingOrder.genMarketplaces[0].condition || 'N/A'} • {viewingOrder.genMarketplaces[0].location || 'N/A'}</p>
-                                             </div>
-                                             <div className="col-span-1 md:col-span-2 space-y-1">
-                                                 <span className="text-[10px] text-muted-foreground uppercase font-medium">Descripción</span>
-                                                 <p className="text-xs text-muted-foreground leading-relaxed">{viewingOrder.genMarketplaces[0].description}</p>
-                                             </div>
-                                         </div>
-                                     </div>
-                                 )}
+                                 {(() => {
+                                      let mkDetails = viewingOrder.genMarketplaces?.[0] || null;
+                                      
+                                      if (viewingOrder.type === 'MARKETPLACE' && viewingOrder.intent && viewingOrder.intent.startsWith('{')) {
+                                          try {
+                                              const parsed = JSON.parse(viewingOrder.intent);
+                                              mkDetails = { ...mkDetails, ...parsed };
+                                          } catch (e) {}
+                                      }
+
+                                      if (viewingOrder.type === 'MARKETPLACE' && mkDetails) {
+                                          return (
+                                              <div className="col-span-1 md:col-span-2 space-y-4 border-t pt-4">
+                                                  <span className="text-[10px] text-muted-foreground font-bold uppercase">Detalles del Producto (Marketplace)</span>
+                                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/20 p-4 rounded-xl border border-dashed">
+                                                      <div className="space-y-1">
+                                                          <span className="text-[10px] text-muted-foreground uppercase font-medium">Título</span>
+                                                          <p className="text-sm font-bold">{mkDetails.title || 'Sin título'}</p>
+                                                      </div>
+                                                      <div className="space-y-1">
+                                                          <span className="text-[10px] text-muted-foreground uppercase font-medium">Precio</span>
+                                                          <p className="text-sm font-bold text-primary">${mkDetails.price || 0}</p>
+                                                      </div>
+                                                      <div className="space-y-1">
+                                                          <span className="text-[10px] text-muted-foreground uppercase font-medium">Categoría</span>
+                                                          <p className="text-sm font-medium">{mkDetails.category || 'Varios'}</p>
+                                                      </div>
+                                                      <div className="space-y-1">
+                                                          <span className="text-[10px] text-muted-foreground uppercase font-medium">Condición</span>
+                                                          <p className="text-sm font-medium">{mkDetails.condition || 'N/A'}</p>
+                                                      </div>
+                                                      <div className="col-span-1 md:col-span-2 space-y-1">
+                                                          <span className="text-[10px] text-muted-foreground uppercase font-medium">Descripción</span>
+                                                          <p className="text-xs text-muted-foreground leading-relaxed">{mkDetails.description || 'Sin descripción'}</p>
+                                                      </div>
+
+                                                      {mkDetails.images && mkDetails.images.length > 0 && (
+                                                          <div className="col-span-1 md:col-span-2 space-y-2 border-t pt-3">
+                                                              <span className="text-[10px] text-muted-foreground uppercase font-medium">Fotos ({mkDetails.images.length})</span>
+                                                              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                                                  {mkDetails.images.map((img: string, idx: number) => (
+                                                                      <div key={idx} className="relative aspect-square rounded-md overflow-hidden bg-white border shadow-sm group">
+                                                                          <img 
+                                                                             src={img} 
+                                                                             alt={`Marketplace ${idx}`} 
+                                                                             className="h-full w-full object-cover transition-transform group-hover:scale-110 cursor-zoom-in"
+                                                                             onClick={() => window.open(img, '_blank')}
+                                                                          />
+                                                                      </div>
+                                                                  ))}
+                                                              </div>
+                                                          </div>
+                                                      )}
+                                                  </div>
+                                              </div>
+                                          );
+                                      }
+                                      return null;
+                                  })()}
                              </div>
                          )}
                      </ScrollArea>

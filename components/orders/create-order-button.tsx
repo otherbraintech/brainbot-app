@@ -25,9 +25,25 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { TikTokIcon } from "@/components/icons/tiktok-icon"
+import { toast } from "sonner"
 
 import { createOrder, getNextOrderName } from "@/lib/actions/orders"
 import { getAvailableDevicesCount } from "@/lib/actions/devices"
+import { uploadMarketplaceImage } from "@/lib/actions/marketplace-upload"
+
+// Helper to convert File to base64 (without the prefix)
+const fileToBase64 = (file: File): Promise<{ base64: string; mimeType: string }> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+        reader.onload = () => {
+            const result = reader.result as string
+            const base64 = result.split(',')[1] // Strip prefix
+            resolve({ base64, mimeType: file.type })
+        }
+        reader.onerror = (error) => reject(error)
+    })
+}
 
 const SOCIAL_NETWORKS = [
     { value: "INSTAGRAM", label: "Instagram" },
@@ -115,39 +131,59 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
 
         setLoading(true)
         setError(null)
-
-        const result = await createOrder({
-            projectId,
-            link,
-            socialNetwork,
-            postType:
-                orderType === "SEGUIMIENTO"
-                    ? "PAGINA"
-                    : isReportAction
-                        ? reportType
-                        : (isPostAction ? postType : "OTRO"),
-            orderName,
-            type: orderType,
-            intent: orderType === "COMENTARIO" ? (intent || undefined) : undefined,
-            quantity,
-            marketplaceData: isMarketplaceAction ? {
-                title: mTitle,
-                price: Number(mPrice),
-                category: mCategory,
-                condition: mCondition,
-                description: mDescription,
-                images: mImages,
-            } : undefined,
+        const toastId = toast.loading("Creando orden...", {
+            description: isMarketplaceAction ? "Subiendo detalles del producto y enviando orden." : "Enviando solicitud al servidor."
         })
 
-        if (result?.error) {
-            setError(result.error)
-        } else {
-            setOpen(false)
-            resetForm()
-        }
+        try {
+            const result = await createOrder({
+                projectId,
+                link,
+                socialNetwork,
+                postType:
+                    orderType === "SEGUIMIENTO"
+                        ? "PAGINA"
+                        : isReportAction
+                            ? reportType
+                            : (isPostAction ? postType : "OTRO"),
+                orderName,
+                type: orderType,
+                intent: orderType === "COMENTARIO" ? (intent || undefined) : undefined,
+                quantity,
+                marketplaceData: isMarketplaceAction ? {
+                    title: mTitle,
+                    price: Number(mPrice),
+                    category: mCategory,
+                    condition: mCondition,
+                    description: mDescription,
+                    images: mImages,
+                } : undefined,
+            })
 
-        setLoading(false)
+            if (result?.error) {
+                setError(result.error)
+                toast.error("Error al crear la orden", {
+                    id: toastId,
+                    description: result.error
+                })
+            } else {
+                toast.success("Orden creada con éxito", {
+                    id: toastId,
+                    description: `La ${orderName} ha sido registrada en el sistema.`
+                })
+                setOpen(false)
+                resetForm()
+            }
+        } catch (err) {
+            console.error("Error creating order:", err)
+            setError("Ocurrió un error inesperado al procesar la orden.")
+            toast.error("Error crítico", {
+                id: toastId,
+                description: "No se pudo conectar con el servidor."
+            })
+        } finally {
+            setLoading(false)
+        }
     }
 
     function resetForm() {
@@ -411,26 +447,26 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                                                             
                                                             setUploading(true)
                                                             try {
-                                                                // Simulación de subida al VPS gestor de imágenes
-                                                                // Usaría process.env.NEXT_PUBLIC_IMAGE_MANAGER_URL
-                                                                const uploadUrl = process.env.NEXT_PUBLIC_IMAGE_MANAGER_URL || "https://images-vps.su-vps.com/upload"
+                                                                const newUrls: string[] = []
                                                                 
-                                                                const newUrls = await Promise.all(
-                                                                    files.map(async (file) => {
-                                                                        const formData = new FormData()
-                                                                        formData.append('file', file)
-                                                                        
-                                                                        // Simulación de fetch al VPS
-                                                                        // const res = await fetch(uploadUrl, { method: "POST", body: formData })
-                                                                        // return (await res.json()).url
-                                                                        
-                                                                        // Por ahora, usamos base64 local para demostración o URLs falsas
-                                                                        return URL.createObjectURL(file) 
-                                                                    })
-                                                                )
-                                                                setMImages([...mImages, ...newUrls])
+                                                                for (const file of files) {
+                                                                    const { base64, mimeType } = await fileToBase64(file)
+                                                                    const res = await uploadMarketplaceImage(base64, file.name, mimeType)
+                                                                    
+                                                                    if (res.url) {
+                                                                        newUrls.push(res.url)
+                                                                    } else if (res.error) {
+                                                                        console.error("Upload error:", res.error)
+                                                                        setError(`Error al subir ${file.name}: ${res.error}`)
+                                                                    }
+                                                                }
+                                                                
+                                                                if (newUrls.length > 0) {
+                                                                    setMImages([...mImages, ...newUrls])
+                                                                }
                                                             } catch (err) {
                                                                 console.error("Error uploading images:", err)
+                                                                setError("Ocurrió un error inesperado al subir las imágenes.")
                                                             } finally {
                                                                 setUploading(false)
                                                             }
@@ -557,10 +593,10 @@ export function CreateOrderButton({ projectId }: { projectId: string }) {
                         </Button>
                         <Button
                             type="submit"
-                            disabled={loading || (!isMarketplaceAction && !link.trim()) || !orderName.trim()}
+                            disabled={loading || uploading || (!isMarketplaceAction && !link.trim()) || !orderName.trim()}
                             className="h-10 text-xs px-8 bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all active:scale-95"
                         >
-                            {loading ? "Creando..." : "Crear Orden"}
+                            {loading ? "Creando..." : uploading ? "Subiendo fotos..." : "Crear Orden"}
                         </Button>
                     </DialogFooter>
                 </form>

@@ -29,7 +29,18 @@ export async function getOrders(projectId: string) {
       genFollows: { select: { status: true } },
       genReports: { select: { status: true } },
       genLives: { select: { status: true } },
-      genMarketplaces: { select: { status: true } },
+      genMarketplaces: {
+        select: {
+          status: true,
+          title: true,
+          price: true,
+          category: true,
+          condition: true,
+          location: true,
+          description: true,
+          images: true
+        }
+      },
       _count: {
         select: {
           genComments: true,
@@ -72,7 +83,18 @@ export async function getAllOrders() {
       genFollows: { select: { status: true } },
       genReports: { select: { status: true } },
       genLives: { select: { status: true } },
-      genMarketplaces: { select: { status: true } },
+      genMarketplaces: {
+        select: {
+          status: true,
+          title: true,
+          price: true,
+          category: true,
+          condition: true,
+          location: true,
+          description: true,
+          images: true
+        }
+      },
       _count: {
         select: {
           genComments: true,
@@ -178,7 +200,9 @@ export async function createOrder(input: CreateOrderInput) {
     return { error: "Proyecto no encontrado" }
   }
   
-  if (!input.link || (input.link as any).length < 10) {
+  const isMarketplace = input.type === OrderType.MARKETPLACE
+  
+  if (!isMarketplace && (!input.link || (input.link as any).length < 10)) {
     return { error: "Ingresa un enlace válido" }
   }
   
@@ -191,27 +215,15 @@ export async function createOrder(input: CreateOrderInput) {
       userId: session,
       projectId: input.projectId,
       type: input.type,
-      url: input.link,
+      url: (isMarketplace && !input.link) ? (input.marketplaceData?.images?.[0] || "") : (input.link || ""),
       socialNetwork: input.socialNetwork,
       postType: input.postType,
       orderName: input.orderName,
-      intent: input.intent,
+      intent: isMarketplace && input.marketplaceData 
+        ? JSON.stringify(input.marketplaceData) 
+        : input.intent,
       quantity: input.quantity,
       status: OrderStatus.LISTA,
-      ...(input.type === OrderType.MARKETPLACE && input.marketplaceData && {
-        genMarketplaces: {
-          create: {
-            userId: session,
-            title: input.marketplaceData.title,
-            price: input.marketplaceData.price,
-            category: input.marketplaceData.category,
-            condition: input.marketplaceData.condition,
-            location: input.marketplaceData.location,
-            description: input.marketplaceData.description,
-            images: input.marketplaceData.images,
-          }
-        }
-      })
     } as any,
   })
   
@@ -229,6 +241,14 @@ type UpdateOrderInput = {
   link?: string
   orderName?: string
   type?: OrderType
+  marketplaceData?: {
+    title?: string
+    price?: number
+    category?: string
+    condition?: string
+    description?: string
+    images?: string[]
+  }
 }
 
 export async function updateOrder(input: UpdateOrderInput) {
@@ -260,6 +280,7 @@ export async function updateOrder(input: UpdateOrderInput) {
       ...(input.quantity && { quantity: input.quantity }),
       ...(input.orderName && { orderName: input.orderName }),
       ...(input.type && { type: input.type }),
+      ...(input.marketplaceData && { intent: JSON.stringify(input.marketplaceData) }),
     } as any,
   })
   
