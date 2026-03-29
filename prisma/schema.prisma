@@ -7,27 +7,27 @@ datasource db {
 }
 
 model User {
-  id            String           @id @default(cuid())
-  username      String           @unique
-  usernameLower String           @unique
-  passwordHash  String
-  name          String
-  role          Role             @default(USUARIO)
-  plan          Plan             @default(GRATIS)
-  commentLimit  Int              @default(500)
-  commentsUsed  Int              @default(0)
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  botOrders     BotOrder[]
-  genComments   GenComment[]
-  genFollows    GenFollow[]
-  genLikes      GenLike[]
-  genLives      GenLive[]
-  genReports    GenReport[]
-  genShares     GenShare[]
+  id              String           @id @default(cuid())
+  username        String           @unique
+  usernameLower   String           @unique
+  passwordHash    String
+  name            String
+  role            Role             @default(USUARIO)
+  plan            Plan             @default(GRATIS)
+  commentLimit    Int              @default(500)
+  commentsUsed    Int              @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  botOrders       BotOrder[]
+  genComments     GenComment[]
+  genFollows      GenFollow[]
+  genLikes        GenLike[]
+  genLives        GenLive[]
+  genReports      GenReport[]
+  genShares       GenShare[]
   genMarketplaces GenMarketplace[]
-  integrations  IntegrationLog[]
-  projects      Project[]
+  integrations    IntegrationLog[]
+  projects        Project[]
 }
 
 model Project {
@@ -66,32 +66,32 @@ model Target {
 }
 
 model BotOrder {
-  id            String           @id @default(cuid())
-  projectId     String
-  userId        String
-  type          OrderType
-  url           String
-  orderName     String           @default("Orden")
-  socialNetwork SocialNetwork
-  postType      PostType
-  intent        String?
-  quantity      Int
-  status        OrderStatus      @default(LISTA)
-  sentAt        DateTime?
-  generatedAt   DateTime?
-  deletedAt     DateTime?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  project       Project          @relation(fields: [projectId], references: [id])
-  user          User             @relation(fields: [userId], references: [id])
-  genComments   GenComment[]
-  genFollows    GenFollow[]
-  genLikes      GenLike[]
-  genLives      GenLive[]
-  genReports    GenReport[]
-  genShares     GenShare[]
+  id              String           @id @default(cuid())
+  projectId       String
+  userId          String
+  type            OrderType
+  url             String
+  orderName       String           @default("Orden")
+  socialNetwork   SocialNetwork
+  postType        PostType
+  intent          String?
+  quantity        Int
+  status          OrderStatus      @default(LISTA)
+  sentAt          DateTime?
+  generatedAt     DateTime?
+  deletedAt       DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  project         Project          @relation(fields: [projectId], references: [id])
+  user            User             @relation(fields: [userId], references: [id])
+  genComments     GenComment[]
+  genFollows      GenFollow[]
+  genLikes        GenLike[]
+  genLives        GenLive[]
+  genReports      GenReport[]
+  genShares       GenShare[]
   genMarketplaces GenMarketplace[]
-  integrations  IntegrationLog[]
+  integrations    IntegrationLog[]
 
   @@index([projectId, createdAt])
   @@index([userId, createdAt])
@@ -203,45 +203,41 @@ model GenLive {
 }
 
 model GenMarketplace {
-  id          Int           @id @default(autoincrement())
-  orderId     String
-  userId      String
-  title       String
-  price       Float
-  category    String
-  condition   String?
-  location    String?
-  description String
-  images      String[]
-  status      CommentStatus @default(PENDIENTE)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  botOrder    BotOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  user        User          @relation(fields: [userId], references: [id])
+  id        Int           @id @default(autoincrement())
+  orderId   String
+  userId    String
+  status    CommentStatus @default(PENDIENTE)
+  deviceId  String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @default(now())
+
+  device   Device?  @relation(fields: [deviceId], references: [id])
+  botOrder BotOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id])
 
   @@index([orderId, createdAt])
 }
 
 model Device {
-
-  id           String       @id @default(cuid())
-  deviceName   String       @unique
-  personName   String?
-  label        String?
-  phoneNumber  String?
-  urlTiktok    String?
-  urlFacebook  String?
-  urlInstagram String?
-  status       DeviceStatus @default(LIBRE)
-  blockedAt    DateTime?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  genComments  GenComment[]
-  genFollows   GenFollow[]
-  genLikes     GenLike[]
-  genLives     GenLive[]
-  genReports   GenReport[]
-  genShares    GenShare[]
+  id              String           @id @default(cuid())
+  deviceName      String           @unique
+  personName      String?
+  label           String?
+  phoneNumber     String?
+  urlTiktok       String?
+  urlFacebook     String?
+  urlInstagram    String?
+  status          DeviceStatus     @default(LIBRE)
+  blockedAt       DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  genComments     GenComment[]
+  genFollows      GenFollow[]
+  genLikes        GenLike[]
+  genLives        GenLive[]
+  genReports      GenReport[]
+  genShares       GenShare[]
+  genMarketplaces GenMarketplace[]
 
   @@map("dispositivos")
 }
